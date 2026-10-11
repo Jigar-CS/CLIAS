@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Logger } from '@nestjs/common';
+import { Subject, Observable, interval, map, filter, merge } from 'rxjs';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateDisputeDto, ResolveDisputeDto, ResolveDisputeAction } from './dto/dispute.dto';
 import { DisputeStatus, QuestionStatus } from '@prisma/client';
@@ -6,6 +7,17 @@ import { DisputeStatus, QuestionStatus } from '@prisma/client';
 @Injectable()
 export class DisputesService {
   private readonly logger = new Logger('DisputesService');
+  private readonly notificationEvents$ = new Subject<{
+    type: string;
+    userId?: string;
+    role?: string;
+    studentId?: string;
+    data?: any;
+    timestamp: string;
+  }>();
+
+  private dismissedNotificationsByUser: Map<string, Set<string>> = new Map();
+  private readNotificationsByUser: Map<string, Set<string>> = new Map();
 
   constructor(private prisma: PrismaService) {}
 
@@ -43,6 +55,16 @@ export class DisputesService {
     });
 
     this.logger.log(`Student ${studentProfileId} filed dispute for question ${dto.questionId}`);
+
+    this.emitNotificationEvent({
+      type: 'NEW_DISPUTE',
+      role: 'FACULTY',
+      data: {
+        disputeId: dispute.id,
+        questionId: dispute.questionId,
+        studentId: studentProfileId,
+      },
+    });
 
     return {
       success: true,
@@ -245,6 +267,16 @@ export class DisputesService {
 
     this.logger.log(`Dispute ${disputeId} resolved as ${newStatus} by faculty ${facultyProfileId}`);
 
+    this.emitNotificationEvent({
+      type: 'DISPUTE_RESOLVED',
+      studentId: dispute.studentId,
+      data: {
+        disputeId: dispute.id,
+        verdict: isApproved ? 'APPROVED' : 'REJECTED',
+        topicName,
+      },
+    });
+
     return {
       success: true,
       message: isApproved
@@ -255,8 +287,210 @@ export class DisputesService {
     };
   }
 
+  emitNotificationEvent(payload: {
+    type: string;
+    userId?: string;
+    role?: string;
+    studentId?: string;
+    data?: any;
+  }) {
+    this.notificationEvents$.next({
+      ...payload,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  subscribeToNotifications(userId?: string, role?: string): Observable<{ data: any }> {
+    const pings$ = interval(25000).pipe(
+      map(() => ({
+        data: {
+          type: 'PING',
+          timestamp: new Date().toISOString(),
+        },
+      })),
+    );
+
+    const events$ = this.notificationEvents$.pipe(
+      filter((evt) => {
+        if (!evt) return false;
+        if (evt.userId && userId && evt.userId === userId) return true;
+        if (evt.studentId && userId && evt.studentId === userId) return true;
+        if (evt.role && role && evt.role === role) return true;
+        if (!evt.userId && !evt.role && !evt.studentId) return true;
+        return false;
+      }),
+      map((evt) => ({
+        data: evt,
+      })),
+    );
+
+    return merge(pings$, events$);
+  }
+
   /**
-   * Retrieves notifications for a student
+   * Universal notification retriever across all roles (Student, Faculty, Counsellor, HOD, Head, Admin)
+   */
+  async getNotifications(user: any) {
+    const role = user?.role;
+    const userId = user?.id || user?.sub || 'anon';
+    const studentProfileId = user?.studentId || user?.studentProfile?.id;
+    const dismissed = this.dismissedNotificationsByUser.get(userId) || new Set<string>();
+    const readSet = this.readNotificationsByUser.get(userId) || new Set<string>();
+
+    if (role === 'STUDENT' && studentProfileId) {
+      const records = await this.prisma.studentNotification.findMany({
+        where: { studentId: studentProfileId },
+        orderBy: { createdAt: 'desc' },
+        take: 30,
+      });
+      return records.filter((r) => !dismissed.has(r.id));
+    }
+
+    const items: Array<{
+      id: string;
+      title: string;
+      message: string;
+      type: string;
+      read: boolean;
+      metadata?: string;
+      createdAt: Date;
+    }> = [];
+
+    if (role === 'FACULTY' || role === 'HOD' || role === 'HEAD' || role === 'SUPER_ADMIN') {
+      try {
+        const pendingDisputes = await this.prisma.questionDispute.findMany({
+          where: { status: DisputeStatus.PENDING },
+          include: {
+            question: { include: { topic: true, course: true } },
+            student: { include: { user: true } },
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 15,
+        });
+
+        for (const d of pendingDisputes) {
+          const id = `dispute-${d.id}`;
+          if (dismissed.has(id)) continue;
+          const courseCode = d.question?.course?.code || 'Course';
+          const topicName = d.question?.topic?.name || 'Curriculum';
+          const studentEmail = d.student?.user?.email || 'Student';
+          items.push({
+            id,
+            title: `Pending Dispute: ${courseCode} • ${topicName}`,
+            message: `${studentEmail} submitted a dispute: "${(d.studentComment || '').substring(0, 120)}..."`,
+            type: 'DISPUTE_PENDING',
+            read: readSet.has(id),
+            metadata: JSON.stringify({
+              disputeId: d.id,
+              actionUrl: '/faculty/disputes',
+              courseCode,
+              topicName,
+            }),
+            createdAt: d.createdAt,
+          });
+        }
+      } catch (e) {
+        this.logger.warn(`Could not load pending disputes for notification: ${e}`);
+      }
+
+      try {
+        const plagiarismScans = await this.prisma.plagiarismScan.findMany({
+          where: { flaggedPairsCount: { gt: 0 } },
+          include: { problem: true },
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+        });
+
+        for (const scan of plagiarismScans) {
+          const id = `plagiarism-${scan.id}`;
+          if (dismissed.has(id)) continue;
+          items.push({
+            id,
+            title: `⚠️ Plagiarism Alert: ${scan.problem?.title || 'Coding Problem'}`,
+            message: `${scan.flaggedPairsCount} submission pair(s) flagged above ${scan.threshold}% similarity threshold.`,
+            type: 'PLAGIARISM_FLAGGED',
+            read: readSet.has(id),
+            metadata: JSON.stringify({
+              scanId: scan.id,
+              actionUrl: '/faculty/plagiarism',
+            }),
+            createdAt: scan.createdAt,
+          });
+        }
+      } catch (e) {
+        // ignore
+      }
+
+      try {
+        const flaggedSessions = await this.prisma.proctoringSession.findMany({
+          where: { status: 'FLAGGED' as any },
+          include: {
+            student: { include: { user: true } },
+            submission: { include: { assessment: true } },
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 10,
+        });
+
+        for (const session of flaggedSessions) {
+          const id = `proctoring-${session.id}`;
+          if (dismissed.has(id)) continue;
+          items.push({
+            id,
+            title: `🚨 Proctoring Flag: ${session.submission?.assessment?.title || 'Exam Session'}`,
+            message: `Integrity anomalies flagged for ${session.student?.user?.email || 'student'} during assessment.`,
+            type: 'PROCTORING_FLAGGED',
+            read: readSet.has(id),
+            metadata: JSON.stringify({
+              sessionId: session.id,
+              actionUrl: '/faculty/invigilation',
+            }),
+            createdAt: session.createdAt,
+          });
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    if (role === 'COUNSELLOR' || role === 'SUPER_ADMIN' || role === 'HOD' || role === 'HEAD') {
+      try {
+        const atRiskAlerts = await this.prisma.atRiskAlert.findMany({
+          where: { status: 'PENDING' as any },
+          include: {
+            student: { include: { user: true } },
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 15,
+        });
+
+        for (const alert of atRiskAlerts) {
+          const id = `alert-${alert.id}`;
+          if (dismissed.has(id)) continue;
+          items.push({
+            id,
+            title: `${alert.severity === 'CRITICAL' ? '🚨 Critical' : '⚠️ High'} Risk Alert: ${alert.student?.user?.email || 'Student'}`,
+            message: alert.triggerReason || 'Student identified for academic intervention.',
+            type: 'AT_RISK_ALERT',
+            read: readSet.has(id),
+            metadata: JSON.stringify({
+              alertId: alert.id,
+              actionUrl: '/counsellor/alerts',
+              severity: alert.severity,
+            }),
+            createdAt: alert.createdAt,
+          });
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    return items.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }
+
+  /**
+   * Retrieves notifications for a student (backwards compatibility)
    */
   async getStudentNotifications(studentProfileId: string) {
     return this.prisma.studentNotification.findMany({
@@ -269,15 +503,108 @@ export class DisputesService {
   /**
    * Marks a notification as read
    */
-  async markNotificationRead(studentProfileId: string, notificationId: string) {
-    await this.prisma.studentNotification.updateMany({
-      where: {
-        id: notificationId,
-        studentId: studentProfileId,
-      },
-      data: { read: true },
-    });
+  async markNotificationRead(user: any, notificationId: string) {
+    const role = user?.role;
+    const userId = user?.id || user?.sub;
+    const studentProfileId = user?.studentId || user?.studentProfile?.id;
+
+    if (role === 'STUDENT' && studentProfileId) {
+      await this.prisma.studentNotification.updateMany({
+        where: {
+          id: notificationId,
+          studentId: studentProfileId,
+        },
+        data: { read: true },
+      });
+    }
+
+    if (userId) {
+      if (!this.readNotificationsByUser.has(userId)) {
+        this.readNotificationsByUser.set(userId, new Set());
+      }
+      this.readNotificationsByUser.get(userId)!.add(notificationId);
+    }
 
     return { success: true, isRead: true };
+  }
+
+  /**
+   * Marks all notifications as read for current user
+   */
+  async markAllNotificationsRead(user: any) {
+    const role = user?.role;
+    const userId = user?.id || user?.sub;
+    const studentProfileId = user?.studentId || user?.studentProfile?.id;
+
+    if (role === 'STUDENT' && studentProfileId) {
+      await this.prisma.studentNotification.updateMany({
+        where: { studentId: studentProfileId },
+        data: { read: true },
+      });
+    }
+
+    const current = await this.getNotifications(user);
+    if (userId) {
+      if (!this.readNotificationsByUser.has(userId)) {
+        this.readNotificationsByUser.set(userId, new Set());
+      }
+      const set = this.readNotificationsByUser.get(userId)!;
+      current.forEach((item) => set.add(item.id));
+    }
+
+    return { success: true, count: current.length };
+  }
+
+  /**
+   * Clears a single notification
+   */
+  async clearNotification(user: any, notificationId: string) {
+    const role = user?.role;
+    const userId = user?.id || user?.sub;
+    const studentProfileId = user?.studentId || user?.studentProfile?.id;
+
+    if (role === 'STUDENT' && studentProfileId) {
+      await this.prisma.studentNotification.deleteMany({
+        where: {
+          id: notificationId,
+          studentId: studentProfileId,
+        },
+      });
+    }
+
+    if (userId) {
+      if (!this.dismissedNotificationsByUser.has(userId)) {
+        this.dismissedNotificationsByUser.set(userId, new Set());
+      }
+      this.dismissedNotificationsByUser.get(userId)!.add(notificationId);
+    }
+
+    return { success: true, clearedId: notificationId };
+  }
+
+  /**
+   * Clears all notifications for the current user
+   */
+  async clearAllNotifications(user: any) {
+    const role = user?.role;
+    const userId = user?.id || user?.sub;
+    const studentProfileId = user?.studentId || user?.studentProfile?.id;
+
+    if (role === 'STUDENT' && studentProfileId) {
+      await this.prisma.studentNotification.deleteMany({
+        where: { studentId: studentProfileId },
+      });
+    }
+
+    const current = await this.getNotifications(user);
+    if (userId) {
+      if (!this.dismissedNotificationsByUser.has(userId)) {
+        this.dismissedNotificationsByUser.set(userId, new Set());
+      }
+      const set = this.dismissedNotificationsByUser.get(userId)!;
+      current.forEach((item) => set.add(item.id));
+    }
+
+    return { success: true, count: current.length };
   }
 }

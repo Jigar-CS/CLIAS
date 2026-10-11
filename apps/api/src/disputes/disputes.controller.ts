@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Patch, Body, Param, UseGuards, Req, ForbiddenException } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Sse, Body, Param, UseGuards, Req, ForbiddenException } from '@nestjs/common';
 import { DisputesService } from './disputes.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
@@ -49,22 +49,89 @@ export class DisputesController {
   }
 
   @Get('notifications')
-  @Roles(UserRole.STUDENT)
-  async getStudentNotifications(@Req() req: any) {
-    const studentProfileId = req.user?.studentId || req.user?.studentProfile?.id;
-    if (!studentProfileId) {
-      throw new ForbiddenException('Authenticated user is not linked to a student profile');
-    }
-    return this.disputesService.getStudentNotifications(studentProfileId);
+  @Roles(
+    UserRole.STUDENT,
+    UserRole.FACULTY,
+    UserRole.COUNSELLOR,
+    UserRole.HOD,
+    UserRole.HEAD,
+    UserRole.SUPER_ADMIN,
+  )
+  async getNotifications(@Req() req: any) {
+    return this.disputesService.getNotifications(req.user);
+  }
+
+  @Sse('notifications/stream')
+  @Roles(
+    UserRole.STUDENT,
+    UserRole.FACULTY,
+    UserRole.COUNSELLOR,
+    UserRole.HOD,
+    UserRole.HEAD,
+    UserRole.SUPER_ADMIN,
+  )
+  streamNotifications(@Req() req: any) {
+    return this.disputesService.subscribeToNotifications(
+      req.user?.id,
+      req.user?.role,
+    );
+  }
+
+  @Patch('notifications/read-all')
+  @Roles(
+    UserRole.STUDENT,
+    UserRole.FACULTY,
+    UserRole.COUNSELLOR,
+    UserRole.HOD,
+    UserRole.HEAD,
+    UserRole.SUPER_ADMIN,
+  )
+  async markAllNotificationsRead(@Req() req: any) {
+    return this.disputesService.markAllNotificationsRead(req.user);
   }
 
   @Patch('notifications/:id/read')
-  @Roles(UserRole.STUDENT)
-  async markNotificationRead(@Req() req: any, @Param('id') notificationId: string) {
-    const studentProfileId = req.user?.studentId || req.user?.studentProfile?.id;
-    if (!studentProfileId) {
-      throw new ForbiddenException('Authenticated user is not linked to a student profile');
-    }
-    return this.disputesService.markNotificationRead(studentProfileId, notificationId);
+  @Roles(
+    UserRole.STUDENT,
+    UserRole.FACULTY,
+    UserRole.COUNSELLOR,
+    UserRole.HOD,
+    UserRole.HEAD,
+    UserRole.SUPER_ADMIN,
+  )
+  async markNotificationRead(
+    @Req() req: any,
+    @Param('id') notificationId: string,
+  ) {
+    return this.disputesService.markNotificationRead(req.user, notificationId);
+  }
+
+  @Delete('notifications')
+  @Roles(
+    UserRole.STUDENT,
+    UserRole.FACULTY,
+    UserRole.COUNSELLOR,
+    UserRole.HOD,
+    UserRole.HEAD,
+    UserRole.SUPER_ADMIN,
+  )
+  async clearAllNotifications(@Req() req: any) {
+    return this.disputesService.clearAllNotifications(req.user);
+  }
+
+  @Delete('notifications/:id')
+  @Roles(
+    UserRole.STUDENT,
+    UserRole.FACULTY,
+    UserRole.COUNSELLOR,
+    UserRole.HOD,
+    UserRole.HEAD,
+    UserRole.SUPER_ADMIN,
+  )
+  async clearNotification(
+    @Req() req: any,
+    @Param('id') notificationId: string,
+  ) {
+    return this.disputesService.clearNotification(req.user, notificationId);
   }
 }
