@@ -288,7 +288,14 @@ export function CounsellorAssignmentModal({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60 font-medium">
-                    {result.assignments.map((item: any, idx: number) => (
+                    {[...result.assignments]
+                      .sort((a: any, b: any) =>
+                        (a.enrollmentNumber || '').localeCompare(b.enrollmentNumber || '', undefined, {
+                          numeric: true,
+                          sensitivity: 'base',
+                        }),
+                      )
+                      .map((item: any, idx: number) => (
                       <tr key={idx} className="hover:bg-slate-50 dark:hover:bg-slate-850/50">
                         <td className="p-3 font-semibold text-indigo-600 dark:text-indigo-400">{item.counsellorEmail}</td>
                         <td className="p-3 font-bold text-slate-900 dark:text-white">{item.studentName}</td>

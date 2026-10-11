@@ -360,6 +360,9 @@ export default function FacultyAssessmentsPage() {
     setQuestionSearch('');
     setQuestionSourceWorkflow('BANK');
     setNewStatus('DRAFT');
+    const activeCourseCode = courses.find((c: any) => c.id === selectedCourseId)?.code || 'ASM';
+    setNewCode(`${activeCourseCode}-${Date.now().toString().slice(-4)}`);
+    setNewTitle(`${activeCourseCode} Continuous Evaluation Assessment`);
     setRagFile(null);
     setRagExtractError(null);
     setRagExtractProgress(null);
@@ -929,15 +932,19 @@ export default function FacultyAssessmentsPage() {
 
     setCreating(true);
     try {
+      const activeCourseCode = courses.find((c: any) => c.id === selectedCourseId)?.code || 'ASM';
+      const cleanCode = (newCode || '').trim() || `${activeCourseCode}-${Date.now().toString().slice(-4)}`;
+      const cleanTitle = (newTitle || '').trim() || `${activeCourseCode} Assessment`;
+
       await api.post('/assessments', {
-        title: newTitle,
-        code: newCode || `ASM-${Date.now().toString().slice(-4)}`,
+        title: cleanTitle,
+        code: cleanCode,
         courseId: selectedCourseId,
         type: newType,
         division: newDivision,
-        durationMinutes: Number(newDuration),
-        totalMarks: Number(newTotalMarks),
-        passingMarks: Number(newPassingMarks),
+        durationMinutes: Number(newDuration) > 0 ? Number(newDuration) : 30,
+        totalMarks: Number(newTotalMarks) > 0 ? Number(newTotalMarks) : 100,
+        passingMarks: Number(newPassingMarks) > 0 ? Number(newPassingMarks) : 40,
         examMode,
         status: newStatus,
         questionIds: examMode === 'CODING' ? [] : selectedQuestionIds,
@@ -3060,6 +3067,12 @@ export default function FacultyAssessmentsPage() {
                                 (s.email || '').toLowerCase().includes(searchStudent.toLowerCase());
                               return matchDiv && matchSearch;
                             })
+                            .sort((a: any, b: any) =>
+                              (a.enrollmentNumber || '').localeCompare(b.enrollmentNumber || '', undefined, {
+                                numeric: true,
+                                sensitivity: 'base',
+                              }),
+                            )
                             .map((sub: any) => (
                               <tr key={sub.submissionId || sub.id} className="hover:bg-slate-800/40 transition">
                                 <td className="px-4 py-3.5">

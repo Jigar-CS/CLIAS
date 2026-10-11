@@ -389,6 +389,14 @@ export class CounsellorAssignmentService {
       }
     }
 
+    // Sort assignments ID-wise
+    createdAssignments.sort((a, b) =>
+      (a.enrollmentNumber || '').localeCompare(b.enrollmentNumber || '', undefined, {
+        numeric: true,
+        sensitivity: 'base',
+      }),
+    );
+
     return {
       success: true,
       message: `Successfully mapped ${createdAssignments.length} student assignments across ${counsellorsMapped.size} counsellor(s).`,

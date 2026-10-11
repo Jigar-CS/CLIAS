@@ -110,10 +110,17 @@ export default function CounsellorDashboard() {
     }
   };
 
-  const filteredAlerts = atRiskAlerts.filter((a) => {
-    if (statusFilter === 'ALL') return true;
-    return a.status === statusFilter;
-  });
+  const filteredAlerts = atRiskAlerts
+    .filter((a) => {
+      if (statusFilter === 'ALL') return true;
+      return a.status === statusFilter;
+    })
+    .sort((a, b) =>
+      (a.enrollmentNumber || '').localeCompare(b.enrollmentNumber || '', undefined, {
+        numeric: true,
+        sensitivity: 'base',
+      }),
+    );
 
   const getSeverityBadge = (sev: string) => {
     switch (sev) {
@@ -363,7 +370,14 @@ export default function CounsellorDashboard() {
                 </thead>
                 <tbody className="divide-y divide-slate-800 font-medium text-slate-300">
                   {menteesSummary?.mentees && menteesSummary.mentees.length > 0 ? (
-                    menteesSummary.mentees.map((m: any) => (
+                    [...menteesSummary.mentees]
+                      .sort((a: any, b: any) =>
+                        (a.enrollmentNumber || '').localeCompare(b.enrollmentNumber || '', undefined, {
+                          numeric: true,
+                          sensitivity: 'base',
+                        }),
+                      )
+                      .map((m: any) => (
                       <tr key={m.studentId} className="hover:bg-slate-800/50">
                         <td className="p-3 font-mono font-bold text-white">{m.enrollmentNumber}</td>
                         <td className="p-3 font-semibold text-white">{m.name}</td>

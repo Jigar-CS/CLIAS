@@ -104,11 +104,18 @@ export default function CounsellorAlertsPage() {
     }
   };
 
-  const filteredAlerts = alerts.filter((a) => {
-    const matchesStatus = statusFilter === 'ALL' || a.status === statusFilter;
-    const matchesSeverity = severityFilter === 'ALL' || a.severity === severityFilter;
-    return matchesStatus && matchesSeverity;
-  });
+  const filteredAlerts = alerts
+    .filter((a) => {
+      const matchesStatus = statusFilter === 'ALL' || a.status === statusFilter;
+      const matchesSeverity = severityFilter === 'ALL' || a.severity === severityFilter;
+      return matchesStatus && matchesSeverity;
+    })
+    .sort((a, b) =>
+      (a.enrollmentNumber || '').localeCompare(b.enrollmentNumber || '', undefined, {
+        numeric: true,
+        sensitivity: 'base',
+      }),
+    );
 
   const getSeverityBadge = (sev: string) => {
     switch (sev) {

@@ -69,7 +69,7 @@ export default function AdminStudentsPage() {
     try {
       const [statsRes, studentsRes]: any = await Promise.all([
         api.get('/admin/dashboard').catch(() => null),
-        api.get('/admin/students?limit=200').catch(() => null),
+        api.get('/admin/students?limit=2000').catch(() => null),
       ]);
       if (statsRes) setStats(statsRes);
       const list = Array.isArray(studentsRes)
@@ -77,6 +77,14 @@ export default function AdminStudentsPage() {
         : Array.isArray(studentsRes?.data)
         ? studentsRes.data
         : [];
+
+      // Sort ID-wise
+      list.sort((a: AuthorizedStudent, b: AuthorizedStudent) =>
+        (a.enrollmentNumber || '').localeCompare(b.enrollmentNumber || '', undefined, {
+          numeric: true,
+          sensitivity: 'base',
+        }),
+      );
       setStudents(list);
     } catch {
       setStudents([]);
@@ -85,23 +93,30 @@ export default function AdminStudentsPage() {
 
   const availableDivisions = ['ALL', ...Array.from(new Set(students.map((s) => s.division).filter(Boolean))).sort()];
 
-  const filteredStudents = students.filter((s) => {
-    const term = searchTerm.toLowerCase();
-    const matchesSearch =
-      s.name?.toLowerCase().includes(term) ||
-      s.enrollmentNumber?.toLowerCase().includes(term) ||
-      s.email?.toLowerCase().includes(term) ||
-      s.department?.toLowerCase().includes(term);
+  const filteredStudents = students
+    .filter((s) => {
+      const term = searchTerm.toLowerCase();
+      const matchesSearch =
+        s.name?.toLowerCase().includes(term) ||
+        s.enrollmentNumber?.toLowerCase().includes(term) ||
+        s.email?.toLowerCase().includes(term) ||
+        s.department?.toLowerCase().includes(term);
 
-    const matchesStatus =
-      statusFilter === 'ALL' ||
-      (statusFilter === 'ACTIVATED' && s.activated) ||
-      (statusFilter === 'PENDING' && !s.activated);
+      const matchesStatus =
+        statusFilter === 'ALL' ||
+        (statusFilter === 'ACTIVATED' && s.activated) ||
+        (statusFilter === 'PENDING' && !s.activated);
 
-    const matchesDiv = divisionFilter === 'ALL' || s.division === divisionFilter;
+      const matchesDiv = divisionFilter === 'ALL' || s.division === divisionFilter;
 
-    return matchesSearch && matchesStatus && matchesDiv;
-  });
+      return matchesSearch && matchesStatus && matchesDiv;
+    })
+    .sort((a, b) =>
+      (a.enrollmentNumber || '').localeCompare(b.enrollmentNumber || '', undefined, {
+        numeric: true,
+        sensitivity: 'base',
+      }),
+    );
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 flex text-slate-900 dark:text-slate-100 font-sans">

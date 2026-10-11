@@ -47,9 +47,9 @@ export default function LoginPage() {
     }
   };
 
-  const fillDemo = (demoEmail: string) => {
+  const fillDemo = (demoEmail: string, demoPassword = 'clias123') => {
     setEmail(demoEmail);
-    setPassword('clias123');
+    setPassword(demoPassword);
     setError(null);
   };
 
@@ -144,7 +144,7 @@ export default function LoginPage() {
             <div className="grid grid-cols-3 gap-1.5 text-[10px] font-semibold">
               <button
                 type="button"
-                onClick={() => fillDemo('student@charusat.edu.in')}
+                onClick={() => fillDemo('24cs001@charusat.edu.in', 'vivaan@2006')}
                 className="py-1.5 px-2 rounded-lg bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/40 transition"
               >
                 Student

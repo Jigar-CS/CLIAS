@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { useSidebar } from '@/lib/sidebar-context';
 import { useTheme } from '@/lib/theme-context';
@@ -40,20 +40,71 @@ export interface SidebarProps {
 
 export function Sidebar({ isLocked = false, onLockedClick }: SidebarProps = {}) {
   const pathname = usePathname();
+  const router = useRouter();
   const { user, logout } = useAuth();
   const { isPinned, togglePin, isMobileOpen, setIsMobileOpen } = useSidebar();
   const [isHovered, setIsHovered] = useState(false);
   const [mounted, setMounted] = useState(false);
 
+  // Check if user is a dual-role Faculty + Counsellor
+  const isDualRole = Boolean(
+    user && (
+      (user.role === UserRole.FACULTY && user.isCounsellor) ||
+      (user.role === UserRole.COUNSELLOR && user.isFaculty) ||
+      (user.isCounsellor && user.isFaculty)
+    )
+  );
+
+  // Active view mode for dual-role users
+  const [activeRoleView, setActiveRoleView] = useState<'FACULTY' | 'COUNSELLOR'>('FACULTY');
+
   React.useEffect(() => {
     setMounted(true);
-  }, []);
+    if (typeof window !== 'undefined' && user) {
+      if (pathname.startsWith('/counsellor')) {
+        setActiveRoleView('COUNSELLOR');
+        localStorage.setItem('clias_active_role_view', 'COUNSELLOR');
+      } else if (pathname.startsWith('/faculty')) {
+        setActiveRoleView('FACULTY');
+        localStorage.setItem('clias_active_role_view', 'FACULTY');
+      } else {
+        const saved = localStorage.getItem('clias_active_role_view');
+        if (saved === 'COUNSELLOR' || saved === 'FACULTY') {
+          setActiveRoleView(saved);
+        } else if (user.role === UserRole.COUNSELLOR) {
+          setActiveRoleView('COUNSELLOR');
+        } else {
+          setActiveRoleView('FACULTY');
+        }
+      }
+    }
+  }, [pathname, user]);
 
   if (!mounted || !user) return null;
 
   // On mobile (when isMobileOpen is true), expand sidebar. On desktop, expand when pinned or hovered.
   const isExpanded = isMobileOpen || isPinned || isHovered;
 
+  const handleSwitchRole = (targetRole: 'FACULTY' | 'COUNSELLOR') => {
+    if (isLocked) {
+      onLockedClick?.();
+      return;
+    }
+    setActiveRoleView(targetRole);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('clias_active_role_view', targetRole);
+    }
+    if (targetRole === 'COUNSELLOR') {
+      if (!pathname.startsWith('/counsellor')) {
+        router.push('/counsellor/dashboard');
+      }
+    } else {
+      if (!pathname.startsWith('/faculty')) {
+        router.push('/faculty/dashboard');
+      }
+    }
+    setIsMobileOpen(false);
+  };
 
   const studentLinks = [
     { name: 'Learning Dashboard', href: '/student/dashboard', icon: LayoutDashboard },
@@ -85,9 +136,6 @@ export function Sidebar({ isLocked = false, onLockedClick }: SidebarProps = {}) 
     { name: 'Exam Studio', href: '/faculty/assessments', icon: FileCheck },
     { name: 'Plagiarism Studio', href: '/faculty/plagiarism', icon: GitCompare },
     { name: 'Invigilation Console', href: '/faculty/invigilation', icon: ShieldCheck },
-    ...(user.isCounsellor
-      ? [{ name: 'Counsellor Panel (Dual Role)', href: '/counsellor/dashboard', icon: Users }]
-      : []),
     { name: 'My Profile', href: '/faculty/profile', icon: UserCircle },
   ];
 
@@ -95,9 +143,6 @@ export function Sidebar({ isLocked = false, onLockedClick }: SidebarProps = {}) 
     { name: 'Counsellor Dashboard', href: '/counsellor/dashboard', icon: LayoutDashboard },
     { name: 'Assigned Students', href: '/counsellor/students', icon: Users },
     { name: 'Intervention Alerts', href: '/counsellor/alerts', icon: ShieldCheck },
-    ...(user.isFaculty
-      ? [{ name: 'Faculty Console (Dual Role)', href: '/faculty/dashboard', icon: BookOpen }]
-      : []),
     { name: 'My Profile', href: '/counsellor/profile', icon: UserCircle },
   ];
 
@@ -116,11 +161,19 @@ export function Sidebar({ isLocked = false, onLockedClick }: SidebarProps = {}) 
   ];
 
   let currentLinks = studentLinks;
-  if (user.role === UserRole.SUPER_ADMIN) currentLinks = adminLinks;
-  else if (user.role === UserRole.FACULTY) currentLinks = facultyLinks;
-  else if (user.role === UserRole.COUNSELLOR) currentLinks = counsellorLinks;
-  else if (user.role === UserRole.HOD) currentLinks = hodLinks;
-  else if (user.role === UserRole.HEAD) currentLinks = headLinks;
+  if (user.role === UserRole.SUPER_ADMIN) {
+    currentLinks = adminLinks;
+  } else if (isDualRole) {
+    currentLinks = activeRoleView === 'COUNSELLOR' ? counsellorLinks : facultyLinks;
+  } else if (user.role === UserRole.FACULTY) {
+    currentLinks = facultyLinks;
+  } else if (user.role === UserRole.COUNSELLOR) {
+    currentLinks = counsellorLinks;
+  } else if (user.role === UserRole.HOD) {
+    currentLinks = hodLinks;
+  } else if (user.role === UserRole.HEAD) {
+    currentLinks = headLinks;
+  }
 
   const { theme, toggleTheme } = useTheme();
 
@@ -207,25 +260,93 @@ export function Sidebar({ isLocked = false, onLockedClick }: SidebarProps = {}) 
             </div>
           </div>
 
-        {/* Role Badge */}
-        {isExpanded ? (
-          <div className="px-5 py-3 border-b border-slate-200 dark:border-slate-800/60 bg-slate-50 dark:bg-slate-950/40 animate-in fade-in duration-200">
-            <div className="flex items-center justify-between">
-              <span className="text-xs uppercase tracking-wider font-semibold text-slate-500 dark:text-slate-400">Current Role</span>
-              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/30">
-                {user.role}
+        {/* Role Badge & Dual Role Switcher */}
+        {isDualRole ? (
+          isExpanded ? (
+            <div className="px-3.5 py-3 border-b border-slate-200 dark:border-slate-800/60 bg-gradient-to-b from-slate-50 to-slate-100/60 dark:from-slate-950/60 dark:to-slate-900/40 animate-in fade-in duration-200 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] uppercase tracking-wider font-extrabold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-500 animate-pulse" />
+                  Dual Role Mode
+                </span>
+                <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full border ${
+                  activeRoleView === 'COUNSELLOR'
+                    ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-700/50'
+                    : 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border-indigo-300 dark:border-indigo-700/50'
+                }`}>
+                  {activeRoleView === 'COUNSELLOR' ? 'Counsellor Active' : 'Faculty Active'}
+                </span>
+              </div>
+
+              {/* Segmented Switch Control */}
+              <div className="grid grid-cols-2 p-1 bg-slate-200/80 dark:bg-slate-800/80 rounded-xl gap-1">
+                <button
+                  type="button"
+                  onClick={() => handleSwitchRole('FACULTY')}
+                  className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-bold transition-all duration-200 ${
+                    activeRoleView === 'FACULTY'
+                      ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs border border-slate-200 dark:border-slate-700'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  <BookOpen className="w-3.5 h-3.5 shrink-0" />
+                  <span>Faculty View</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSwitchRole('COUNSELLOR')}
+                  className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-bold transition-all duration-200 ${
+                    activeRoleView === 'COUNSELLOR'
+                      ? 'bg-white dark:bg-slate-900 text-amber-600 dark:text-amber-400 shadow-xs border border-slate-200 dark:border-slate-700'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  <Users className="w-3.5 h-3.5 shrink-0" />
+                  <span>Counsellor View</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="py-2.5 border-b border-slate-200 dark:border-slate-800/60 flex flex-col items-center gap-1">
+              <button
+                type="button"
+                onClick={() => handleSwitchRole(activeRoleView === 'FACULTY' ? 'COUNSELLOR' : 'FACULTY')}
+                title={`Active View: ${activeRoleView}. Click to switch to ${activeRoleView === 'FACULTY' ? 'Counsellor' : 'Faculty'}.`}
+                className={`p-2 rounded-xl transition-all border shadow-xs ${
+                  activeRoleView === 'COUNSELLOR'
+                    ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-700 hover:bg-amber-100 dark:hover:bg-amber-900/50'
+                    : 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border-indigo-300 dark:border-indigo-700 hover:bg-indigo-100 dark:hover:bg-indigo-900/50'
+                }`}
+              >
+                {activeRoleView === 'COUNSELLOR' ? (
+                  <Users className="w-4 h-4" />
+                ) : (
+                  <BookOpen className="w-4 h-4" />
+                )}
+              </button>
+            </div>
+          )
+        ) : (
+          /* Normal single role badge */
+          isExpanded ? (
+            <div className="px-5 py-3 border-b border-slate-200 dark:border-slate-800/60 bg-slate-50 dark:bg-slate-950/40 animate-in fade-in duration-200">
+              <div className="flex items-center justify-between">
+                <span className="text-xs uppercase tracking-wider font-semibold text-slate-500 dark:text-slate-400">Current Role</span>
+                <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/30">
+                  {user.role}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="py-2 border-b border-slate-200 dark:border-slate-800/60 flex justify-center">
+              <span
+                title={`Role: ${user.role}`}
+                className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/30 uppercase cursor-default"
+              >
+                {user.role.slice(0, 3)}
               </span>
             </div>
-          </div>
-        ) : (
-          <div className="py-2 border-b border-slate-200 dark:border-slate-800/60 flex justify-center">
-            <span
-              title={`Role: ${user.role}`}
-              className="text-[10px] font-extrabold px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800/30 uppercase cursor-default"
-            >
-              {user.role.slice(0, 3)}
-            </span>
-          </div>
+          )
         )}
 
         {/* Navigation Links */}
@@ -306,7 +427,7 @@ export function Sidebar({ isLocked = false, onLockedClick }: SidebarProps = {}) 
         {isExpanded ? (
           <div className="flex items-center justify-between animate-in fade-in duration-200">
             <Link
-              href={`/${user.role.toLowerCase()}/profile`}
+              href={isDualRole ? (activeRoleView === 'COUNSELLOR' ? '/counsellor/profile' : '/faculty/profile') : `/${user.role.toLowerCase()}/profile`}
               onClick={(e) => {
                 if (isLocked) {
                   e.preventDefault();
@@ -371,7 +492,7 @@ export function Sidebar({ isLocked = false, onLockedClick }: SidebarProps = {}) 
               )}
             </button>
             <Link
-              href={`/${user.role.toLowerCase()}/profile`}
+              href={isDualRole ? (activeRoleView === 'COUNSELLOR' ? '/counsellor/profile' : '/faculty/profile') : `/${user.role.toLowerCase()}/profile`}
               onClick={(e) => {
                 if (isLocked) {
                   e.preventDefault();

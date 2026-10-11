@@ -24,5 +24,8 @@
     "adaptive-learning"
   ],
   "author": "CLIAS Engineering Team",
-  "license": "UNLICENSED"
+  "license": "UNLICENSED",
+  "dependencies": {
+    "xlsx": "^0.18.5"
+  }
 }

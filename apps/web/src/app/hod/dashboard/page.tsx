@@ -23,6 +23,8 @@ import {
   Award,
   BarChart3,
   ShieldCheck,
+  RefreshCw,
+  Loader2,
 } from 'lucide-react';
 
 interface CourseOutcome {
@@ -74,23 +76,26 @@ export default function HodDashboard() {
   const loadOBEAndCurriculumData = async (courseId?: string) => {
     setFetching(true);
     try {
-      const coursesRes: any = await api.get('/courses').catch(() => []);
-      const courseList = Array.isArray(coursesRes) ? coursesRes : [];
-      setCourses(courseList);
-
-      const targetCourseId = courseId || selectedCourseId || courseList?.[0]?.id;
-      if (!selectedCourseId && courseList?.[0]?.id) {
-        setSelectedCourseId(courseList[0].id);
-      }
-
-      const [obeRes, healthRes]: any = await Promise.all([
-        targetCourseId
-          ? api.get(`/analytics/obe/courses/${targetCourseId}/attainment`).catch(() => null)
-          : Promise.resolve(null),
+      const [coursesRes, healthRes]: any = await Promise.all([
+        api.get('/courses').catch(() => []),
         api.get('/analytics/hod/curriculum-health/me').catch(() => null),
       ]);
-      setObeData(obeRes);
+
+      let courseList = Array.isArray(coursesRes) && coursesRes.length > 0 ? coursesRes : [];
+      if (courseList.length === 0 && healthRes?.coursesHealth?.length > 0) {
+        courseList = healthRes.coursesHealth;
+      }
+      setCourses(courseList);
       setCurriculumHealth(healthRes);
+
+      const targetCourseId = courseId || selectedCourseId || courseList?.[0]?.id;
+      if (targetCourseId) {
+        if (!selectedCourseId || selectedCourseId !== targetCourseId) {
+          setSelectedCourseId(targetCourseId);
+        }
+        const obeRes = await api.get(`/analytics/obe/courses/${targetCourseId}/attainment`).catch(() => null);
+        setObeData(obeRes);
+      }
     } catch (e) {
       console.error('Failed to load HOD curriculum data:', e);
     } finally {
@@ -224,6 +229,31 @@ export default function HodDashboard() {
           </div>
 
           {/* TAB 1: OBE Matrix */}
+          {activeTab === 'obe' && !obeData && (
+            <div className="bg-slate-900/80 rounded-2xl border border-slate-800 p-12 text-center space-y-4 shadow-xl">
+              {fetching ? (
+                <div className="flex flex-col items-center justify-center space-y-3">
+                  <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
+                  <p className="text-sm font-semibold text-slate-300">Calculating NBA Course Outcome Attainments...</p>
+                  <p className="text-xs text-slate-500">Aggregating granular student assessment questions and program correlations.</p>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center space-y-3">
+                  <AlertTriangle className="w-8 h-8 text-amber-400" />
+                  <p className="text-sm font-semibold text-slate-300">No Course Outcome data available yet</p>
+                  <p className="text-xs text-slate-500">Ensure department courses have syllabus outcomes defined or click below to reload.</p>
+                  <button
+                    onClick={() => loadOBEAndCurriculumData()}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl transition shadow-xs"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    <span>Reload OBE Metrics</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+
           {activeTab === 'obe' && obeData && (
             <div className="space-y-6">
               {/* Course Outcome Attainment Table */}
@@ -252,6 +282,14 @@ export default function HodDashboard() {
                         ))}
                       </select>
                     )}
+                    <button
+                      onClick={() => handleCourseChange(selectedCourseId || courses?.[0]?.id)}
+                      disabled={fetching}
+                      className="p-1.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-400 hover:text-white transition disabled:opacity-50"
+                      title="Refresh Attainment Metrics"
+                    >
+                      <RefreshCw className={`w-3.5 h-3.5 ${fetching ? 'animate-spin' : ''}`} />
+                    </button>
                     <span className="text-xs font-mono font-bold px-2.5 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-300">
                       Target: 70%
                     </span>

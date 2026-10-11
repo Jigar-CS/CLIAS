@@ -722,7 +722,7 @@ export class AuthService {
       } catch {}
     }
 
-    if (!isDualCounsellor && /faculty[12]\./i.test(user.email)) {
+    if (!isDualCounsellor && (/faculty[12]\./i.test(user.email) || user.email.toLowerCase() === 'dharasolanki.cse@charusat.ac.in')) {
       isDualCounsellor = true;
     }
 

@@ -51,7 +51,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (storedToken && storedUser) {
       try {
         setToken(storedToken);
-        setUser(JSON.parse(storedUser));
+        const parsed = JSON.parse(storedUser);
+        setUser(parsed);
+
+        // Asynchronously synchronize session permissions from /auth/me
+        api.get('/auth/me')
+          .then((freshUser: any) => {
+            if (freshUser && freshUser.id) {
+              setUser((current) => {
+                if (!current) return freshUser;
+                const merged = { ...current, ...freshUser };
+                try {
+                  localStorage.setItem('clias_user', JSON.stringify(merged));
+                } catch {}
+                return merged;
+              });
+            }
+          })
+          .catch(() => {});
       } catch (e) {
         localStorage.removeItem('clias_token');
         localStorage.removeItem('clias_user');

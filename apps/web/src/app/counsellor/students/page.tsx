@@ -206,6 +206,13 @@ export default function CounsellorAssignedStudentsPage() {
           alerts: m.alerts || [],
         }));
 
+        mapped.sort((a, b) =>
+          (a.enrollmentNumber || '').localeCompare(b.enrollmentNumber || '', undefined, {
+            numeric: true,
+            sensitivity: 'base',
+          }),
+        );
+
         setStudents(mapped);
       } else {
         setStudents([]);
@@ -217,16 +224,23 @@ export default function CounsellorAssignedStudentsPage() {
     }
   };
 
-  const filteredStudents = students.filter((s) => {
-    const term = searchTerm.toLowerCase();
-    const matchesSearch =
-      s.name.toLowerCase().includes(term) ||
-      s.enrollmentNumber.toLowerCase().includes(term) ||
-      s.email.toLowerCase().includes(term);
-    const matchesDivision = divisionFilter === 'ALL' || s.division === divisionFilter;
-    const matchesStatus = statusFilter === 'ALL' || s.status === statusFilter;
-    return matchesSearch && matchesDivision && matchesStatus;
-  });
+  const filteredStudents = students
+    .filter((s) => {
+      const term = searchTerm.toLowerCase();
+      const matchesSearch =
+        s.name.toLowerCase().includes(term) ||
+        s.enrollmentNumber.toLowerCase().includes(term) ||
+        s.email.toLowerCase().includes(term);
+      const matchesDivision = divisionFilter === 'ALL' || s.division === divisionFilter;
+      const matchesStatus = statusFilter === 'ALL' || s.status === statusFilter;
+      return matchesSearch && matchesDivision && matchesStatus;
+    })
+    .sort((a, b) =>
+      (a.enrollmentNumber || '').localeCompare(b.enrollmentNumber || '', undefined, {
+        numeric: true,
+        sensitivity: 'base',
+      }),
+    );
 
   const getStatusBadge = (st: string) => {
     switch (st) {

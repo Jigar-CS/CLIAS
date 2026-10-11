@@ -186,16 +186,22 @@ export default function FacultyClassAnalyticsPage() {
           `/analytics/faculty/course/${selectedCourseId}/students${divParam}`,
         );
         if (Array.isArray(list)) {
-          setStudentsList(list);
+          const sortedList = [...list].sort((a: StudentListItem, b: StudentListItem) =>
+            (a.enrollmentNumber || '').localeCompare(b.enrollmentNumber || '', undefined, {
+              numeric: true,
+              sensitivity: 'base',
+            }),
+          );
+          setStudentsList(sortedList);
           if (
-            list.length > 0 &&
+            sortedList.length > 0 &&
             (!selectedStudentId ||
-              !list.some(
+              !sortedList.some(
                 (s: StudentListItem) =>
                   s.id === selectedStudentId || s.enrollmentNumber === selectedStudentId,
               ))
           ) {
-            setSelectedStudentId(list[0].id || list[0].enrollmentNumber);
+            setSelectedStudentId(sortedList[0].id || sortedList[0].enrollmentNumber);
           }
         }
       } catch (e) {

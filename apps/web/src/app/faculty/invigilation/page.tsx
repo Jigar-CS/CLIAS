@@ -97,6 +97,13 @@ export default function FacultyInvigilationPage() {
           invigilatorNotes: s.invigilatorNotes,
           violations: s.violations || [],
         }));
+        // Sort sessions ID-wise
+        mapped.sort((a, b) =>
+          (a.enrollmentNumber || '').localeCompare(b.enrollmentNumber || '', undefined, {
+            numeric: true,
+            sensitivity: 'base',
+          }),
+        );
         setSessions(mapped);
         setSelectedSession((current) => {
           if (!current && mapped.length > 0) return mapped[0];

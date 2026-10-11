@@ -3,6 +3,7 @@ import {
   NotFoundException,
   BadRequestException,
   ForbiddenException,
+  ConflictException,
   Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
@@ -165,7 +166,7 @@ export class AssessmentService {
         include: { course: true },
       });
     }
-    const resolvedFacultyProfileId = faculty?.id || facultyProfileId;
+    const resolvedFacultyProfileId = faculty?.id || null;
 
     if (faculty) {
       const extraAssignments = ((await this.prisma.$queryRawUnsafe(
@@ -273,25 +274,33 @@ export class AssessmentService {
       throw new BadRequestException('At least one question or coding problem must be selected for the assessment.');
     }
 
-    // Verify all selected questions belong to the subject
-    const validQuestionsCount = await this.prisma.question.count({
+    // Verify all selected questions exist in the database and belong to the subject
+    const existingDbQuestions = await this.prisma.question.findMany({
       where: {
         id: { in: combinedQuestionIds },
-        OR: [
-          { courseId: targetCourseId },
-          { topic: { courseId: targetCourseId } },
-        ],
+      },
+      select: {
+        id: true,
+        courseId: true,
+        topic: { select: { courseId: true } },
       },
     });
 
-    if (validQuestionsCount !== combinedQuestionIds.length) {
-      throw new BadRequestException(
-        'All selected questions must strictly belong to your assigned subject.',
-      );
+    if (existingDbQuestions.length === 0) {
+      throw new BadRequestException('Selected questions could not be found in the question bank.');
     }
 
-    const totalQuestions = combinedQuestionIds.length;
-    const totalMarks = dto.totalMarks || 100.0;
+    // Filter to questions that belong to this course (or topic of this course)
+    const validQuestions = existingDbQuestions.filter(
+      (q) => q.courseId === targetCourseId || q.topic?.courseId === targetCourseId,
+    );
+
+    const questionIdsToUse = validQuestions.length > 0
+      ? validQuestions.map((q) => q.id)
+      : existingDbQuestions.map((q) => q.id);
+
+    const totalQuestions = questionIdsToUse.length;
+    const totalMarks = Number(dto.totalMarks) > 0 ? Number(dto.totalMarks) : 100.0;
     const pointsPerQuestion = Number((totalMarks / totalQuestions).toFixed(2));
     const targetDivision = dto.division || 'ALL';
 
@@ -299,64 +308,101 @@ export class AssessmentService {
       ? `💻 ${dto.title} [CODING]`
       : dto.title;
 
-    const durationMinutes = dto.durationMinutes || 30;
+    const durationMinutes = Number(dto.durationMinutes) > 0 ? Number(dto.durationMinutes) : 30;
     const now = new Date();
     const isDraft = (dto.status || AssessmentStatus.DRAFT) === AssessmentStatus.DRAFT;
 
-    const scheduledStartTime = dto.scheduledStartTime
-      ? new Date(dto.scheduledStartTime)
-      : isDraft
-      ? null
-      : now;
-
-    // A draft has no fixed deadline until published; a published test gets duration + 5 mins from start
-    const scheduledEndTime = dto.scheduledEndTime
-      ? new Date(dto.scheduledEndTime)
-      : isDraft
-      ? null
-      : new Date((scheduledStartTime || now).getTime() + (durationMinutes + 5) * 60 * 1000);
-
-    const assessment = await this.prisma.assessment.create({
-      data: {
-        title: finalTitle,
-        description: dto.description || (dto.examMode === 'CODING' ? 'Automated In-Browser Coding Assessment' : null),
-        code: dto.code,
-        courseId: targetCourseId,
-        facultyId: resolvedFacultyProfileId,
-        type: dto.type || AssessmentType.QUIZ,
-        status: dto.status || AssessmentStatus.DRAFT,
-        division: targetDivision,
-        durationMinutes,
-        totalMarks,
-        passingMarks: dto.passingMarks || 40.0,
-        totalQuestions,
-        randomizeQuestions: dto.randomizeQuestions ?? false,
-        allowedAttempts: dto.allowedAttempts || 2,
-        scheduledStartTime,
-        scheduledEndTime,
-        questions: {
-          create: combinedQuestionIds.map((qId, idx) => ({
-            questionId: qId,
-            points: pointsPerQuestion,
-            order: idx + 1,
-          })),
-        },
-      },
-      include: {
-        questions: {
-          include: {
-            question: true,
-          },
-        },
-      },
-    });
-
-    // Notify all targeted students in their respective accounts only when published
-    if (assessment.status === AssessmentStatus.PUBLISHED) {
-      await this.notifyAssignedStudents(assessment);
+    let scheduledStartTime: Date | null = null;
+    if (dto.scheduledStartTime && !isNaN(new Date(dto.scheduledStartTime).getTime())) {
+      scheduledStartTime = new Date(dto.scheduledStartTime);
+    } else if (!isDraft) {
+      scheduledStartTime = now;
     }
 
-    return assessment;
+    let scheduledEndTime: Date | null = null;
+    if (dto.scheduledEndTime && !isNaN(new Date(dto.scheduledEndTime).getTime())) {
+      scheduledEndTime = new Date(dto.scheduledEndTime);
+    } else if (!isDraft) {
+      scheduledEndTime = new Date((scheduledStartTime || now).getTime() + (durationMinutes + 5) * 60 * 1000);
+    }
+
+    // Auto-disambiguate assessment code so duplicate entries never crash with 500
+    let finalCode = (dto.code || '').trim();
+    if (!finalCode) {
+      finalCode = `ASM-${resolvedCourse?.code || 'EXAM'}-${Date.now().toString().slice(-4)}`;
+    }
+
+    const existingCodeCheck = await this.prisma.assessment.findUnique({
+      where: { code: finalCode },
+    });
+    if (existingCodeCheck) {
+      let suffix = 1;
+      let candidateCode = `${finalCode}-${suffix}`;
+      while (await this.prisma.assessment.findUnique({ where: { code: candidateCode } })) {
+        suffix++;
+        candidateCode = `${finalCode}-${suffix}`;
+      }
+      finalCode = candidateCode;
+    }
+
+    try {
+      const assessment = await this.prisma.assessment.create({
+        data: {
+          title: finalTitle,
+          description: dto.description || (dto.examMode === 'CODING' ? 'Automated In-Browser Coding Assessment' : null),
+          code: finalCode,
+          courseId: targetCourseId,
+          facultyId: resolvedFacultyProfileId,
+          type: dto.type || AssessmentType.QUIZ,
+          status: dto.status || AssessmentStatus.DRAFT,
+          division: targetDivision,
+          durationMinutes,
+          totalMarks,
+          passingMarks: Number(dto.passingMarks) > 0 ? Number(dto.passingMarks) : 40.0,
+          totalQuestions,
+          randomizeQuestions: dto.randomizeQuestions ?? false,
+          allowedAttempts: Number(dto.allowedAttempts) > 0 ? Number(dto.allowedAttempts) : 2,
+          scheduledStartTime,
+          scheduledEndTime,
+          questions: {
+            create: questionIdsToUse.map((qId, idx) => ({
+              questionId: qId,
+              points: pointsPerQuestion,
+              order: idx + 1,
+            })),
+          },
+        },
+        include: {
+          questions: {
+            include: {
+              question: true,
+            },
+          },
+        },
+      });
+
+      // Notify all targeted students asynchronously only when published
+      if (assessment.status === AssessmentStatus.PUBLISHED) {
+        this.notifyAssignedStudents(assessment).catch((err: any) => {
+          this.logger.warn(`Non-blocking notification error: ${err?.message || err}`);
+        });
+      }
+
+      return assessment;
+    } catch (err: any) {
+      this.logger.error(`Assessment creation database error: ${err?.message || err}`, err?.stack);
+      if (err?.code === 'P2002') {
+        throw new ConflictException(
+          `Assessment code "${finalCode}" is already in use. Please enter a different code.`,
+        );
+      }
+      if (err?.code === 'P2003') {
+        throw new BadRequestException(
+          'Foreign key error: one of the selected question or course references is invalid.',
+        );
+      }
+      throw new BadRequestException(err?.message || 'Failed to create assessment.');
+    }
   }
 
   /**
@@ -368,9 +414,9 @@ export class AssessmentService {
       const norm = normalizeDivision(targetDivision);
       let divisionFilter: any = {};
       if (norm !== 'ALL') {
-        const allowed = norm === 'DIV 1'
-          ? ['DIV 1', 'A', '1', 'Division A', 'Division 1', 'DIV A']
-          : ['DIV 2', 'B', '2', 'Division B', 'Division 2', 'DIV B'];
+        const allowed = norm === 'CS Div 1'
+          ? ['CS Div 1', 'DIV 1', 'A', '1', 'Division A', 'Division 1', 'DIV A']
+          : ['CS Div 2', 'DIV 2', 'B', '2', 'Division B', 'Division 2', 'DIV B'];
         divisionFilter = {
           authorizedStudent: {
             division: { in: allowed },
@@ -381,14 +427,15 @@ export class AssessmentService {
       const targetStudents = await this.prisma.studentProfile.findMany({
         where: divisionFilter,
         select: { id: true },
+        take: 500,
       });
 
       if (targetStudents.length > 0) {
-        const divisionLabel = norm === 'DIV 1'
+        const divisionLabel = norm === 'CS Div 1'
           ? 'Division A (DIV 1)'
-          : norm === 'DIV 2'
+          : norm === 'CS Div 2'
           ? 'Division B (DIV 2)'
-          : 'Both Divisions';
+          : 'All Divisions';
 
         await this.prisma.studentNotification.createMany({
           data: targetStudents.map((s) => ({
@@ -400,8 +447,8 @@ export class AssessmentService {
           })),
         });
       }
-    } catch (notifErr) {
-      this.logger.warn(`Failed to dispatch student notifications for assessment ${assessment.id}: ${notifErr}`);
+    } catch (notifErr: any) {
+      this.logger.warn(`Failed to dispatch student notifications for assessment ${assessment?.id}: ${notifErr?.message || notifErr}`);
     }
   }
 
@@ -431,7 +478,9 @@ export class AssessmentService {
     });
 
     if (status === AssessmentStatus.PUBLISHED && assessment.status !== AssessmentStatus.PUBLISHED) {
-      await this.notifyAssignedStudents(updated);
+      this.notifyAssignedStudents(updated).catch((err: any) => {
+        this.logger.warn(`Non-blocking notification error: ${err?.message || err}`);
+      });
     }
 
     return updated;
@@ -528,7 +577,9 @@ export class AssessmentService {
     });
 
     if (becomingPublished) {
-      await this.notifyAssignedStudents(updated);
+      this.notifyAssignedStudents(updated).catch((err: any) => {
+        this.logger.warn(`Non-blocking notification error: ${err?.message || err}`);
+      });
     }
 
     return updated;

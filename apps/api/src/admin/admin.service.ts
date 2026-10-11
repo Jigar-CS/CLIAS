@@ -227,7 +227,7 @@ export class AdminService {
 
   async getAuthorizedStudents(query?: { search?: string; page?: number; limit?: number }) {
     const page = query?.page || 1;
-    const limit = query?.limit || 50;
+    const limit = query?.limit || 2000;
     const skip = (page - 1) * limit;
 
     const where: any = {};
@@ -244,10 +244,18 @@ export class AdminService {
         where,
         skip,
         take: limit,
-        orderBy: { importedAt: 'desc' },
+        orderBy: { enrollmentNumber: 'asc' },
       }),
       this.prisma.authorizedStudent.count({ where }),
     ]);
+
+    // Natural alphanumeric sorting by enrollmentNumber ID
+    students.sort((a, b) =>
+      (a.enrollmentNumber || '').localeCompare(b.enrollmentNumber || '', undefined, {
+        numeric: true,
+        sensitivity: 'base',
+      }),
+    );
 
     return {
       data: students,
@@ -311,10 +319,10 @@ export class AdminService {
           inst.departments.map(async (dep) => {
             const studentCount = await this.prisma.authorizedStudent.count({
               where: {
+                institute: inst.code,
                 OR: [
-                  { institute: inst.code, department: dep.code },
+                  { department: dep.name },
                   { department: dep.code },
-                  { department: { contains: dep.code } },
                 ],
               },
             });
@@ -323,17 +331,31 @@ export class AdminService {
               where: { departmentId: dep.id },
             });
 
+            const instSlug = inst.code.toLowerCase();
+            const deptSlug = dep.code.toLowerCase().replace('_', '');
+            const specificHodEmail = `hod.${instSlug}.${deptSlug}@charusat.edu.in`;
+
             const hodUser = await this.prisma.user.findFirst({
-              where: { role: 'HOD' },
+              where: {
+                OR: [
+                  { email: specificHodEmail },
+                  {
+                    facultyProfile: { departmentId: dep.id },
+                    role: 'HOD',
+                  },
+                ],
+              },
               select: { email: true },
             });
+
+            const hodEmail = hodUser ? hodUser.email : (inst.code === 'CSPIT' && dep.code === 'CSE') ? 'hod@charusat.edu.in' : specificHodEmail;
 
             return {
               id: dep.id,
               code: dep.code,
               name: dep.name,
-              hodName: hodUser ? 'Dr. ' + hodUser.email.split('@')[0].toUpperCase() : 'Appointed HOD',
-              hodEmail: hodUser ? hodUser.email : `hod.${dep.code.toLowerCase()}@charusat.edu.in`,
+              hodName: `Dr. HOD (${dep.code})`,
+              hodEmail,
               studentCount,
               facultyCount: Math.max(facultyCount, 1),
               curriculumModules: dep.courses.length,
