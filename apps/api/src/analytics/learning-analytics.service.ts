@@ -1031,7 +1031,19 @@ export class LearningAnalyticsService {
       return;
     }
 
-    // 3. Faculty created assessments for this course
+    // 3. Multi-course assignment check across any institute / department
+    const extraAssignments = ((await this.prisma.$queryRawUnsafe(
+      'SELECT id FROM faculty_course_assignments WHERE (facultyId = ? OR facultyId = ?) AND (courseId = ? OR courseId = ?)',
+      faculty.id,
+      facultyUserId,
+      course.id,
+      course.code,
+    ).catch(() => [])) as any[]) || [];
+    if (extraAssignments && extraAssignments.length > 0) {
+      return;
+    }
+
+    // 4. Faculty created assessments for this course
     const createdAssessment = await this.prisma.assessment.findFirst({
       where: {
         facultyId: faculty.id,
@@ -2510,31 +2522,116 @@ export class LearningAnalyticsService {
   }
 
   /**
+   * Helper to resolve and restrict department access for HOD vs Admin.
+   * If requester is HOD, strictly validates that the requested department is the HOD's department.
+   */
+  async resolveAuthorizedDepartmentForRequester(departmentId?: string, requester?: any) {
+    if (requester?.role === UserRole.HOD) {
+      let hodDeptId = requester.departmentId;
+      if (!hodDeptId) {
+        const fac = await this.prisma.facultyProfile.findUnique({
+          where: { userId: requester.id },
+        });
+        hodDeptId = fac?.departmentId;
+      }
+
+      if (!hodDeptId) {
+        throw new ForbiddenException('No department is assigned to this HOD account.');
+      }
+
+      const hodDept = await this.prisma.department.findUnique({
+        where: { id: hodDeptId },
+      });
+
+      if (!hodDept) {
+        throw new NotFoundException('Assigned HOD department could not be found.');
+      }
+
+      // If a specific departmentId is requested, enforce that it matches HOD's department
+      if (
+        departmentId &&
+        departmentId !== 'me' &&
+        departmentId !== 'my-department' &&
+        departmentId !== hodDept.id &&
+        departmentId.toUpperCase() !== hodDept.code.toUpperCase()
+      ) {
+        throw new ForbiddenException(
+          `Access restricted: As HOD of ${hodDept.name} (${hodDept.code}), you are restricted to viewing data for your department only.`,
+        );
+      }
+
+      return hodDept;
+    }
+
+    // For SUPER_ADMIN / HEAD
+    let targetDept = null;
+    if (departmentId && departmentId !== 'me' && departmentId !== 'my-department') {
+      targetDept = await this.prisma.department.findFirst({
+        where: {
+          OR: [
+            { id: departmentId },
+            { code: departmentId },
+            { code: departmentId.toUpperCase() },
+          ],
+        },
+      });
+    }
+
+    if (!targetDept) {
+      targetDept = await this.prisma.department.findFirst();
+    }
+
+    if (!targetDept) {
+      throw new NotFoundException(`Department ${departmentId || ''} not found.`);
+    }
+
+    return targetDept;
+  }
+
+  /**
+   * Enforces that an HOD can only access courses belonging to their department.
+   */
+  async assertHODAuthorizedForCourse(requester: any, courseId: string): Promise<void> {
+    const hodDept = await this.resolveAuthorizedDepartmentForRequester(undefined, requester);
+    const clean = courseId.replace(/^course-/, '');
+    const course = await this.prisma.course.findFirst({
+      where: {
+        OR: [
+          { id: courseId },
+          { id: clean },
+          { code: courseId },
+          { code: courseId.toUpperCase() },
+          { code: clean.toUpperCase() },
+        ],
+      },
+    });
+
+    if (!course) {
+      throw new NotFoundException('Course not found.');
+    }
+
+    if (course.departmentId !== hodDept.id) {
+      throw new ForbiddenException(
+        `Access restricted: As HOD of ${hodDept.name} (${hodDept.code}), you are restricted to courses belonging to your department only.`,
+      );
+    }
+  }
+
+  /**
    * Department HOD Cohort Analytics: Aggregates curriculum health across all courses in department
    */
-  async getDepartmentCohortAnalytics(departmentId: string) {
-    const department =
-      (await this.prisma.department.findFirst({
-        where: {
-          OR: [{ id: departmentId }, { code: departmentId }, { code: departmentId.toUpperCase() }],
-        },
-        include: {
-          courses: {
-            include: {
-              topics: true,
-            },
+  async getDepartmentCohortAnalytics(departmentId: string, requester?: any) {
+    const departmentRecord = await this.resolveAuthorizedDepartmentForRequester(departmentId, requester);
+    const department = await this.prisma.department.findUnique({
+      where: { id: departmentRecord.id },
+      include: {
+        courses: {
+          include: {
+            topics: true,
           },
         },
-      })) ||
-      (await this.prisma.department.findFirst({
-        include: {
-          courses: {
-            include: {
-              topics: true,
-            },
-          },
-        },
-      }));
+      },
+    });
 
     if (!department) {
       throw new NotFoundException('Department not found.');
@@ -2910,29 +3007,18 @@ export class LearningAnalyticsService {
   /**
    * HOD Department-level Curriculum Health with division comparative metrics.
    */
-  async getHODCurriculumHealth(departmentId: string) {
-    const department =
-      (await this.prisma.department.findFirst({
-        where: {
-          OR: [{ id: departmentId }, { code: departmentId }, { code: departmentId.toUpperCase() }],
-        },
-        include: {
-          courses: {
-            include: {
-              courseOutcomes: true,
-            },
+  async getHODCurriculumHealth(departmentId: string, requester?: any) {
+    const departmentRecord = await this.resolveAuthorizedDepartmentForRequester(departmentId, requester);
+    const department = await this.prisma.department.findUnique({
+      where: { id: departmentRecord.id },
+      include: {
+        courses: {
+          include: {
+            courseOutcomes: true,
           },
         },
-      })) ||
-      (await this.prisma.department.findFirst({
-        include: {
-          courses: {
-            include: {
-              courseOutcomes: true,
-            },
-          },
-        },
-      }));
+      },
+    });
 
     if (!department) {
       throw new NotFoundException(`Department ${departmentId} not found.`);

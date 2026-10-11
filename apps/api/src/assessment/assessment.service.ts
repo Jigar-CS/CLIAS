@@ -167,18 +167,33 @@ export class AssessmentService {
     }
     const resolvedFacultyProfileId = faculty?.id || facultyProfileId;
 
-    if (faculty && faculty.courseId) {
-      if (
-        dto.courseId &&
-        dto.courseId !== faculty.courseId &&
-        resolvedCourse?.id !== faculty.courseId &&
-        resolvedCourse?.code !== faculty.course?.code
-      ) {
-        throw new ForbiddenException(
-          `Unauthorized: You are assigned to teaching "${faculty.course?.name || faculty.courseId}". You can only create assessments for this assigned subject.`,
-        );
+    if (faculty) {
+      const extraAssignments = ((await this.prisma.$queryRawUnsafe(
+        'SELECT courseId FROM faculty_course_assignments WHERE facultyId = ? OR facultyId = ?',
+        faculty.id,
+        faculty.userId,
+      ).catch(() => [])) as any[]) || [];
+      const extraCourseIds = Array.isArray(extraAssignments) ? extraAssignments.map((a: any) => a.courseId) : [];
+      const allowedCourseIds = Array.from(
+        new Set([faculty.courseId, faculty.course?.code, ...extraCourseIds].filter(Boolean)),
+      );
+
+      if (allowedCourseIds.length > 0) {
+        const reqCourseId = resolvedCourse?.id || dto.courseId;
+        const reqCourseCode = resolvedCourse?.code;
+        const isMatch =
+          (reqCourseId && allowedCourseIds.includes(reqCourseId)) ||
+          (reqCourseCode && allowedCourseIds.includes(reqCourseCode));
+
+        if (dto.courseId && !isMatch) {
+          throw new ForbiddenException(
+            `Unauthorized: You can only create assessments for subjects you are assigned to teach.`,
+          );
+        }
+        if (!targetCourseId) {
+          targetCourseId = reqCourseId || faculty.courseId;
+        }
       }
-      targetCourseId = faculty.courseId;
     }
 
     if (!targetCourseId) {
@@ -442,8 +457,20 @@ export class AssessmentService {
       },
     });
 
-    if (faculty && faculty.courseId && assessment.courseId !== faculty.courseId) {
-      throw new ForbiddenException('You can only modify assessments for your assigned course.');
+    if (faculty) {
+      const extraAssignments = ((await this.prisma.$queryRawUnsafe(
+        'SELECT courseId FROM faculty_course_assignments WHERE facultyId = ? OR facultyId = ?',
+        faculty.id,
+        faculty.userId,
+      ).catch(() => [])) as any[]) || [];
+      const extraCourseIds = Array.isArray(extraAssignments) ? extraAssignments.map((a: any) => a.courseId) : [];
+      const allowedCourseIds = Array.from(
+        new Set([faculty.courseId, ...extraCourseIds].filter(Boolean)),
+      );
+
+      if (allowedCourseIds.length > 0 && !allowedCourseIds.includes(assessment.courseId)) {
+        throw new ForbiddenException('You can only modify assessments for your assigned courses.');
+      }
     }
 
     const dataToUpdate: any = {};

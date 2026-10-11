@@ -79,7 +79,7 @@ export default function FacultyQuestionBankPage() {
   const printRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!authLoading && (!user || (user.role !== UserRole.FACULTY && user.role !== UserRole.SUPER_ADMIN && user.role !== UserRole.HOD))) {
+    if (!authLoading && (!user || (user.role !== UserRole.FACULTY && user.role !== UserRole.SUPER_ADMIN && user.role !== UserRole.HOD && !user.isFaculty))) {
       router.push('/auth/login');
       return;
     }

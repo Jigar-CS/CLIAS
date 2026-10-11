@@ -22,13 +22,32 @@ export class RolesGuard implements CanActivate {
       throw new ForbiddenException('Access denied: Authentication missing role credentials');
     }
 
-    const hasRole = requiredRoles.includes(user.role);
-    if (!hasRole) {
-      throw new ForbiddenException(
-        `Access denied: Role '${user.role}' does not have permission for this resource. Required: [${requiredRoles.join(', ')}]`,
-      );
+    if (user.role === UserRole.SUPER_ADMIN) {
+      return true;
     }
 
-    return true;
+    if (requiredRoles.includes(user.role)) {
+      return true;
+    }
+
+    // Dual-role check: Faculty with counsellor privileges
+    if (
+      requiredRoles.includes(UserRole.COUNSELLOR) &&
+      (user.isCounsellor || user.role === UserRole.HOD)
+    ) {
+      return true;
+    }
+
+    // Dual-role check: Counsellor with faculty privileges
+    if (
+      requiredRoles.includes(UserRole.FACULTY) &&
+      (user.isFaculty || user.role === UserRole.HOD)
+    ) {
+      return true;
+    }
+
+    throw new ForbiddenException(
+      `Access denied: Role '${user.role}' does not have permission for this resource. Required: [${requiredRoles.join(', ')}]`,
+    );
   }
 }

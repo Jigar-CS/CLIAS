@@ -22,7 +22,9 @@ import {
   School,
   Layers,
   Sparkles,
+  BookOpen,
 } from 'lucide-react';
+import { FacultyCourseAssignmentModal } from '@/components/FacultyCourseAssignmentModal';
 
 interface DepartmentItem {
   id: string;
@@ -53,6 +55,7 @@ export default function AdminInstitutesPage() {
   const [selectedInstituteId, setSelectedInstituteId] = useState<string>('');
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showFacultyModal, setShowFacultyModal] = useState(false);
   const [newDepCode, setNewDepCode] = useState('');
   const [newDepName, setNewDepName] = useState('');
   const [newHodName, setNewHodName] = useState('');
@@ -163,13 +166,22 @@ export default function AdminInstitutesPage() {
               </p>
             </div>
 
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Add Department</span>
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => setShowFacultyModal(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs transition"
+              >
+                <BookOpen className="w-4 h-4" />
+                <span>Assign Faculty Subjects</span>
+              </button>
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Add Department</span>
+              </button>
+            </div>
           </div>
 
           {/* Metric Overview */}
@@ -404,6 +416,13 @@ export default function AdminInstitutesPage() {
           </div>
         </div>
       )}
+
+      {/* Faculty Course Assignment Modal */}
+      <FacultyCourseAssignmentModal
+        isOpen={showFacultyModal}
+        onClose={() => setShowFacultyModal(false)}
+        onSuccess={() => loadInstitutes()}
+      />
     </div>
   );
 }

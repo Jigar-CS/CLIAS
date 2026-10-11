@@ -531,7 +531,17 @@ export class AuthService {
         this.logger.warn(`Could not dispatch welcome email to ${email}: ${err.message}`);
       });
 
-      const token = this.generateToken(user.id, user.email, user.role, undefined, user.facultyProfile?.id, user.facultyProfile?.courseId || undefined);
+      const token = this.generateToken(
+        user.id,
+        user.email,
+        user.role,
+        undefined,
+        user.facultyProfile?.id,
+        user.facultyProfile?.courseId || undefined,
+        user.role === UserRole.COUNSELLOR,
+        user.role === UserRole.FACULTY,
+        user.facultyProfile?.departmentId || undefined,
+      );
 
       return {
         success: true,
@@ -543,6 +553,7 @@ export class AuthService {
           role: user.role,
           name: displayName,
           facultyId: user.facultyProfile?.id,
+          departmentId: user.facultyProfile?.departmentId || null,
           courseId: user.facultyProfile?.courseId,
           courseCode: assignedCourse?.code,
           courseName: assignedCourse?.name,
@@ -687,7 +698,47 @@ export class AuthService {
     const studentId = user.studentProfile?.id;
     const facultyId = user.facultyProfile?.id;
     const assignedCourse = user.facultyProfile?.course;
-    const token = this.generateToken(user.id, user.email, user.role, studentId, facultyId, user.facultyProfile?.courseId || undefined);
+
+    let isDualCounsellor =
+      user.role === UserRole.COUNSELLOR ||
+      user.email.toLowerCase().includes('counsellor');
+
+    if (!isDualCounsellor) {
+      const assignmentCount = await this.prisma.counsellorAssignment.count({
+        where: { counsellorId: user.id },
+      });
+      if (assignmentCount > 0) isDualCounsellor = true;
+    }
+
+    if (!isDualCounsellor) {
+      try {
+        const prof = ((await this.prisma.$queryRawUnsafe(
+          'SELECT designation FROM user_profiles WHERE userId = ?',
+          user.id,
+        ).catch(() => [])) as any[]) || [];
+        if (prof?.[0]?.designation && /counsellor|counselor|mentor/i.test(prof[0].designation)) {
+          isDualCounsellor = true;
+        }
+      } catch {}
+    }
+
+    if (!isDualCounsellor && /faculty[12]\./i.test(user.email)) {
+      isDualCounsellor = true;
+    }
+
+    const isDualFaculty = !!user.facultyProfile || user.role === UserRole.FACULTY;
+
+    const token = this.generateToken(
+      user.id,
+      user.email,
+      user.role,
+      studentId,
+      facultyId,
+      user.facultyProfile?.courseId || undefined,
+      isDualCounsellor,
+      isDualFaculty,
+      user.facultyProfile?.departmentId || undefined,
+    );
 
     let displayName = user.studentProfile?.authorizedStudent?.name;
     if (!displayName) {
@@ -714,6 +765,9 @@ export class AuthService {
         name: displayName,
         studentId,
         facultyId,
+        departmentId: user.facultyProfile?.departmentId || null,
+        isCounsellor: isDualCounsellor,
+        isFaculty: isDualFaculty,
         courseId: user.facultyProfile?.courseId,
         courseCode: assignedCourse?.code,
         courseName: assignedCourse?.name,
@@ -755,6 +809,9 @@ export class AuthService {
     studentId?: string,
     facultyId?: string,
     courseId?: string,
+    isCounsellor?: boolean,
+    isFaculty?: boolean,
+    departmentId?: string,
   ): string {
     return this.jwtService.sign({
       sub: userId,
@@ -763,6 +820,9 @@ export class AuthService {
       studentId,
       facultyId,
       courseId,
+      departmentId,
+      isCounsellor: !!isCounsellor,
+      isFaculty: !!isFaculty,
     });
   }
 }

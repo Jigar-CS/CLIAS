@@ -8,6 +8,7 @@ import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
 import { MetricCard } from '@/components/MetricCard';
 import { CounsellorAssignmentModal } from '@/components/CounsellorAssignmentModal';
+import { FacultyCourseAssignmentModal } from '@/components/FacultyCourseAssignmentModal';
 import { UserRole } from '@clias/shared-types';
 import {
   Building2,
@@ -57,6 +58,7 @@ export default function HodDashboard() {
   const [fetching, setFetching] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'obe' | 'divisions'>('obe');
   const [isCounsellorModalOpen, setIsCounsellorModalOpen] = useState(false);
+  const [isFacultyModalOpen, setIsFacultyModalOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && (!user || (user.role !== UserRole.HOD && user.role !== UserRole.SUPER_ADMIN))) {
@@ -76,14 +78,16 @@ export default function HodDashboard() {
       const courseList = Array.isArray(coursesRes) ? coursesRes : [];
       setCourses(courseList);
 
-      const targetCourseId = courseId || selectedCourseId || courseList?.[0]?.id || 'CS301';
+      const targetCourseId = courseId || selectedCourseId || courseList?.[0]?.id;
       if (!selectedCourseId && courseList?.[0]?.id) {
         setSelectedCourseId(courseList[0].id);
       }
 
       const [obeRes, healthRes]: any = await Promise.all([
-        api.get(`/analytics/obe/courses/${targetCourseId}/attainment`).catch(() => null),
-        api.get('/analytics/hod/curriculum-health/CSE').catch(() => null),
+        targetCourseId
+          ? api.get(`/analytics/obe/courses/${targetCourseId}/attainment`).catch(() => null)
+          : Promise.resolve(null),
+        api.get('/analytics/hod/curriculum-health/me').catch(() => null),
       ]);
       setObeData(obeRes);
       setCurriculumHealth(healthRes);
@@ -136,6 +140,13 @@ export default function HodDashboard() {
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => setIsFacultyModalOpen(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-xs transition transform hover:-translate-y-0.5"
+              >
+                <BookOpen className="w-4 h-4" />
+                <span>Assign Faculty Subjects</span>
+              </button>
               <button
                 onClick={() => setIsCounsellorModalOpen(true)}
                 className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl shadow-xs transition transform hover:-translate-y-0.5"
@@ -434,6 +445,13 @@ export default function HodDashboard() {
       <CounsellorAssignmentModal
         isOpen={isCounsellorModalOpen}
         onClose={() => setIsCounsellorModalOpen(false)}
+        onSuccess={() => loadOBEAndCurriculumData()}
+      />
+
+      {/* Faculty Course Multi-Assignment Modal */}
+      <FacultyCourseAssignmentModal
+        isOpen={isFacultyModalOpen}
+        onClose={() => setIsFacultyModalOpen(false)}
         onSuccess={() => loadOBEAndCurriculumData()}
       />
     </div>

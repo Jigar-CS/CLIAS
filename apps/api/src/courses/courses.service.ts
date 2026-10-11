@@ -5,7 +5,78 @@ import { PrismaService } from '../prisma/prisma.service';
 export class CoursesService {
   constructor(private prisma: PrismaService) {}
 
-  async getAllCourses() {
+  async getAllCourses(requester?: any) {
+    // 1. If requester is FACULTY, find all assigned courses (primary course + faculty_course_assignments)
+    if (requester?.role === 'FACULTY') {
+      const faculty = await this.prisma.facultyProfile.findUnique({
+        where: { userId: requester.id },
+      });
+      if (faculty) {
+        const extraAssignments = ((await this.prisma.$queryRawUnsafe(
+          'SELECT courseId FROM faculty_course_assignments WHERE facultyId = ?',
+          faculty.id,
+        ).catch(() => [])) as any[]) || [];
+        const extraCourseIds = Array.isArray(extraAssignments) ? extraAssignments.map((a: any) => a.courseId) : [];
+        const allCourseIds = Array.from(new Set([faculty.courseId, ...extraCourseIds].filter(Boolean)));
+
+        if (allCourseIds.length > 0) {
+          return this.prisma.course.findMany({
+            where: { id: { in: allCourseIds } },
+            include: {
+              topics: {
+                select: {
+                  id: true,
+                  name: true,
+                  slug: true,
+                  _count: { select: { questions: true } },
+                },
+              },
+              _count: { select: { questions: true } },
+            },
+            orderBy: { code: 'asc' },
+          });
+        }
+      }
+    }
+
+    // 2. If requester is HOD, restrict to their department's courses
+    if (requester?.role === 'HOD') {
+      let deptId = requester.departmentId;
+      if (!deptId) {
+        const faculty = await this.prisma.facultyProfile.findUnique({
+          where: { userId: requester.id },
+        });
+        deptId = faculty?.departmentId;
+      }
+      if (!deptId && requester.email) {
+        const emailParts = requester.email.toLowerCase().split('@')[0].split('.');
+        const deptCode = emailParts[emailParts.length - 1].toUpperCase();
+        const dept = await this.prisma.department.findFirst({
+          where: { OR: [{ code: deptCode }, { code: `D_${deptCode}` }] },
+        });
+        deptId = dept?.id;
+      }
+
+      if (deptId) {
+        return this.prisma.course.findMany({
+          where: { departmentId: deptId },
+          include: {
+            topics: {
+              select: {
+                id: true,
+                name: true,
+                slug: true,
+                _count: { select: { questions: true } },
+              },
+            },
+            _count: { select: { questions: true } },
+          },
+          orderBy: { code: 'asc' },
+        });
+      }
+    }
+
+    // 3. Super Admin, Students, or general access
     return this.prisma.course.findMany({
       include: {
         topics: {
@@ -13,14 +84,10 @@ export class CoursesService {
             id: true,
             name: true,
             slug: true,
-            _count: {
-              select: { questions: true },
-            },
+            _count: { select: { questions: true } },
           },
         },
-        _count: {
-          select: { questions: true },
-        },
+        _count: { select: { questions: true } },
       },
       orderBy: { code: 'asc' },
     });

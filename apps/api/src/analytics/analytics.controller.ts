@@ -205,8 +205,8 @@ export class AnalyticsController {
 
   @Get('department/:departmentId/summary')
   @Roles(UserRole.HOD, UserRole.SUPER_ADMIN)
-  async getDepartmentCohortAnalytics(@Param('departmentId') departmentId: string) {
-    return this.analyticsService.getDepartmentCohortAnalytics(departmentId);
+  async getDepartmentCohortAnalytics(@Request() req, @Param('departmentId') departmentId: string) {
+    return this.analyticsService.getDepartmentCohortAnalytics(departmentId, req.user);
   }
 
   @Get('institutional/summary')
@@ -224,6 +224,8 @@ export class AnalyticsController {
   async getCourseOBEAttainment(@Request() req, @Param('courseId') courseId: string) {
     if (req.user?.role === UserRole.FACULTY) {
       await this.analyticsService.assertFacultyAuthorizedForCourse(req.user.id, courseId);
+    } else if (req.user?.role === UserRole.HOD) {
+      await this.analyticsService.assertHODAuthorizedForCourse(req.user, courseId);
     }
     return this.analyticsService.getCourseOBEAttainment(courseId);
   }
@@ -246,7 +248,7 @@ export class AnalyticsController {
 
   @Get('hod/curriculum-health/:departmentId')
   @Roles(UserRole.HOD, UserRole.HEAD, UserRole.SUPER_ADMIN)
-  async getHODCurriculumHealth(@Param('departmentId') departmentId: string) {
-    return this.analyticsService.getHODCurriculumHealth(departmentId);
+  async getHODCurriculumHealth(@Request() req, @Param('departmentId') departmentId: string) {
+    return this.analyticsService.getHODCurriculumHealth(departmentId, req.user);
   }
 }

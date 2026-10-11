@@ -10,6 +10,9 @@ interface JwtPayload {
   studentId?: string;
   facultyId?: string;
   courseId?: string;
+  isCounsellor?: boolean;
+  isFaculty?: boolean;
+  departmentId?: string;
 }
 
 @Injectable()
@@ -47,6 +50,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       studentId: payload.studentId,
       facultyId: payload.facultyId,
       courseId: payload.courseId,
+      departmentId: payload.departmentId,
+      isCounsellor: payload.isCounsellor ?? false,
+      isFaculty: payload.isFaculty ?? false,
       // Backwards-compatible shape for controllers that access req.user.studentProfile?.id
       studentProfile: payload.studentId ? { id: payload.studentId } : null,
       facultyProfile: payload.facultyId ? { id: payload.facultyId } : null,

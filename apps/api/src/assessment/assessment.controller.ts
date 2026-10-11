@@ -92,7 +92,7 @@ export class AssessmentController {
       req.user?.facultyId ||
       req.user?.facultyProfile?.id ||
       req.user?.id;
-    if (req.user?.role === UserRole.FACULTY && req.user?.courseId) {
+    if (req.user?.role === UserRole.FACULTY && !dto.courseId && req.user?.courseId) {
       dto.courseId = req.user.courseId;
     }
     return this.assessmentService.createAssessment(facultyProfileId, dto);

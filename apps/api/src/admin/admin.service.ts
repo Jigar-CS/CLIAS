@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 
 export interface ParsedStudentRow {
@@ -404,5 +404,242 @@ export class AdminService {
   async updateSettings(settings: Record<string, any>) {
     this.customSettings = { ...this.customSettings, ...settings };
     return this.getSettings();
+  }
+
+  // ===========================================================================
+  // Faculty Multi-Course Assignment Management (Super Admin & HOD)
+  // ===========================================================================
+
+  async getFacultyCourseAssignments(requester?: any) {
+    let hodDeptId: string | null = null;
+    if (requester?.role === 'HOD') {
+      hodDeptId = requester.departmentId;
+      if (!hodDeptId) {
+        const fac = await this.prisma.facultyProfile.findUnique({
+          where: { userId: requester.id },
+        });
+        hodDeptId = fac?.departmentId || null;
+      }
+    }
+
+    // 1. Fetch all faculty profiles with user, department, and primary course
+    const faculties = await this.prisma.facultyProfile.findMany({
+      include: {
+        user: { select: { id: true, email: true, role: true } },
+        course: {
+          select: {
+            id: true,
+            code: true,
+            name: true,
+            department: {
+              select: {
+                id: true,
+                code: true,
+                name: true,
+                institute: { select: { code: true, name: true } },
+              },
+            },
+          },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // 2. Fetch all rows from faculty_course_assignments
+    const rawAssignments = ((await this.prisma.$queryRawUnsafe(
+      'SELECT id, facultyId, courseId, assignedAt FROM faculty_course_assignments',
+    ).catch(() => [])) as any[]) || [];
+
+    // 3. Fetch courses metadata for extra assignments
+    const allAssignedCourseIds = Array.from(new Set(rawAssignments.map((a: any) => a.courseId)));
+    const courses = await this.prisma.course.findMany({
+      where: { id: { in: allAssignedCourseIds } },
+      select: {
+        id: true,
+        code: true,
+        name: true,
+        department: {
+          select: {
+            id: true,
+            code: true,
+            name: true,
+            institute: { select: { code: true, name: true } },
+          },
+        },
+      },
+    });
+    const courseMap = new Map(courses.map((c) => [c.id, c]));
+
+    // 4. Fetch available courses: if HOD, strictly their department's courses; if SUPER_ADMIN, all courses
+    const availableCourses = await this.prisma.course.findMany({
+      where: hodDeptId ? { departmentId: hodDeptId } : {},
+      select: {
+        id: true,
+        code: true,
+        name: true,
+        semester: true,
+        department: {
+          select: {
+            id: true,
+            code: true,
+            name: true,
+            institute: { select: { code: true, name: true } },
+          },
+        },
+      },
+      orderBy: [{ departmentId: 'asc' }, { code: 'asc' }],
+    });
+
+    const result = faculties.map((f) => {
+      // Find extra assignments for this faculty (matching either f.id or f.userId)
+      const assigned = rawAssignments
+        .filter((a: any) => a.facultyId === f.id || a.facultyId === f.userId)
+        .map((a: any) => {
+          const c = courseMap.get(a.courseId);
+          return {
+            assignmentId: a.id,
+            courseId: a.courseId,
+            courseCode: c?.code || a.courseId,
+            courseName: c?.name || 'Unknown Course',
+            department: c?.department,
+            assignedAt: a.assignedAt,
+          };
+        });
+
+      return {
+        facultyId: f.id,
+        userId: f.userId,
+        email: f.user.email,
+        employeeCode: f.employeeCode,
+        departmentId: f.departmentId,
+        primaryCourse: f.course,
+        additionalCourses: assigned,
+      };
+    });
+
+    return {
+      faculties: result,
+      availableCourses,
+      isHOD: !!hodDeptId,
+      hodDepartmentId: hodDeptId,
+    };
+  }
+
+  async assignCourseToFaculty(requester: any, facultyId: string, courseId: string) {
+    if (!facultyId || !courseId) {
+      throw new BadRequestException('Faculty ID and Course ID are required.');
+    }
+
+    // Verify course
+    const course = await this.prisma.course.findFirst({
+      where: { OR: [{ id: courseId }, { code: courseId }] },
+    });
+    if (!course) {
+      throw new BadRequestException('Course not found.');
+    }
+
+    // If HOD, verify course belongs to HOD's department
+    if (requester?.role === 'HOD') {
+      let hodDeptId = requester.departmentId;
+      if (!hodDeptId) {
+        const fac = await this.prisma.facultyProfile.findUnique({
+          where: { userId: requester.id },
+        });
+        hodDeptId = fac?.departmentId;
+      }
+      if (!hodDeptId || course.departmentId !== hodDeptId) {
+        throw new ForbiddenException(
+          'Access denied: As an HOD, you can only assign faculty to subjects within your own department.',
+        );
+      }
+    }
+
+    // Verify faculty
+    const faculty = await this.prisma.facultyProfile.findFirst({
+      where: { OR: [{ id: facultyId }, { userId: facultyId }] },
+    });
+    if (!faculty) {
+      throw new BadRequestException('Faculty profile not found.');
+    }
+
+    // Check if course is already primary
+    if (faculty.courseId === course.id) {
+      return { success: true, message: `Course ${course.code} is already the primary subject for this faculty.` };
+    }
+
+    // Check existing in faculty_course_assignments
+    const existing = ((await this.prisma.$queryRawUnsafe(
+      'SELECT id FROM faculty_course_assignments WHERE (facultyId = ? OR facultyId = ?) AND courseId = ?',
+      faculty.id,
+      faculty.userId,
+      course.id,
+    ).catch(() => [])) as any[]) || [];
+
+    if (existing && existing.length > 0) {
+      return { success: true, message: `Faculty is already assigned to ${course.code}.` };
+    }
+
+    const id = `fac_course_${Date.now()}_${Math.random().toString(36).substring(2, 8)}`;
+    await this.prisma.$queryRawUnsafe(
+      'INSERT INTO faculty_course_assignments (id, facultyId, courseId, assignedAt) VALUES (?, ?, ?, NOW())',
+      id,
+      faculty.id,
+      course.id,
+    );
+
+    return {
+      success: true,
+      message: `Successfully assigned ${course.code} (${course.name}) to faculty ${faculty.employeeCode || faculty.id}.`,
+      assignmentId: id,
+    };
+  }
+
+  async removeCourseFromFaculty(requester: any, facultyId: string, courseId: string) {
+    if (!facultyId || !courseId) {
+      throw new BadRequestException('Faculty ID and Course ID are required.');
+    }
+
+    const course = await this.prisma.course.findFirst({
+      where: { OR: [{ id: courseId }, { code: courseId }] },
+    });
+    if (!course) {
+      throw new BadRequestException('Course not found.');
+    }
+
+    // If HOD, verify course belongs to HOD's department
+    if (requester?.role === 'HOD') {
+      let hodDeptId = requester.departmentId;
+      if (!hodDeptId) {
+        const fac = await this.prisma.facultyProfile.findUnique({
+          where: { userId: requester.id },
+        });
+        hodDeptId = fac?.departmentId;
+      }
+      if (!hodDeptId || course.departmentId !== hodDeptId) {
+        throw new ForbiddenException(
+          'Access denied: As an HOD, you can only remove course assignments within your own department.',
+        );
+      }
+    }
+
+    const faculty = await this.prisma.facultyProfile.findFirst({
+      where: { OR: [{ id: facultyId }, { userId: facultyId }] },
+    });
+    if (!faculty) {
+      throw new BadRequestException('Faculty profile not found.');
+    }
+
+    await this.prisma.$queryRawUnsafe(
+      'DELETE FROM faculty_course_assignments WHERE (facultyId = ? OR facultyId = ?) AND (courseId = ? OR courseId = ?)',
+      faculty.id,
+      faculty.userId,
+      course.id,
+      course.code,
+    );
+
+    return {
+      success: true,
+      message: `Successfully unassigned ${course.code} from faculty.`,
+    };
   }
 }

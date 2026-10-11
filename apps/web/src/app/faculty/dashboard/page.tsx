@@ -33,7 +33,7 @@ export default function FacultyDashboard() {
   const [fetching, setFetching] = useState(false);
 
   useEffect(() => {
-    if (!loading && (!user || (user.role !== UserRole.FACULTY && user.role !== UserRole.SUPER_ADMIN))) {
+    if (!loading && (!user || (user.role !== UserRole.FACULTY && user.role !== UserRole.SUPER_ADMIN && user.role !== UserRole.HOD && !user.isFaculty))) {
       router.push('/auth/login');
       return;
     }

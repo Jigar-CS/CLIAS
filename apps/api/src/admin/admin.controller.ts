@@ -12,6 +12,7 @@ import {
   HttpStatus,
   Res,
   BadRequestException,
+  Req,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AdminService, ParsedStudentRow } from './admin.service';
@@ -143,5 +144,34 @@ export class AdminController {
     res.setHeader('Content-Type', sample.mimeType);
     res.setHeader('Content-Disposition', `attachment; filename="${sample.filename}"`);
     return res.send(sample.buffer);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Faculty Multi-Course Assignment Management (Super Admin & HOD)
+  // ---------------------------------------------------------------------------
+
+  @Get('faculty-course-assignments')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.HOD)
+  async getFacultyCourseAssignments(@Req() req: any) {
+    return this.adminService.getFacultyCourseAssignments(req.user);
+  }
+
+  @Post('faculty-course-assignments')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.HOD)
+  async assignCourseToFaculty(
+    @Req() req: any,
+    @Body() body: { facultyId: string; courseId: string },
+  ) {
+    return this.adminService.assignCourseToFaculty(req.user, body.facultyId, body.courseId);
+  }
+
+  @Delete('faculty-course-assignments/:facultyId/:courseId')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.HOD)
+  async removeCourseFromFaculty(
+    @Req() req: any,
+    @Param('facultyId') facultyId: string,
+    @Param('courseId') courseId: string,
+  ) {
+    return this.adminService.removeCourseFromFaculty(req.user, facultyId, courseId);
   }
 }

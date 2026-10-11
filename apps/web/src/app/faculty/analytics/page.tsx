@@ -96,7 +96,7 @@ export default function FacultyClassAnalyticsPage() {
   useEffect(() => {
     if (
       !authLoading &&
-      (!user || (user.role !== UserRole.FACULTY && user.role !== UserRole.SUPER_ADMIN))
+      (!user || (user.role !== UserRole.FACULTY && user.role !== UserRole.SUPER_ADMIN && user.role !== UserRole.HOD && !user.isFaculty))
     ) {
       router.push('/auth/login');
       return;

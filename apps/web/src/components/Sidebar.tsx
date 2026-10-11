@@ -69,6 +69,9 @@ export function Sidebar({ isLocked = false, onLockedClick }: SidebarProps = {}) 
     { name: 'System Overview', href: '/admin/dashboard', icon: LayoutDashboard },
     { name: 'Authorized Students', href: '/admin/students', icon: Users },
     { name: 'Institution Hierarchy', href: '/admin/institutes', icon: Building2 },
+    { name: 'HOD Department View', href: '/hod/dashboard', icon: Building2 },
+    { name: 'Counsellor Console', href: '/counsellor/dashboard', icon: ShieldCheck },
+    { name: 'Faculty Console', href: '/faculty/dashboard', icon: BookOpen },
     { name: 'System Settings', href: '/admin/settings', icon: Settings },
     { name: 'My Profile', href: '/admin/profile', icon: UserCircle },
   ];
@@ -82,6 +85,9 @@ export function Sidebar({ isLocked = false, onLockedClick }: SidebarProps = {}) 
     { name: 'Exam Studio', href: '/faculty/assessments', icon: FileCheck },
     { name: 'Plagiarism Studio', href: '/faculty/plagiarism', icon: GitCompare },
     { name: 'Invigilation Console', href: '/faculty/invigilation', icon: ShieldCheck },
+    ...(user.isCounsellor
+      ? [{ name: 'Counsellor Panel (Dual Role)', href: '/counsellor/dashboard', icon: Users }]
+      : []),
     { name: 'My Profile', href: '/faculty/profile', icon: UserCircle },
   ];
 
@@ -89,12 +95,17 @@ export function Sidebar({ isLocked = false, onLockedClick }: SidebarProps = {}) 
     { name: 'Counsellor Dashboard', href: '/counsellor/dashboard', icon: LayoutDashboard },
     { name: 'Assigned Students', href: '/counsellor/students', icon: Users },
     { name: 'Intervention Alerts', href: '/counsellor/alerts', icon: ShieldCheck },
+    ...(user.isFaculty
+      ? [{ name: 'Faculty Console (Dual Role)', href: '/faculty/dashboard', icon: BookOpen }]
+      : []),
     { name: 'My Profile', href: '/counsellor/profile', icon: UserCircle },
   ];
 
   const hodLinks = [
     { name: 'Department Dashboard', href: '/hod/dashboard', icon: LayoutDashboard },
     { name: 'Curriculum Mastery', href: '/hod/dashboard#curriculum', icon: TrendingUp },
+    { name: 'Faculty Console', href: '/faculty/dashboard', icon: BookOpen },
+    { name: 'Counsellor Panel', href: '/counsellor/dashboard', icon: Users },
     { name: 'My Profile', href: '/hod/profile', icon: UserCircle },
   ];
 

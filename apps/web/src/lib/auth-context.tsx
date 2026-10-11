@@ -16,6 +16,8 @@ export interface UserSession {
   courseId?: string;
   courseCode?: string;
   courseName?: string;
+  isCounsellor?: boolean;
+  isFaculty?: boolean;
   assignedCourse?: {
     id: string;
     code: string;
