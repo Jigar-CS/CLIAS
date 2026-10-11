@@ -983,22 +983,14 @@ export default function FacultyAssessmentsPage() {
             </div>
 
             <div className="flex items-center gap-3">
-              {user?.courseId ? (
-                <div className="px-3.5 py-2 bg-emerald-950/60 border border-emerald-500/30 rounded-xl text-emerald-200 text-xs font-bold flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <span>
-                    Subject: {user.courseCode || courses.find((c) => c.id === selectedCourseId)?.code} - {user.courseName || courses.find((c) => c.id === selectedCourseId)?.name}
-                  </span>
-                  <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 ml-1">Fixed</span>
-                </div>
-              ) : (
+              {courses.length > 1 ? (
                 <select
                   value={selectedCourseId}
                   onChange={(e) => {
                     setSelectedCourseId(e.target.value);
                     loadCourseAssessments(e.target.value);
                   }}
-                  className="p-2.5 text-xs font-semibold bg-[#1E293B] border border-slate-700 rounded-xl text-white focus:outline-none focus:border-indigo-500"
+                  className="p-2.5 text-xs font-semibold bg-[#1E293B] border border-slate-700 rounded-xl text-white focus:outline-none focus:border-indigo-500 cursor-pointer"
                 >
                   {courses.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -1006,7 +998,15 @@ export default function FacultyAssessmentsPage() {
                     </option>
                   ))}
                 </select>
-              )}
+              ) : courses.length === 1 ? (
+                <div className="px-3.5 py-2 bg-emerald-950/60 border border-emerald-500/30 rounded-xl text-emerald-200 text-xs font-bold flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                  <span>
+                    Subject: {courses[0].code} - {courses[0].name}
+                  </span>
+                  <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 ml-1">Fixed</span>
+                </div>
+              ) : null}
 
               <button
                 type="button"

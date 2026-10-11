@@ -348,7 +348,7 @@ export default function FacultyClassAnalyticsPage() {
                     ? 'Class Performance Intelligence'
                     : 'Student Learning Performance Deep-Dive'}
                 </h2>
-                {coursesList.length > 0 && (
+                {coursesList.length > 1 ? (
                   <select
                     value={selectedCourseId}
                     onChange={(e) => setSelectedCourseId(e.target.value)}
@@ -364,7 +364,11 @@ export default function FacultyClassAnalyticsPage() {
                       </option>
                     ))}
                   </select>
-                )}
+                ) : coursesList.length === 1 ? (
+                  <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                    {coursesList[0].code} - {coursesList[0].name}
+                  </span>
+                ) : null}
                 <select
                   value={selectedDivision}
                   onChange={(e) => setSelectedDivision(e.target.value)}

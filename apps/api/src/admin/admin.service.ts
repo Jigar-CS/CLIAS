@@ -420,10 +420,19 @@ export class AdminService {
         });
         hodDeptId = fac?.departmentId || null;
       }
+      if (!hodDeptId && requester.email) {
+        const emailParts = requester.email.toLowerCase().split('@')[0].split('.');
+        const deptCode = emailParts[emailParts.length - 1].toUpperCase();
+        const dept = await this.prisma.department.findFirst({
+          where: { OR: [{ code: deptCode }, { code: `D_${deptCode}` }] },
+        });
+        hodDeptId = dept?.id || null;
+      }
     }
 
-    // 1. Fetch all faculty profiles with user, department, and primary course
+    // 1. Fetch all faculty profiles with user, department, and primary course (restricted to department if HOD)
     const faculties = await this.prisma.facultyProfile.findMany({
+      where: hodDeptId ? { departmentId: hodDeptId } : {},
       include: {
         user: { select: { id: true, email: true, role: true } },
         course: {

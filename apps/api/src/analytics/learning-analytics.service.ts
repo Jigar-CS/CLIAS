@@ -1176,16 +1176,51 @@ export class LearningAnalyticsService {
           { code: clean.toUpperCase() },
         ],
       },
-      include: { department: true },
+      include: { department: { include: { institute: true } } },
     });
 
     if (!course) {
       throw new NotFoundException('Course not found.');
     }
 
+    const courseDept = course.department;
+    const courseInstCode = courseDept?.institute?.code;
+    const courseDeptName = courseDept?.name;
+    const courseDeptCode = courseDept?.code;
+
+    const deptMatchConditions: any[] = [];
+    if (courseDeptName) {
+      deptMatchConditions.push({ department: courseDeptName });
+      if (courseDeptName.includes(' and ')) {
+        deptMatchConditions.push({ department: courseDeptName.replace(' and ', ' & ') });
+      } else if (courseDeptName.includes(' & ')) {
+        deptMatchConditions.push({ department: courseDeptName.replace(' & ', ' and ') });
+      }
+    }
+    if (courseDeptCode) {
+      deptMatchConditions.push({ department: { contains: courseDeptCode } });
+    }
+
     const students = await this.prisma.authorizedStudent.findMany({
       where: {
         ...(allowedDivisionsForQuery ? { division: { in: allowedDivisionsForQuery } } : {}),
+        OR: [
+          {
+            AND: [
+              ...(courseInstCode ? [{ institute: courseInstCode }] : []),
+              { OR: deptMatchConditions.length > 0 ? deptMatchConditions : [{ department: courseDeptName || '' }] },
+            ],
+          },
+          {
+            studentProfile: {
+              OR: [
+                { attempts: { some: { question: { courseId: course.id } } } },
+                { assessmentSubmissions: { some: { assessment: { courseId: course.id } } } },
+                { skillMasteries: { some: { topic: { courseId: course.id } } } },
+              ],
+            },
+          },
+        ],
       },
       include: {
         studentProfile: {
@@ -1731,7 +1766,7 @@ export class LearningAnalyticsService {
         ],
       },
       include: {
-        department: true,
+        department: { include: { institute: true } },
         topics: {
           select: {
             id: true,
@@ -1749,10 +1784,45 @@ export class LearningAnalyticsService {
       throw new NotFoundException(`Course not found.`);
     }
 
-    // 1. Fetch enrolled students in this cohort / division
+    const courseDept = course.department;
+    const courseInstCode = courseDept?.institute?.code;
+    const courseDeptName = courseDept?.name;
+    const courseDeptCode = courseDept?.code;
+
+    const deptMatchConditions: any[] = [];
+    if (courseDeptName) {
+      deptMatchConditions.push({ department: courseDeptName });
+      if (courseDeptName.includes(' and ')) {
+        deptMatchConditions.push({ department: courseDeptName.replace(' and ', ' & ') });
+      } else if (courseDeptName.includes(' & ')) {
+        deptMatchConditions.push({ department: courseDeptName.replace(' & ', ' and ') });
+      }
+    }
+    if (courseDeptCode) {
+      deptMatchConditions.push({ department: { contains: courseDeptCode } });
+    }
+
+    // 1. Fetch enrolled students in this cohort / division strictly for this course's department
     const enrolledStudents = await this.prisma.authorizedStudent.findMany({
       where: {
         ...(allowedDivisionsForQuery ? { division: { in: allowedDivisionsForQuery } } : {}),
+        OR: [
+          {
+            AND: [
+              ...(courseInstCode ? [{ institute: courseInstCode }] : []),
+              { OR: deptMatchConditions.length > 0 ? deptMatchConditions : [{ department: courseDeptName || '' }] },
+            ],
+          },
+          {
+            studentProfile: {
+              OR: [
+                { attempts: { some: { question: { courseId: course.id } } } },
+                { assessmentSubmissions: { some: { assessment: { courseId: course.id } } } },
+                { skillMasteries: { some: { topic: { courseId: course.id } } } },
+              ],
+            },
+          },
+        ],
       },
       include: {
         studentProfile: true,
@@ -2056,8 +2126,11 @@ export class LearningAnalyticsService {
         ? [...attemptedTopics].sort((a, b) => a.classAverageMastery - b.classAverageMastery).slice(0, 3)
         : [];
 
-    // Active CS cohort divisions
-    const availableDivisions = ['CS Div 1', 'CS Div 2'];
+    // Active cohort divisions dynamically derived from the course's department students
+    const cohortDivisions = Array.from(
+      new Set(enrolledStudents.map((s) => s.division).filter(Boolean)),
+    ).sort();
+    const availableDivisions = cohortDivisions.length > 0 ? cohortDivisions : ['CS Div 1', 'CS Div 2'];
 
     const result = {
       courseId: course.id,
@@ -2533,6 +2606,14 @@ export class LearningAnalyticsService {
           where: { userId: requester.id },
         });
         hodDeptId = fac?.departmentId;
+      }
+      if (!hodDeptId && requester?.email) {
+        const emailParts = requester.email.toLowerCase().split('@')[0].split('.');
+        const deptCode = emailParts[emailParts.length - 1].toUpperCase();
+        const dept = await this.prisma.department.findFirst({
+          where: { OR: [{ code: deptCode }, { code: `D_${deptCode}` }] },
+        });
+        hodDeptId = dept?.id;
       }
 
       if (!hodDeptId) {
@@ -3012,6 +3093,7 @@ export class LearningAnalyticsService {
     const department = await this.prisma.department.findUnique({
       where: { id: departmentRecord.id },
       include: {
+        institute: true,
         courses: {
           include: {
             courseOutcomes: true,
@@ -3044,8 +3126,27 @@ export class LearningAnalyticsService {
       };
     });
 
-    // Dynamically compute division benchmark from actual AuthorizedStudent and SkillMastery records
+    const deptMatchConditions: any[] = [];
+    if (department.name) {
+      deptMatchConditions.push({ department: department.name });
+      if (department.name.includes(' and ')) {
+        deptMatchConditions.push({ department: department.name.replace(' and ', ' & ') });
+      } else if (department.name.includes(' & ')) {
+        deptMatchConditions.push({ department: department.name.replace(' & ', ' and ') });
+      }
+    }
+    if (department.code) {
+      deptMatchConditions.push({ department: { contains: department.code } });
+    }
+
+    const deptStudentWhere: any = {
+      ...(department.institute?.code ? { institute: department.institute.code } : {}),
+      OR: deptMatchConditions.length > 0 ? deptMatchConditions : [{ department: department.name }],
+    };
+
+    // Dynamically compute division benchmark strictly from this Department's AuthorizedStudent and SkillMastery records
     const rawDivisions = await this.prisma.authorizedStudent.findMany({
+      where: deptStudentWhere,
       select: { division: true },
       distinct: ['division'],
     });
@@ -3054,12 +3155,20 @@ export class LearningAnalyticsService {
     const divisionBenchmark = await Promise.all(
       divisionList.map(async (div) => {
         const enrolledStudents = await this.prisma.authorizedStudent.count({
-          where: { division: div },
+          where: {
+            division: div,
+            ...deptStudentWhere,
+          },
         });
 
         const divMasteries = await this.prisma.skillMastery.findMany({
           where: {
-            student: { authorizedStudent: { division: div } },
+            student: {
+              authorizedStudent: {
+                division: div,
+                ...deptStudentWhere,
+              },
+            },
           },
           select: { masteryScore: true },
         });
@@ -3072,7 +3181,12 @@ export class LearningAnalyticsService {
         const riskCount = await this.prisma.atRiskAlert.count({
           where: {
             status: { not: 'RESOLVED' },
-            student: { authorizedStudent: { division: div } },
+            student: {
+              authorizedStudent: {
+                division: div,
+                ...deptStudentWhere,
+              },
+            },
           },
         });
 

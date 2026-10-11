@@ -266,17 +266,23 @@ export default function FacultyQuestionBankPage() {
                   Item Bank Repository
                 </h2>
                 {/* Course Switcher */}
-                <select
-                  value={selectedCourseId}
-                  onChange={(e) => handleCourseChange(e.target.value)}
-                  className="px-3 py-1 text-xs font-bold rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 focus:outline-none cursor-pointer"
-                >
-                  {courses.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.code} - {c.name}
-                    </option>
-                  ))}
-                </select>
+                {courses.length > 1 ? (
+                  <select
+                    value={selectedCourseId}
+                    onChange={(e) => handleCourseChange(e.target.value)}
+                    className="px-3 py-1 text-xs font-bold rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 focus:outline-none cursor-pointer"
+                  >
+                    {courses.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.code} - {c.name}
+                      </option>
+                    ))}
+                  </select>
+                ) : courses.length === 1 ? (
+                  <span className="px-3 py-1 text-xs font-bold rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                    {currentCourse?.code || courses[0].code} - {currentCourse?.name || courses[0].name}
+                  </span>
+                ) : null}
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 Explore real-time calibrated questions, filter topic-wise with dedicated export view, and export topic questions directly as PDF.

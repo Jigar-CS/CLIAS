@@ -7,14 +7,24 @@ export class CoursesService {
 
   async getAllCourses(requester?: any) {
     // 1. If requester is FACULTY, find all assigned courses (primary course + faculty_course_assignments)
-    if (requester?.role === 'FACULTY') {
-      const faculty = await this.prisma.facultyProfile.findUnique({
-        where: { userId: requester.id },
-      });
+    if (requester?.role === 'FACULTY' || requester?.isFaculty) {
+      let faculty = null;
+      if (requester.facultyId) {
+        faculty = await this.prisma.facultyProfile.findUnique({
+          where: { id: requester.facultyId },
+        });
+      }
+      if (!faculty && requester.id) {
+        faculty = await this.prisma.facultyProfile.findUnique({
+          where: { userId: requester.id },
+        });
+      }
+
       if (faculty) {
         const extraAssignments = ((await this.prisma.$queryRawUnsafe(
-          'SELECT courseId FROM faculty_course_assignments WHERE facultyId = ?',
+          'SELECT courseId FROM faculty_course_assignments WHERE facultyId = ? OR facultyId = ?',
           faculty.id,
+          faculty.userId,
         ).catch(() => [])) as any[]) || [];
         const extraCourseIds = Array.isArray(extraAssignments) ? extraAssignments.map((a: any) => a.courseId) : [];
         const allCourseIds = Array.from(new Set([faculty.courseId, ...extraCourseIds].filter(Boolean)));
@@ -31,12 +41,16 @@ export class CoursesService {
                   _count: { select: { questions: true } },
                 },
               },
+              department: {
+                include: { institute: true },
+              },
               _count: { select: { questions: true } },
             },
             orderBy: { code: 'asc' },
           });
         }
       }
+      return [];
     }
 
     // 2. If requester is HOD, restrict to their department's courses
@@ -69,11 +83,15 @@ export class CoursesService {
                 _count: { select: { questions: true } },
               },
             },
+            department: {
+              include: { institute: true },
+            },
             _count: { select: { questions: true } },
           },
           orderBy: { code: 'asc' },
         });
       }
+      return [];
     }
 
     // 3. Super Admin, Students, or general access
@@ -86,6 +104,9 @@ export class CoursesService {
             slug: true,
             _count: { select: { questions: true } },
           },
+        },
+        department: {
+          include: { institute: true },
         },
         _count: { select: { questions: true } },
       },
