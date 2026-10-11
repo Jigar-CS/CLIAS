@@ -235,7 +235,7 @@ export class CounsellorAssignmentService {
         if (parts.length >= 2) {
           const cPart = parts[0];
           const sPart = parts[1];
-          if (!cPart.toLowerCase().includes('counsellor') && (sPart.includes('2') || sPart.includes('-') || sPart.includes(','))) {
+          if (!cPart.toLowerCase().includes('counsellor') && !cPart.toLowerCase().includes('faculty') && sPart.length > 0) {
             pairs.push({ counsellorQuery: cPart, studentsQuery: sPart });
           }
         }
@@ -244,7 +244,7 @@ export class CounsellorAssignmentService {
         if (parts.length >= 2) {
           const cPart = parts[0];
           const sPart = parts.slice(1).join(', ');
-          if (!cPart.toLowerCase().includes('counsellor') && sPart.length > 2) {
+          if (!cPart.toLowerCase().includes('counsellor') && !cPart.toLowerCase().includes('faculty') && sPart.length > 0) {
             pairs.push({ counsellorQuery: cPart, studentsQuery: sPart });
           }
         }
@@ -255,44 +255,72 @@ export class CounsellorAssignmentService {
   }
 
   /**
-   * Expands ID range (e.g., "24CS001-24CS050" or "24CS001 to 24CS050"),
-   * comma-separated IDs, or list of names into individual student query tokens.
+   * Expands multiple ID ranges (e.g., "1 to 10 and also 20 to 30", "24CS001-24CS010, 24CS020-24CS030"),
+   * optional exclusions ("but not 11 to 19"), comma/line-separated IDs, or student names.
    */
   expandStudentsQuery(rawQuery: string): string[] {
-    const tokens: string[] = [];
-    // Split by comma, semicolon, newline, or pipe
-    const rawChunks = rawQuery
-      .split(/[,;\n\r|]+/)
+    let excludedTokens = new Set<string>();
+    let mainQuery = rawQuery;
+
+    // Check for exclusion clauses: e.g. "but not 11 to 19", "except 11-19", "excluding 11 to 19", "without 11 to 19"
+    const excludeMatch = rawQuery.match(/(?:except|excluding|but\s+not|without)\s+([^\n\r]+)$/i);
+    if (excludeMatch) {
+      mainQuery = rawQuery.substring(0, excludeMatch.index).trim();
+      const exTokens = this.expandStudentsQuery(excludeMatch[1]);
+      exTokens.forEach((t) => excludedTokens.add(t.toLowerCase()));
+    }
+
+    // Normalize connectors between multiple ranges or student IDs:
+    // "and also", "and", "also", "&", "+" -> convert into comma delimiters
+    const normalized = mainQuery.replace(/\s+(?:and\s+also|and|also|&|\+)\s+/gi, ', ');
+
+    // Split by comma, semicolon, newline, pipe, or multiple slashes
+    const rawChunks = normalized
+      .split(/[,;\n\r|/]+/)
       .map((c) => c.trim())
       .filter(Boolean);
 
+    const tokens: string[] = [];
+
     for (const chunk of rawChunks) {
-      // 1. Check Range Pattern: e.g. "24CS001-24CS050", "24CS001 to 24CS050", "24CS001 - 50"
-      const rangeMatch = chunk.match(
-        /^([a-zA-Z0-9]+?)(\d+)\s*(?:-|to|–|—)\s*(?:([a-zA-Z0-9]+?))?(\d+)$/i,
+      // Strip common prefixes: "id:", "ids", "roll no:", "enrollment range:"
+      const cleaned = chunk
+        .replace(/^(?:ids?|roll\s*(?:nos?|numbers?)?|enrollments?|students?)\s*[:=]?\s*/i, '')
+        .trim();
+
+      // Check Range Pattern: e.g. "24CS001-24CS010", "24CS001 to 24CS010", "24CS001 - 10", "1 to 10", "1-10", "01 to 10"
+      const rangeMatch = cleaned.match(
+        /^([a-zA-Z]+[0-9]*[a-zA-Z]+|[a-zA-Z]+|[0-9]+[a-zA-Z]+)?\s*(\d+)\s*(?:-|to|–|—)\s*([a-zA-Z]+[0-9]*[a-zA-Z]+|[a-zA-Z]+|[0-9]+[a-zA-Z]+)?\s*(\d+)$/i,
       );
 
       if (rangeMatch) {
-        const prefix1 = rangeMatch[1].toUpperCase();
-        const startNumStr = rangeMatch[2];
-        const startNum = parseInt(startNumStr, 10);
-        const padLen = startNumStr.length;
-        const prefix2 = (rangeMatch[3] || prefix1).toUpperCase();
-        const endNum = parseInt(rangeMatch[4], 10);
+        const p1 = (rangeMatch[1] || '').toUpperCase();
+        const startStr = rangeMatch[2];
+        const startNum = parseInt(startStr, 10);
+        const p2 = (rangeMatch[3] || p1).toUpperCase();
+        const endStr = rangeMatch[4];
+        const endNum = parseInt(endStr, 10);
 
-        if (prefix1 === prefix2 && !isNaN(startNum) && !isNaN(endNum) && startNum <= endNum && endNum - startNum <= 300) {
+        if (p1 === p2 && !isNaN(startNum) && !isNaN(endNum) && startNum <= endNum && endNum - startNum <= 500) {
+          const padLen = p1
+            ? Math.max(startStr.length, endStr.length > startStr.length ? endStr.length : startStr.length)
+            : (startStr.length > 1 ? startStr.length : 0);
+
           for (let i = startNum; i <= endNum; i++) {
-            tokens.push(prefix1 + String(i).padStart(padLen, '0'));
+            const formatted = padLen > 0 ? String(i).padStart(padLen, '0') : String(i);
+            tokens.push(p1 ? p1 + formatted : formatted);
           }
           continue;
         }
       }
 
-      // 2. Individual ID or Student Name
-      tokens.push(chunk);
+      // Individual ID or Student Name
+      tokens.push(cleaned || chunk);
     }
 
-    return Array.from(new Set(tokens.filter(Boolean)));
+    return Array.from(new Set(tokens.filter(Boolean))).filter(
+      (t) => !excludedTokens.has(t.toLowerCase()),
+    );
   }
 
   /**
@@ -434,7 +462,7 @@ export class CounsellorAssignmentService {
     const clean = token.trim();
     if (!clean) return null;
 
-    // 1. Search AuthorizedStudent by enrollmentNumber, name, or email
+    // 1. Search AuthorizedStudent by exact enrollmentNumber, email, or name
     let authStudent = await this.prisma.authorizedStudent.findFirst({
       where: {
         OR: [
@@ -449,8 +477,21 @@ export class CounsellorAssignmentService {
       },
     });
 
-    // Substring name match if clean token has more than 3 chars
-    if (!authStudent && clean.length > 3) {
+    // 2. If clean token is numeric (e.g. "1", "10", "20"), check existing enrollment numeric suffixes
+    if (!authStudent && /^\d+$/.test(clean)) {
+      const num = parseInt(clean, 10);
+      const allAuth = await this.prisma.authorizedStudent.findMany({
+        include: { studentProfile: true },
+      });
+      authStudent =
+        allAuth.find((s) => {
+          const m = s.enrollmentNumber.match(/(\d+)$/);
+          return m ? parseInt(m[1], 10) === num : false;
+        }) || null;
+    }
+
+    // 3. Substring name match if clean token has more than 3 chars and is not purely numeric
+    if (!authStudent && clean.length > 3 && !/^\d+$/.test(clean)) {
       authStudent = await this.prisma.authorizedStudent.findFirst({
         where: {
           name: { contains: clean },
@@ -459,6 +500,50 @@ export class CounsellorAssignmentService {
           studentProfile: true,
         },
       });
+    }
+
+    // 4. Auto-provision AuthorizedStudent if this student ID does not yet exist
+    if (!authStudent) {
+      let candidateEnrollment: string | null = null;
+
+      if (/^[0-9]{2}[A-Za-z]{2,5}[0-9]{2,4}$/i.test(clean)) {
+        // Formatted enrollment number like "24CS015"
+        candidateEnrollment = clean.toUpperCase();
+      } else if (/^\d+$/.test(clean)) {
+        // Plain roll number like "1", "20", infer prefix from existing records
+        const sample = await this.prisma.authorizedStudent.findFirst({
+          orderBy: { enrollmentNumber: 'asc' },
+        });
+        const m = sample?.enrollmentNumber.match(/^([a-zA-Z]+[0-9]*[a-zA-Z]+|[a-zA-Z]+|[0-9]+[a-zA-Z]+)?\s*(\d+)$/);
+        const prefix = m ? m[1] : '24CS';
+        const padLen = m ? m[2].length : 3;
+        candidateEnrollment = `${prefix}${String(clean).padStart(padLen, '0')}`;
+      }
+
+      if (candidateEnrollment) {
+        authStudent = (await this.prisma.authorizedStudent.findUnique({
+          where: { enrollmentNumber: candidateEnrollment },
+          include: { studentProfile: true },
+        })) as any;
+
+        if (!authStudent) {
+          const sample = await this.prisma.authorizedStudent.findFirst();
+          authStudent = (await this.prisma.authorizedStudent.create({
+            data: {
+              enrollmentNumber: candidateEnrollment,
+              name: `Student ${candidateEnrollment}`,
+              email: `${candidateEnrollment.toLowerCase()}@charusat.edu.in`,
+              institute: sample?.institute || 'CSPIT',
+              department: sample?.department || 'Computer Science & Engineering',
+              programName: sample?.programName || 'B.Tech CSE',
+              semester: sample?.semester || 4,
+              division: sample?.division || 'CS Div 1',
+              graduationYear: sample?.graduationYear || new Date().getFullYear() + 4,
+            },
+            include: { studentProfile: true },
+          })) as any;
+        }
+      }
     }
 
     if (!authStudent) {
@@ -589,17 +674,17 @@ export class CounsellorAssignmentService {
       {
         'Counsellor Name': 'Dr. Rajesh Patel',
         'Counsellor Email': 'counsellor@charusat.edu.in',
-        'Assigned Student IDs / Range / Names': '24CS001-24CS045',
+        'Assigned Student IDs / Range / Names': '24CS001-24CS010, 24CS020-24CS030',
       },
       {
         'Counsellor Name': 'Prof. Sneha Joshi',
         'Counsellor Email': 'sneha.cse@charusat.ac.in',
-        'Assigned Student IDs / Range / Names': '24CS046-24CS090',
+        'Assigned Student IDs / Range / Names': 'id 11 to 19 and also 31 to 45',
       },
       {
         'Counsellor Name': 'Dr. Amit Dave',
         'Counsellor Email': 'amit.cse@charusat.ac.in',
-        'Assigned Student IDs / Range / Names': 'Rahul Patel, Priya Sharma, Aarav Desai',
+        'Assigned Student IDs / Range / Names': 'Rahul Patel, Priya Sharma, 24CS046-24CS050',
       },
     ];
 

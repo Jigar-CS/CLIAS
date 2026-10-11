@@ -60,7 +60,7 @@ export class RegisterStudentDto {
 }
 
 export class LoginDto {
-  @IsEmail({}, { message: 'A valid university email is required' })
+  @IsString({ message: 'A valid university email or student ID is required' })
   @IsNotEmpty()
   email: string;
 

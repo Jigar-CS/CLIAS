@@ -166,10 +166,11 @@ export function CounsellorAssignmentModal({
             <div className="space-y-1 text-[11px] leading-relaxed">
               <p className="font-semibold text-slate-900 dark:text-white">Supported Content Formats in PDF or Excel:</p>
               <ul className="list-disc list-inside space-y-0.5 text-slate-500 dark:text-slate-400">
-                <li><strong className="text-slate-700 dark:text-slate-200">ID Range:</strong> e.g. <span className="font-mono text-indigo-500">24CS001-24CS045</span> or <span className="font-mono text-indigo-500">24CS001 to 24CS045</span></li>
-                <li><strong className="text-slate-700 dark:text-slate-200">Comma-separated IDs:</strong> e.g. <span className="font-mono text-indigo-500">24CS001, 24CS002, 24CS003</span></li>
-                <li><strong className="text-slate-700 dark:text-slate-200">Student Names:</strong> e.g. <span className="font-mono text-indigo-500">Rahul Patel, Priya Sharma, Aarav Desai</span></li>
-                <li><strong className="text-slate-700 dark:text-slate-200">Excel Columns:</strong> Column 1 for Counsellor Name/Email, Column 2 for Student IDs/Range</li>
+                <li><strong className="text-slate-700 dark:text-slate-200">Multiple ID Ranges:</strong> e.g. <span className="font-mono text-indigo-500">24CS001-24CS010, 24CS020-24CS030</span> or <span className="font-mono text-indigo-500">id 1 to 10 and also 20 to 30</span> (assigns 1-10 & 20-30, leaving 11-19 out)</li>
+                <li><strong className="text-slate-700 dark:text-slate-200">Continuous Range:</strong> e.g. <span className="font-mono text-indigo-500">24CS001-24CS045</span> or <span className="font-mono text-indigo-500">1 to 50</span></li>
+                <li><strong className="text-slate-700 dark:text-slate-200">Exclusions:</strong> e.g. <span className="font-mono text-indigo-500">id 1 to 30 but not 11 to 19</span></li>
+                <li><strong className="text-slate-700 dark:text-slate-200">IDs or Names:</strong> e.g. <span className="font-mono text-indigo-500">24CS001, 24CS002</span> or <span className="font-mono text-indigo-500">Rahul Patel, Priya Sharma</span></li>
+                <li><strong className="text-slate-700 dark:text-slate-200">Excel Structure:</strong> Column 1 for Counsellor Name/Email, Column 2 for Student IDs/Ranges. Multiple rows per counsellor are also supported.</li>
               </ul>
             </div>
           </div>
