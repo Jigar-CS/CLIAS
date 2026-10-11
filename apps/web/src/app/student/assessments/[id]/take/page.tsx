@@ -213,6 +213,19 @@ export default function TakeAssessmentPage() {
   } | null>(null);
 
   const [tabSwitchTerminated, setTabSwitchTerminated] = useState(false);
+  const [tabSwitchStrikeCount, setTabSwitchStrikeCount] = useState<number>(0);
+  const tabSwitchStrikeCountRef = useRef<number>(0);
+  const lastTabSwitchTimeRef = useRef<number>(0);
+  const [isWindowBlurred, setIsWindowBlurred] = useState<boolean>(false);
+  const [tabSwitchAlertModal, setTabSwitchAlertModal] = useState<{
+    show: boolean;
+    strike: number;
+    maxStrikes: number;
+    isCodingTest: boolean;
+    isTerminated: boolean;
+    reason: string;
+  } | null>(null);
+
   const [mobileAlertModal, setMobileAlertModal] = useState<{
     show: boolean;
     strike: number;
@@ -555,30 +568,96 @@ export default function TakeAssessmentPage() {
   // ---------------------------------------------------------------------------
   // Real-Time Browser Integrity Monitoring Listeners
   // ---------------------------------------------------------------------------
+  const isCodingTest = Boolean(
+    examData?.questions?.some((q: any) => q.type === 'CODING' || q.codingProblem)
+  );
+
+  const handleDismissTabSwitchModal = () => {
+    if (tabSwitchAlertModal?.isTerminated) return;
+    setTabSwitchAlertModal(null);
+    setIsWindowBlurred(false);
+    lastTabSwitchTimeRef.current = Date.now();
+    if (!document.fullscreenElement) {
+      try {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } catch {}
+    }
+  };
+
+  const handleTabOrWindowSwitch = (trigger: 'TAB_SWITCH' | 'WINDOW_BLUR') => {
+    if (isAutoSubmittingRef.current || result || showPreFlight) return;
+
+    // Debounce to prevent dual strikes from a single Alt+Tab action (blur + visibilitychange)
+    const now = Date.now();
+    if (now - lastTabSwitchTimeRef.current < 2000) return;
+    lastTabSwitchTimeRef.current = now;
+
+    // Standard 3-Strike Warning Architecture:
+    // Strikes 1, 2, 3 show warning modal & penalize integrity score.
+    // 4th violation automatically terminates and submits the exam.
+    tabSwitchStrikeCountRef.current += 1;
+    const currentStrike = tabSwitchStrikeCountRef.current;
+    setTabSwitchStrikeCount(currentStrike);
+
+    if (currentStrike >= 4) {
+      isAutoSubmittingRef.current = true;
+      setTabSwitchTerminated(true);
+      setTabSwitchAlertModal({
+        show: true,
+        strike: 4,
+        maxStrikes: 3,
+        isCodingTest: false,
+        isTerminated: true,
+        reason:
+          'You navigated away from the exam window (Alt+Tab / application switch) 4 times despite 3 prior integrity warnings. In accordance with examination regulations, your assessment has been automatically terminated and submitted.',
+      });
+      reportViolation(
+        'TAB_SWITCH',
+        'SEVERE',
+        '4th Tab/Window Switch Violation: Student exceeded the 3-warning limit. Exam automatically submitted.'
+      );
+      submitExam();
+    } else {
+      const isFinal = currentStrike === 3;
+      setTabSwitchAlertModal({
+        show: true,
+        strike: currentStrike,
+        maxStrikes: 3,
+        isCodingTest: false,
+        isTerminated: false,
+        reason: isFinal
+          ? 'You navigated away from the exam window (Alt+Tab / application switch). THIS IS YOUR FINAL WARNING (Strike 3 of 3)! If you switch away one more time, your exam will be terminated immediately!'
+          : `You navigated away from the exam window (Alt+Tab / application switch). Warning ${currentStrike} of 3. You have ${3 - currentStrike} warning(s) remaining. On the 4th violation, your test will be terminated automatically.`,
+      });
+      reportViolation(
+        'TAB_SWITCH',
+        isFinal ? 'SEVERE' : currentStrike === 2 ? 'HIGH' : 'MEDIUM',
+        `Tab/Window Switch Strike ${currentStrike}/3: Student switched away from exam window.`
+      );
+    }
+  };
+
   useEffect(() => {
     if (!examData || result || showPreFlight) return;
 
-    // 1. Tab Switching Detection -> IMMEDIATE AUTO-SUBMIT
+    // 1. Tab Switching Detection (Alt+Tab or Tab Switch)
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        if (!isAutoSubmittingRef.current && !result) {
-          isAutoSubmittingRef.current = true;
-          setTabSwitchTerminated(true);
-          reportViolation(
-            'TAB_SWITCH',
-            'SEVERE',
-            'Student switched browser tab. Exam auto-submitted immediately per integrity policy.'
-          );
-          submitExam();
-        }
+        setIsWindowBlurred(true);
+        handleTabOrWindowSwitch('TAB_SWITCH');
+      } else {
+        setIsWindowBlurred(false);
       }
     };
 
-    // 2. Window Blur (Switching Apps) Detection
+    // 2. Window Blur (Switching Apps, Alt+Tab, or Opening Screen Capture tools)
     const handleWindowBlur = () => {
-      if (!isAutoSubmittingRef.current && !result) {
-        reportViolation('WINDOW_BLUR', 'MEDIUM', 'Student switched application or lost window focus.');
-      }
+      setIsWindowBlurred(true);
+      handleTabOrWindowSwitch('WINDOW_BLUR');
+    };
+
+    const handleWindowFocus = () => {
+      setIsWindowBlurred(false);
     };
 
     // 3. Fullscreen Exit Enforcement
@@ -591,76 +670,184 @@ export default function TakeAssessmentPage() {
       }
     };
 
-    // 4. Strict Copy / Paste Blocking
+    // 4. Strict Copy / Paste & Clipboard Blocking
     const handleCopy = (e: ClipboardEvent) => {
       e.preventDefault();
+      e.stopPropagation();
+      try {
+        e.clipboardData?.clearData();
+      } catch {}
+      try {
+        navigator.clipboard?.writeText?.('');
+      } catch {}
       reportViolation('WINDOW_BLUR', 'LOW', 'Unauthorized copy attempt prevented.');
-      setWarningMessage('INTEGRITY ALERT: Copying assessment question text is strictly disabled.');
+      setWarningMessage('INTEGRITY ALERT: Copying assessment question or code text is strictly disabled.');
     };
+
     const handleCut = (e: ClipboardEvent) => {
       e.preventDefault();
+      e.stopPropagation();
       setWarningMessage('INTEGRITY ALERT: Cut operation is disabled.');
     };
+
     const handlePaste = (e: ClipboardEvent) => {
       e.preventDefault();
+      e.stopPropagation();
+      try {
+        e.clipboardData?.clearData();
+      } catch {}
       reportViolation('WINDOW_BLUR', 'MEDIUM', 'Unauthorized paste attempt prevented.');
-      setWarningMessage('INTEGRITY ALERT: Pasting external content into assessment is strictly prohibited.');
+      setWarningMessage('INTEGRITY ALERT: Pasting external content or code into assessment is strictly prohibited.');
     };
+
     const handleContextMenu = (e: MouseEvent) => {
       e.preventDefault();
-      setWarningMessage('INTEGRITY ALERT: Context menu is disabled during the exam.');
+      e.stopPropagation();
+      setWarningMessage('INTEGRITY ALERT: Context menu is disabled during the proctored exam.');
     };
+
     const handleSelectStart = (e: Event) => {
       e.preventDefault();
     };
+
     const handleDragStart = (e: DragEvent) => {
       e.preventDefault();
     };
+
+    // 5. Advanced Anti-Cheat Keyboard Shortcut & Screenshot Interceptor
     const handleKeyDown = (e: KeyboardEvent) => {
       const isMac = typeof navigator !== 'undefined' && /Mac|iPod|iPhone|iPad/.test(navigator.platform);
       const cmdOrCtrl = isMac ? e.metaKey : e.ctrlKey;
+      const keyLower = e.key ? e.key.toLowerCase() : '';
 
-      // Block Ctrl+C, Ctrl+V, Ctrl+X, Ctrl+A, Ctrl+P, Ctrl+U, Ctrl+S
-      if (cmdOrCtrl && ['c', 'v', 'x', 'a', 'p', 'u', 's'].includes(e.key.toLowerCase())) {
+      // A. Screenshot Prevention: PrintScreen key (any modifier)
+      if (e.key === 'PrintScreen' || e.code === 'PrintScreen' || e.keyCode === 44) {
         e.preventDefault();
         e.stopPropagation();
-        setWarningMessage(`INTEGRITY ALERT: Keyboard shortcut Ctrl+${e.key.toUpperCase()} is disabled.`);
+        try {
+          navigator.clipboard?.writeText?.('');
+        } catch {}
+        setWarningMessage('INTEGRITY ALERT: Taking screenshots is strictly prohibited during proctored exams. Screen capture attempt recorded.');
+        reportViolation('WINDOW_BLUR', 'HIGH', 'Screenshot attempt via PrintScreen key blocked.');
         return;
       }
-      // Block F12 and Devtools
+
+      // B. Screenshot Prevention: Windows Snipping Tool (Win+Shift+S / Alt+PrtScn / Ctrl+Shift+S)
+      if (
+        (e.shiftKey && (cmdOrCtrl || e.altKey) && (keyLower === 's' || e.key === 'PrintScreen')) ||
+        (e.altKey && e.key === 'PrintScreen')
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+        try {
+          navigator.clipboard?.writeText?.('');
+        } catch {}
+        setWarningMessage('INTEGRITY ALERT: Screen capture shortcut is strictly disabled.');
+        reportViolation('WINDOW_BLUR', 'HIGH', 'Screen capture shortcut Win/Alt/Shift+S blocked.');
+        return;
+      }
+
+      // C. Screenshot Prevention: macOS shortcuts (Cmd+Shift+3, Cmd+Shift+4, Cmd+Shift+5)
+      if (e.metaKey && e.shiftKey && ['3', '4', '5'].includes(e.key)) {
+        e.preventDefault();
+        e.stopPropagation();
+        try {
+          navigator.clipboard?.writeText?.('');
+        } catch {}
+        setWarningMessage('INTEGRITY ALERT: macOS screenshot shortcut is strictly disabled.');
+        reportViolation('WINDOW_BLUR', 'HIGH', 'Mac screenshot shortcut Cmd+Shift+3/4/5 blocked.');
+        return;
+      }
+
+      // D. Print Dialog Prevention: Ctrl+P / Cmd+P
+      if (cmdOrCtrl && keyLower === 'p') {
+        e.preventDefault();
+        e.stopPropagation();
+        setWarningMessage('INTEGRITY ALERT: Printing exam content is strictly disabled.');
+        reportViolation('WINDOW_BLUR', 'HIGH', 'Print dialog attempt blocked.');
+        return;
+      }
+
+      // E. Copy / Paste / Cut Shortcuts:
+      // Ctrl+C, Ctrl+V, Ctrl+X, Ctrl+A, Ctrl+U, Ctrl+S
+      if (cmdOrCtrl && ['c', 'v', 'x', 'a', 'u', 's'].includes(keyLower)) {
+        e.preventDefault();
+        e.stopPropagation();
+        try {
+          navigator.clipboard?.writeText?.('');
+        } catch {}
+        setWarningMessage(`INTEGRITY ALERT: Keyboard shortcut Ctrl+${e.key.toUpperCase()} (Copy/Paste/Cut/Save) is disabled.`);
+        reportViolation('WINDOW_BLUR', 'MEDIUM', `Unauthorized shortcut Ctrl+${e.key.toUpperCase()} blocked.`);
+        return;
+      }
+
+      // F. Alternative Windows Copy / Paste Shortcuts (Insert keys)
+      // Shift+Insert = Paste, Ctrl+Insert = Copy, Shift+Delete = Cut
+      if (
+        (e.shiftKey && (e.key === 'Insert' || e.key === 'Delete')) ||
+        (cmdOrCtrl && e.key === 'Insert')
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+        setWarningMessage('INTEGRITY ALERT: Clipboard operation via Insert/Delete keys is disabled.');
+        reportViolation('WINDOW_BLUR', 'MEDIUM', 'Clipboard operation via Insert key blocked.');
+        return;
+      }
+
+      // G. Developer Tools: F12 and Ctrl+Shift+I/J/C
       if (
         e.key === 'F12' ||
-        (cmdOrCtrl && e.shiftKey && ['i', 'j', 'c'].includes(e.key.toLowerCase()))
+        (cmdOrCtrl && e.shiftKey && ['i', 'j', 'c'].includes(keyLower))
       ) {
         e.preventDefault();
         e.stopPropagation();
         setWarningMessage('INTEGRITY ALERT: Developer inspection tools are disabled.');
+        reportViolation('WINDOW_BLUR', 'HIGH', 'Developer tools attempt blocked.');
         return;
+      }
+    };
+
+    // Clear clipboard on PrintScreen release
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === 'PrintScreen' || e.code === 'PrintScreen' || e.keyCode === 44) {
+        try {
+          navigator.clipboard?.writeText?.('');
+        } catch {}
       }
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('blur', handleWindowBlur);
+    window.addEventListener('focus', handleWindowFocus);
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     window.addEventListener('copy', handleCopy, true);
     window.addEventListener('cut', handleCut, true);
     window.addEventListener('paste', handlePaste, true);
+    window.addEventListener('beforecopy', (e) => e.preventDefault(), true);
+    window.addEventListener('beforecut', (e) => e.preventDefault(), true);
+    window.addEventListener('beforepaste', (e) => e.preventDefault(), true);
     window.addEventListener('contextmenu', handleContextMenu, true);
     window.addEventListener('selectstart', handleSelectStart, true);
     window.addEventListener('dragstart', handleDragStart, true);
     window.addEventListener('keydown', handleKeyDown, true);
+    window.addEventListener('keyup', handleKeyUp, true);
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('blur', handleWindowBlur);
+      window.removeEventListener('focus', handleWindowFocus);
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
       window.removeEventListener('copy', handleCopy, true);
       window.removeEventListener('cut', handleCut, true);
       window.removeEventListener('paste', handlePaste, true);
+      window.removeEventListener('beforecopy', (e) => e.preventDefault(), true);
+      window.removeEventListener('beforecut', (e) => e.preventDefault(), true);
+      window.removeEventListener('beforepaste', (e) => e.preventDefault(), true);
       window.removeEventListener('contextmenu', handleContextMenu, true);
       window.removeEventListener('selectstart', handleSelectStart, true);
       window.removeEventListener('dragstart', handleDragStart, true);
       window.removeEventListener('keydown', handleKeyDown, true);
+      window.removeEventListener('keyup', handleKeyUp, true);
     };
   }, [examData, result, showPreFlight]);
 
@@ -1548,38 +1735,140 @@ export default function TakeAssessmentPage() {
         msUserSelect: 'none',
       }}
     >
+      {/* Anti-Screenshot Print Media CSS Blocker */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media print {
+          html, body, #__next, div, main, header {
+            display: none !important;
+            visibility: hidden !important;
+          }
+        }
+        * {
+          -webkit-user-select: none !important;
+          -moz-user-select: none !important;
+          -ms-user-select: none !important;
+          user-select: none !important;
+        }
+        input, textarea {
+          -webkit-user-select: text !important;
+          -moz-user-select: text !important;
+          user-select: text !important;
+        }
+      `}} />
+
       {/* Offscreen hidden canvas for luminance telemetry */}
       <canvas ref={offscreenCanvasRef} className="hidden" />
 
-      {/* 1. Tab Switching Auto-Submit Blocker Overlay */}
-      {tabSwitchTerminated && (
+      {/* 1. Window Blur Anti-Screenshot Privacy Shield */}
+      {isWindowBlurred && !tabSwitchAlertModal?.show && !tabSwitchTerminated && (
+        <div className="fixed inset-0 z-40 bg-slate-950/98 backdrop-blur-2xl flex items-center justify-center p-6 text-center select-none animate-in fade-in duration-100">
+          <div className="space-y-4 max-w-md">
+            <div className="w-16 h-16 rounded-3xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center mx-auto">
+              <Lock className="w-8 h-8" />
+            </div>
+            <h3 className="text-xl font-extrabold text-white">Exam Screen Protected</h3>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              Exam content is hidden while window focus is lost. Screen capture & external tools are strictly blocked. Return focus to the exam window.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* 2. Tab Switching & Alt+Tab Warning/Termination Overlay */}
+      {tabSwitchAlertModal?.show && (
         <div className="fixed inset-0 z-50 bg-slate-950/95 backdrop-blur-md flex items-center justify-center p-6 animate-in fade-in duration-200">
-          <div className="max-w-lg w-full bg-slate-900 border-2 border-rose-600 rounded-3xl p-8 text-center space-y-6 shadow-2xl shadow-rose-950/80">
-            <div className="w-20 h-20 rounded-3xl bg-rose-500/20 text-rose-500 border border-rose-500/30 flex items-center justify-center mx-auto animate-pulse">
-              <ShieldAlert className="w-10 h-10" />
+          <div
+            className={`max-w-lg w-full bg-slate-900 rounded-3xl p-8 text-center space-y-6 shadow-2xl border-2 ${
+              tabSwitchAlertModal.isTerminated
+                ? 'border-rose-600 shadow-rose-950/80'
+                : tabSwitchAlertModal.strike === 3
+                ? 'border-rose-500 shadow-rose-950/80 ring-4 ring-rose-500/30 animate-pulse'
+                : 'border-amber-500/70 shadow-amber-950/50'
+            }`}
+          >
+            <div
+              className={`w-20 h-20 rounded-3xl mx-auto flex items-center justify-center ${
+                tabSwitchAlertModal.isTerminated || tabSwitchAlertModal.strike === 3
+                  ? 'bg-rose-500/20 text-rose-400 border border-rose-500/40 animate-pulse'
+                  : 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
+              }`}
+            >
+              {tabSwitchAlertModal.isTerminated ? (
+                <XCircle className="w-10 h-10" />
+              ) : tabSwitchAlertModal.strike === 3 ? (
+                <ShieldAlert className="w-10 h-10" />
+              ) : (
+                <AlertTriangle className="w-10 h-10" />
+              )}
             </div>
 
             <div className="space-y-3">
-              <span className="px-3 py-1 text-xs font-mono font-bold rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30 uppercase tracking-wider">
-                Exam Automatically Terminated
+              <span
+                className={`px-3 py-1 text-xs font-mono font-bold rounded-full border uppercase tracking-wider inline-block ${
+                  tabSwitchAlertModal.isTerminated
+                    ? 'bg-rose-500/20 text-rose-300 border-rose-500/30'
+                    : tabSwitchAlertModal.strike === 3
+                    ? 'bg-rose-500/30 text-rose-200 border-rose-500/50 animate-pulse'
+                    : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                }`}
+              >
+                {tabSwitchAlertModal.isTerminated
+                  ? 'EXAM AUTOMATICALLY TERMINATED'
+                  : tabSwitchAlertModal.strike === 3
+                  ? 'FINAL WARNING: Strike 3 of 3'
+                  : `Warning: Strike ${tabSwitchAlertModal.strike} of 3`}
               </span>
-              <h2 className="text-2xl font-black text-white">Tab Switching Detected</h2>
+
+              <h2 className="text-2xl font-black text-white">
+                {tabSwitchAlertModal.isTerminated
+                  ? 'Exam Terminated: Strike Limit Exceeded'
+                  : tabSwitchAlertModal.strike === 3
+                  ? 'Final Warning: Stay in Exam Window!'
+                  : 'Tab / Application Switch Detected'}
+              </h2>
+
               <p className="text-sm text-slate-300 leading-relaxed">
-                You navigated away from the exam tab. According to institutional examination rules, tab switching results in immediate automatic submission of your assessment.
+                {tabSwitchAlertModal.reason}
               </p>
             </div>
 
-            <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-xs text-slate-400 space-y-2">
-              <div className="flex items-center justify-between">
-                <span>Auto-submission Status:</span>
-                <span className="text-rose-400 font-bold flex items-center gap-1.5">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> Submitting to Evaluation Server...
-                </span>
+            {tabSwitchAlertModal.isTerminated ? (
+              <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-xs text-slate-400 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span>Auto-submission Status:</span>
+                  <span className="text-rose-400 font-bold flex items-center gap-1.5">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> Submitting to Evaluation Server...
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-500">
+                  Your submitted responses and proctoring audit telemetry have been transmitted to the Faculty Audit Console.
+                </p>
               </div>
-              <p className="text-[11px] text-slate-500">
-                Your submitted responses and proctoring audit telemetry have been transmitted to the Faculty Audit Console.
-              </p>
-            </div>
+            ) : (
+              <div className="space-y-3 pt-2">
+                <button
+                  type="button"
+                  onClick={handleDismissTabSwitchModal}
+                  className={`w-full py-3 px-6 rounded-xl font-bold text-sm text-white shadow-lg transition flex items-center justify-center gap-2 ${
+                    tabSwitchAlertModal.strike === 3
+                      ? 'bg-rose-600 hover:bg-rose-500 shadow-rose-600/30 ring-2 ring-rose-400/50'
+                      : 'bg-amber-600 hover:bg-amber-500 shadow-amber-600/30'
+                  }`}
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  <span>
+                    {tabSwitchAlertModal.strike === 3
+                      ? 'I Acknowledge Final Warning — Return to Exam'
+                      : `I Understand — Return to Exam (${tabSwitchAlertModal.strike}/3)`}
+                  </span>
+                </button>
+                <p className="text-[11px] text-slate-400">
+                  {tabSwitchAlertModal.strike === 3
+                    ? '⚠️ The very next Alt+Tab or window switch will automatically submit and conclude your exam.'
+                    : `You have ${3 - tabSwitchAlertModal.strike} warning(s) remaining before automated termination.`}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -1888,9 +2177,26 @@ export default function TakeAssessmentPage() {
       {/* Sticky Header */}
       <header className="sticky top-0 z-30 bg-white/95 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-6 py-4 flex items-center justify-between shadow-xs">
         <div>
-          <span className="text-[10px] font-mono uppercase tracking-wider text-amber-600 dark:text-amber-400 font-bold">
-            Formal Proctored Examination
-          </span>
+          <div className="flex items-center gap-2 flex-wrap mb-0.5">
+            <span className="text-[10px] font-mono uppercase tracking-wider text-amber-600 dark:text-amber-400 font-bold">
+              Formal Proctored Examination
+            </span>
+            <span
+              className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold flex items-center gap-1 border ${
+                tabSwitchStrikeCount >= 3
+                  ? 'bg-rose-500/10 text-rose-500 border-rose-500/30'
+                  : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
+              }`}
+            >
+              <Lock className="w-3 h-3" />
+              {tabSwitchStrikeCount === 0
+                ? 'Alt+Tab: 3 Warnings Allowed'
+                : `Alt+Tab Strikes: ${tabSwitchStrikeCount}/3`}
+            </span>
+            <span className="hidden sm:inline-block px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700">
+              Screenshots & Copy/Paste Blocked
+            </span>
+          </div>
           <h2 className="text-base font-bold text-slate-900 dark:text-white">{examData?.assessment?.title}</h2>
         </div>
 
@@ -2207,6 +2513,33 @@ export default function TakeAssessmentPage() {
                         rows={12}
                         value={codingAnswers[currentQ.id]?.sourceCode ?? (currentQ.codingProblem?.starterCodes?.[codingAnswers[currentQ.id]?.language || 'PYTHON'] || '')}
                         onChange={(e) => handleCodeChange(currentQ.id, e.target.value)}
+                        onPaste={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          try {
+                            e.clipboardData?.clearData();
+                          } catch {}
+                          setWarningMessage('INTEGRITY ALERT: Pasting external code is strictly prohibited during the proctored exam.');
+                          reportViolation('WINDOW_BLUR', 'MEDIUM', 'Unauthorized paste attempt inside code editor.');
+                        }}
+                        onCopy={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          try {
+                            e.clipboardData?.clearData();
+                            navigator.clipboard?.writeText?.('');
+                          } catch {}
+                          setWarningMessage('INTEGRITY ALERT: Copying code from the exam is disabled.');
+                          reportViolation('WINDOW_BLUR', 'LOW', 'Unauthorized copy attempt in code editor.');
+                        }}
+                        onCut={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setWarningMessage('INTEGRITY ALERT: Cut operation is disabled.');
+                        }}
+                        onContextMenu={(e) => {
+                          e.preventDefault();
+                        }}
                         onKeyDown={(e) => {
                           if (e.key === 'Tab') {
                             e.preventDefault();
