@@ -156,6 +156,19 @@ const BATCHES = [
 async function main() {
   console.log('🏛️ Starting Comprehensive Multi-Institute Multi-Department Seeding...');
 
+  // 0. Ensure multi-course assignments table exists
+  await prisma.$queryRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS faculty_course_assignments (
+      id VARCHAR(191) PRIMARY KEY,
+      facultyId VARCHAR(191) NOT NULL,
+      courseId VARCHAR(191) NOT NULL,
+      assignedAt DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3),
+      UNIQUE KEY uq_fac_course (facultyId, courseId),
+      INDEX idx_fac (facultyId),
+      INDEX idx_course (courseId)
+    )
+  `);
+
   // Password hashes
   const staffPasswordHash = await bcrypt.hash('clias123', 10);
 

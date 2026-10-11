@@ -15,6 +15,7 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma db push",
     "db:seed": "ts-node prisma/seed.ts",
+    "db:seed-hierarchy": "ts-node prisma/seed-full-hierarchy.ts",
     "db:clean-seed": "ts-node prisma/clean-seed.ts",
     "db:clean-activity": "ts-node prisma/clear-activity.ts",
     "db:migrate-divisions": "ts-node prisma/migrate-divisions.ts",
