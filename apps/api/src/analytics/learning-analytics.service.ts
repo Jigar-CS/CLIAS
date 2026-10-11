@@ -2216,8 +2216,21 @@ export class LearningAnalyticsService {
    * Counsellor Mentees Cohort Analytics: Real-time aggregation strictly scoped to assigned students
    */
   async getCounsellorMenteesCohortAnalytics(counsellorId: string) {
+    const counsellorUser = await this.prisma.user.findFirst({
+      where: {
+        OR: [{ id: counsellorId }, { email: counsellorId }],
+      },
+    });
+
+    const targetCounsellorId = counsellorUser?.id || counsellorId;
+
     const assignments = await this.prisma.counsellorAssignment.findMany({
-      where: { counsellorId },
+      where: {
+        OR: [
+          { counsellorId: targetCounsellorId },
+          ...(counsellorUser?.email ? [{ counsellorId: counsellorUser.email }] : []),
+        ],
+      },
       include: {
         student: {
           include: {
@@ -2227,9 +2240,37 @@ export class LearningAnalyticsService {
               include: { topic: true },
             },
             attempts: {
-              take: 1,
+              take: 20,
               orderBy: { createdAt: 'desc' },
-              select: { createdAt: true },
+              select: { createdAt: true, isCorrect: true, timeTakenSeconds: true },
+            },
+            practiceSessions: {
+              orderBy: { startedAt: 'desc' },
+              take: 15,
+              include: {
+                course: { select: { name: true, code: true } },
+              },
+            },
+            proctoringSessions: {
+              orderBy: { createdAt: 'desc' },
+              take: 10,
+              include: {
+                violations: {
+                  orderBy: { timestamp: 'desc' },
+                  take: 25,
+                },
+              },
+            },
+            assessmentSubmissions: {
+              orderBy: { createdAt: 'desc' },
+              take: 10,
+              include: {
+                assessment: { select: { id: true, title: true, code: true, durationMinutes: true } },
+              },
+            },
+            atRiskAlerts: {
+              orderBy: { createdAt: 'desc' },
+              take: 5,
             },
           },
         },
@@ -2238,7 +2279,7 @@ export class LearningAnalyticsService {
 
     const mentees = assignments.map((a) => {
       const student = a.student;
-      const masteries = student.skillMasteries;
+      const masteries = student.skillMasteries || [];
       const totalAttempts = masteries.reduce((sum, m) => sum + m.attemptCount, 0);
       const totalCorrect = masteries.reduce((sum, m) => sum + m.correctCount, 0);
 
@@ -2247,8 +2288,8 @@ export class LearningAnalyticsService {
           ? Math.round(masteries.reduce((sum, m) => sum + m.masteryScore, 0) / masteries.length)
           : 0;
 
-      // Identify decaying topics
-      const decayingTopics = masteries.filter((m) => {
+      // Identify topic breakdown with forgetting curve retention status
+      const topicBreakdown = masteries.map((m) => {
         const r = ForgettingCurveEngine.analyzeRetention({
           topicId: m.topicId,
           rawMastery: m.masteryScore,
@@ -2256,8 +2297,20 @@ export class LearningAnalyticsService {
           attemptCount: m.attemptCount,
           correctCount: m.correctCount,
         });
-        return r.retentionStatus === 'DECAYING' || r.retentionStatus === 'CRITICAL_DECAY';
+        return {
+          topicId: m.topicId,
+          topicName: m.topic.name,
+          score: Math.round(m.masteryScore),
+          attemptCount: m.attemptCount,
+          correctCount: m.correctCount,
+          retentionStatus: r.retentionStatus,
+          lastPracticedAt: m.lastPracticedAt,
+        };
       });
+
+      const decayingTopics = topicBreakdown.filter(
+        (t) => t.retentionStatus === 'DECAYING' || t.retentionStatus === 'CRITICAL_DECAY',
+      );
 
       // Lowest score topic
       const weakest = [...masteries].sort((a, b) => a.masteryScore - b.masteryScore)[0];
@@ -2279,6 +2332,33 @@ export class LearningAnalyticsService {
         ? Math.round((Date.now() - new Date(lastAttempt).getTime()) / (1000 * 60 * 60 * 24))
         : 14;
 
+      // Practice Metrics
+      const practiceSessions = student.practiceSessions || [];
+      const totalPracticeQuestions = practiceSessions.reduce((sum, p) => sum + (p.questionsAttempted || 0), 0);
+      const totalPracticeCorrect = practiceSessions.reduce((sum, p) => sum + (p.correctAnswers || 0), 0);
+      const practiceAccuracy = totalPracticeQuestions > 0 ? Math.round((totalPracticeCorrect / totalPracticeQuestions) * 100) : 0;
+
+      // Proctoring Violations Telemetry
+      const proctoringSessions = student.proctoringSessions || [];
+      const totalViolations = proctoringSessions.reduce((sum, p) => sum + (p.violationsCount || 0), 0);
+      const latestTrustScore = proctoringSessions.length > 0 ? proctoringSessions[0].trustScore : 100;
+      const flaggedSessionsCount = proctoringSessions.filter((p) => p.status === 'FLAGGED').length;
+
+      const flattenedViolations = proctoringSessions.flatMap((ps) =>
+        (ps.violations || []).map((v) => ({
+          id: v.id,
+          sessionId: ps.id,
+          type: v.type,
+          severity: v.severity,
+          confidence: v.confidence,
+          details: v.details,
+          timestamp: v.timestamp,
+        })),
+      );
+
+      // Assessment Submissions Telemetry
+      const assessmentSubmissions = student.assessmentSubmissions || [];
+
       return {
         assignmentId: a.id,
         studentId: student.id,
@@ -2299,6 +2379,67 @@ export class LearningAnalyticsService {
         riskReason,
         daysSinceLastActivity,
         assignedAt: a.assignedAt,
+
+        // Deep Telemetry Data: Practice, Progress, Violations & Assessments
+        practice: {
+          totalSessions: practiceSessions.length,
+          questionsAttempted: totalPracticeQuestions,
+          correctAnswers: totalPracticeCorrect,
+          accuracy: practiceAccuracy,
+          recentSessions: practiceSessions.map((p) => ({
+            id: p.id,
+            courseName: p.course?.name || 'Computer Science',
+            courseCode: p.course?.code || 'CS',
+            difficulty: p.difficulty,
+            startedAt: p.startedAt,
+            completedAt: p.completedAt,
+            questionsAttempted: p.questionsAttempted,
+            correctAnswers: p.correctAnswers,
+          })),
+        },
+        progress: {
+          averageMastery: avgMastery,
+          topicBreakdown,
+          decayingTopics: decayingTopics.map((t) => t.topicName),
+        },
+        violations: {
+          latestTrustScore,
+          totalViolations,
+          flaggedSessionsCount,
+          proctoringSessionsCount: proctoringSessions.length,
+          violationsList: flattenedViolations,
+          recentSessions: proctoringSessions.map((ps) => ({
+            id: ps.id,
+            trustScore: ps.trustScore,
+            violationsCount: ps.violationsCount,
+            status: ps.status,
+            createdAt: ps.createdAt,
+            violationsCountInternal: (ps.violations || []).length,
+          })),
+        },
+        assessments: {
+          totalTaken: assessmentSubmissions.length,
+          passedCount: assessmentSubmissions.filter((sub) => sub.passed).length,
+          recentSubmissions: assessmentSubmissions.map((sub) => ({
+            id: sub.id,
+            title: sub.assessment?.title || 'Course Assessment',
+            code: sub.assessment?.code || 'EXAM',
+            score: sub.totalScore,
+            percentage: sub.percentage,
+            passed: sub.passed,
+            status: sub.status,
+            createdAt: sub.createdAt,
+          })),
+        },
+        alerts: (student.atRiskAlerts || []).map((alt) => ({
+          id: alt.id,
+          severity: alt.severity,
+          status: alt.status,
+          triggerReason: alt.triggerReason,
+          suggestedIntervention: alt.suggestedIntervention,
+          actionNotes: alt.actionNotes,
+          createdAt: alt.createdAt,
+        })),
       };
     });
 
@@ -2311,10 +2452,19 @@ export class LearningAnalyticsService {
     const criticalCount = mentees.filter((m) => m.riskLevel === 'CRITICAL').length;
     const warningCount = mentees.filter((m) => m.riskLevel === 'WARNING').length;
 
+    // Total violations across all assigned mentees
+    const cohortTotalViolations = mentees.reduce((sum, m) => sum + m.violations.totalViolations, 0);
+    const cohortAvgTrustScore =
+      mentees.length > 0
+        ? Math.round(mentees.reduce((sum, m) => sum + m.violations.latestTrustScore, 0) / mentees.length)
+        : 100;
+
     return {
-      counsellorId,
+      counsellorId: targetCounsellorId,
       totalAssignedMentees: activeMenteesCount,
       cohortAverageMastery,
+      cohortTotalViolations,
+      cohortAvgTrustScore,
       alertsSummary: {
         criticalAlerts: criticalCount,
         warningAlerts: warningCount,
@@ -2322,6 +2472,41 @@ export class LearningAnalyticsService {
       },
       mentees: mentees.sort((a, b) => a.averageMastery - b.averageMastery),
     };
+  }
+
+  /**
+   * Get 360-degree full profile for an individual mentee assigned to the counsellor
+   */
+  async getCounsellorStudentFullProfile(counsellorId: string, studentId: string, role?: string) {
+    if (role === 'COUNSELLOR') {
+      const counsellorUser = await this.prisma.user.findFirst({
+        where: {
+          OR: [{ id: counsellorId }, { email: counsellorId }],
+        },
+      });
+
+      const allowedIds = [counsellorId, ...(counsellorUser ? [counsellorUser.id, counsellorUser.email] : [])];
+
+      const assignment = await this.prisma.counsellorAssignment.findFirst({
+        where: {
+          counsellorId: { in: allowedIds },
+          studentId,
+        },
+      });
+
+      if (!assignment) {
+        throw new ForbiddenException('Access denied: This student is not assigned to your mentorship cohort.');
+      }
+    }
+
+    const cohortData = await this.getCounsellorMenteesCohortAnalytics(counsellorId);
+    const student = cohortData.mentees.find((m: any) => m.studentId === studentId || m.assignmentId === studentId);
+
+    if (!student) {
+      throw new NotFoundException('Assigned student profile not found.');
+    }
+
+    return student;
   }
 
   /**

@@ -1,0 +1,626 @@
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { UserRole, UserStatus } from '@prisma/client';
+import * as bcrypt from 'bcryptjs';
+import * as XLSX from 'xlsx';
+
+export interface ParsedAssignmentPair {
+  counsellorQuery: string;
+  studentsQuery: string;
+}
+
+export interface AssignmentResultItem {
+  id: string;
+  counsellorId: string;
+  counsellorName: string;
+  counsellorEmail: string;
+  studentId: string;
+  enrollmentNumber: string;
+  studentName: string;
+  division: string;
+  semester: number;
+}
+
+export interface AssignmentUploadResponse {
+  success: boolean;
+  message: string;
+  totalAssignmentsCreated: number;
+  counsellorsCount: number;
+  studentsCount: number;
+  assignments: AssignmentResultItem[];
+  unmatchedStudents: string[];
+  unmatchedCounsellors: string[];
+}
+
+@Injectable()
+export class CounsellorAssignmentService {
+  private readonly logger = new Logger(CounsellorAssignmentService.name);
+
+  constructor(private prisma: PrismaService) {}
+
+  /**
+   * Main entry point to process an uploaded file (Excel, CSV, or PDF).
+   */
+  async processUploadedFile(
+    fileBuffer: Buffer,
+    fileName: string,
+  ): Promise<AssignmentUploadResponse> {
+    const ext = (fileName.split('.').pop() || '').toLowerCase();
+    let pairs: ParsedAssignmentPair[] = [];
+
+    if (ext === 'pdf') {
+      pairs = await this.parsePdfFile(fileBuffer);
+    } else if (['xlsx', 'xls', 'csv'].includes(ext)) {
+      pairs = await this.parseExcelOrCsvFile(fileBuffer);
+    } else {
+      throw new BadRequestException(
+        `Unsupported file format '.${ext}'. Please upload an Excel (.xlsx, .xls), CSV (.csv), or PDF (.pdf) file.`,
+      );
+    }
+
+    if (pairs.length === 0) {
+      throw new BadRequestException(
+        'Could not extract counsellor and student assignments from the uploaded file. Please verify the file contents or download the sample format.',
+      );
+    }
+
+    return this.commitAssignments(pairs);
+  }
+
+  /**
+   * Parse Excel or CSV buffers using XLSX
+   */
+  async parseExcelOrCsvFile(buffer: Buffer): Promise<ParsedAssignmentPair[]> {
+    const workbook = XLSX.read(buffer, { type: 'buffer' });
+    const pairs: ParsedAssignmentPair[] = [];
+
+    for (const sheetName of workbook.SheetNames) {
+      const sheet = workbook.Sheets[sheetName];
+      const rows: any[] = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+
+      if (!rows || rows.length === 0) continue;
+
+      // Check if row 0 or 1 contains headers
+      let headerRowIdx = -1;
+      let counsellorColIdx = -1;
+      let studentsColIdx = -1;
+
+      for (let r = 0; r < Math.min(5, rows.length); r++) {
+        const row = rows[r];
+        if (!Array.isArray(row)) continue;
+
+        for (let c = 0; c < row.length; c++) {
+          const val = String(row[c] || '').toLowerCase().trim();
+          if (
+            val.includes('counsellor') ||
+            val.includes('counselor') ||
+            val.includes('mentor') ||
+            val.includes('faculty') ||
+            val.includes('teacher')
+          ) {
+            counsellorColIdx = c;
+          }
+          if (
+            val.includes('student') ||
+            val.includes('enrollment') ||
+            val.includes('id range') ||
+            val.includes('mentee') ||
+            val.includes('roll')
+          ) {
+            studentsColIdx = c;
+          }
+        }
+
+        if (counsellorColIdx !== -1 && studentsColIdx !== -1 && counsellorColIdx !== studentsColIdx) {
+          headerRowIdx = r;
+          break;
+        }
+      }
+
+      if (headerRowIdx !== -1 && counsellorColIdx !== -1 && studentsColIdx !== -1) {
+        // Tabular column layout
+        for (let r = headerRowIdx + 1; r < rows.length; r++) {
+          const row = rows[r];
+          if (!Array.isArray(row)) continue;
+
+          const counsellorVal = String(row[counsellorColIdx] || '').trim();
+          const studentsVal = String(row[studentsColIdx] || '').trim();
+
+          if (counsellorVal && studentsVal) {
+            pairs.push({ counsellorQuery: counsellorVal, studentsQuery: studentsVal });
+          }
+        }
+      } else {
+        // Fallback: Free-form key-value inspection across cells
+        let currentCounsellor = '';
+
+        for (const row of rows) {
+          if (!Array.isArray(row)) continue;
+          const lineText = row.map((cell) => String(cell || '').trim()).filter(Boolean).join(' ');
+
+          const counsellorMatch = lineText.match(
+            /(?:counsellor|counselor|faculty|mentor)\s*(?:name)?\s*[:\-]\s*([^\n\r,;]+)/i,
+          );
+          if (counsellorMatch) {
+            currentCounsellor = counsellorMatch[1].trim();
+          }
+
+          const studentsMatch = lineText.match(
+            /(?:assigned\s+students|student\s+ids?|enrollment\s*(?:range|nos?|numbers?)?|students?)\s*[:\-]\s*(.+)/i,
+          );
+          if (studentsMatch && currentCounsellor) {
+            pairs.push({
+              counsellorQuery: currentCounsellor,
+              studentsQuery: studentsMatch[1].trim(),
+            });
+          } else if (row.length >= 2) {
+            const firstCell = String(row[0] || '').trim();
+            const secondCell = String(row[1] || '').trim();
+            if (firstCell && secondCell) {
+              pairs.push({
+                counsellorQuery: firstCell,
+                studentsQuery: secondCell,
+              });
+            }
+          }
+        }
+      }
+    }
+
+    return pairs;
+  }
+
+  /**
+   * Parse PDF text content
+   */
+  async parsePdfFile(buffer: Buffer): Promise<ParsedAssignmentPair[]> {
+    let fullText = '';
+    try {
+      const pdfModule = require('pdf-parse');
+      if (pdfModule.PDFParse) {
+        const parser = new pdfModule.PDFParse({ data: buffer });
+        const res = await parser.getText();
+        if (typeof res === 'string') fullText = res;
+        else if (res && typeof res.text === 'string') fullText = res.text;
+        else if (res && Array.isArray(res.pages)) {
+          fullText = res.pages.map((p: any) => p.text || '').join('\n');
+        }
+        await parser.destroy();
+      } else if (typeof pdfModule === 'function') {
+        const res = await pdfModule(buffer);
+        fullText = res.text || '';
+      }
+    } catch (err) {
+      this.logger.warn('pdf-parse module extraction fallback to buffer text search', err);
+      fullText = buffer.toString('utf8');
+    }
+
+    if (!fullText || fullText.trim().length === 0) {
+      fullText = buffer.toString('latin1');
+    }
+
+    const pairs: ParsedAssignmentPair[] = [];
+    const lines = fullText
+      .split(/\r?\n/)
+      .map((l) => l.trim())
+      .filter(Boolean);
+
+    let currentCounsellor = '';
+
+    for (const line of lines) {
+      // 1. Check Counsellor pattern
+      const cMatch = line.match(
+        /(?:counsellor|counselor|faculty|mentor)\s*(?:name)?\s*[:\-]\s*([^\n\r]+)/i,
+      );
+      if (cMatch) {
+        currentCounsellor = cMatch[1].trim();
+        continue;
+      }
+
+      // 2. Check Students pattern
+      const sMatch = line.match(
+        /(?:assigned\s+students|student\s+ids?|enrollment\s*(?:range|nos?|numbers?)?|students?)\s*[:\-]\s*([^\n\r]+)/i,
+      );
+      if (sMatch && currentCounsellor) {
+        pairs.push({
+          counsellorQuery: currentCounsellor,
+          studentsQuery: sMatch[1].trim(),
+        });
+        continue;
+      }
+
+      // 3. Tabular row with pipes, commas, or multiple tabs (e.g. "Dr. Patel | 24CS001-24CS040")
+      if (line.includes('|')) {
+        const parts = line.split('|').map((p) => p.trim()).filter(Boolean);
+        if (parts.length >= 2) {
+          const cPart = parts[0];
+          const sPart = parts[1];
+          if (!cPart.toLowerCase().includes('counsellor') && (sPart.includes('2') || sPart.includes('-') || sPart.includes(','))) {
+            pairs.push({ counsellorQuery: cPart, studentsQuery: sPart });
+          }
+        }
+      } else if (line.includes('\t') || line.includes('  ')) {
+        const parts = line.split(/\t+|\s{2,}/).map((p) => p.trim()).filter(Boolean);
+        if (parts.length >= 2) {
+          const cPart = parts[0];
+          const sPart = parts.slice(1).join(', ');
+          if (!cPart.toLowerCase().includes('counsellor') && sPart.length > 2) {
+            pairs.push({ counsellorQuery: cPart, studentsQuery: sPart });
+          }
+        }
+      }
+    }
+
+    return pairs;
+  }
+
+  /**
+   * Expands ID range (e.g., "24CS001-24CS050" or "24CS001 to 24CS050"),
+   * comma-separated IDs, or list of names into individual student query tokens.
+   */
+  expandStudentsQuery(rawQuery: string): string[] {
+    const tokens: string[] = [];
+    // Split by comma, semicolon, newline, or pipe
+    const rawChunks = rawQuery
+      .split(/[,;\n\r|]+/)
+      .map((c) => c.trim())
+      .filter(Boolean);
+
+    for (const chunk of rawChunks) {
+      // 1. Check Range Pattern: e.g. "24CS001-24CS050", "24CS001 to 24CS050", "24CS001 - 50"
+      const rangeMatch = chunk.match(
+        /^([a-zA-Z0-9]+?)(\d+)\s*(?:-|to|–|—)\s*(?:([a-zA-Z0-9]+?))?(\d+)$/i,
+      );
+
+      if (rangeMatch) {
+        const prefix1 = rangeMatch[1].toUpperCase();
+        const startNumStr = rangeMatch[2];
+        const startNum = parseInt(startNumStr, 10);
+        const padLen = startNumStr.length;
+        const prefix2 = (rangeMatch[3] || prefix1).toUpperCase();
+        const endNum = parseInt(rangeMatch[4], 10);
+
+        if (prefix1 === prefix2 && !isNaN(startNum) && !isNaN(endNum) && startNum <= endNum && endNum - startNum <= 300) {
+          for (let i = startNum; i <= endNum; i++) {
+            tokens.push(prefix1 + String(i).padStart(padLen, '0'));
+          }
+          continue;
+        }
+      }
+
+      // 2. Individual ID or Student Name
+      tokens.push(chunk);
+    }
+
+    return Array.from(new Set(tokens.filter(Boolean)));
+  }
+
+  /**
+   * Commit assignments into the database
+   */
+  async commitAssignments(pairs: ParsedAssignmentPair[]): Promise<AssignmentUploadResponse> {
+    const createdAssignments: AssignmentResultItem[] = [];
+    const unmatchedStudents: string[] = [];
+    const unmatchedCounsellors: string[] = [];
+    const counsellorsMapped = new Set<string>();
+    const studentsMapped = new Set<string>();
+
+    for (const pair of pairs) {
+      const counsellorUser = await this.resolveCounsellor(pair.counsellorQuery);
+      if (!counsellorUser) {
+        unmatchedCounsellors.push(pair.counsellorQuery);
+        continue;
+      }
+
+      counsellorsMapped.add(counsellorUser.id);
+      const studentTokens = this.expandStudentsQuery(pair.studentsQuery);
+
+      for (const token of studentTokens) {
+        const studentProfile = await this.resolveStudent(token);
+        if (!studentProfile) {
+          unmatchedStudents.push(`${token} (for ${counsellorUser.email})`);
+          continue;
+        }
+
+        // Upsert assignment
+        const assignment = await this.prisma.counsellorAssignment.upsert({
+          where: {
+            counsellorId_studentId: {
+              counsellorId: counsellorUser.id,
+              studentId: studentProfile.id,
+            },
+          },
+          update: {
+            assignedAt: new Date(),
+          },
+          create: {
+            counsellorId: counsellorUser.id,
+            studentId: studentProfile.id,
+          },
+          include: {
+            student: {
+              include: {
+                authorizedStudent: true,
+              },
+            },
+          },
+        });
+
+        studentsMapped.add(studentProfile.id);
+        createdAssignments.push({
+          id: assignment.id,
+          counsellorId: counsellorUser.id,
+          counsellorName: counsellorUser.email.split('@')[0],
+          counsellorEmail: counsellorUser.email,
+          studentId: studentProfile.id,
+          enrollmentNumber: assignment.student.authorizedStudent.enrollmentNumber,
+          studentName: assignment.student.authorizedStudent.name,
+          division: assignment.student.authorizedStudent.division,
+          semester: assignment.student.authorizedStudent.semester,
+        });
+      }
+    }
+
+    return {
+      success: true,
+      message: `Successfully mapped ${createdAssignments.length} student assignments across ${counsellorsMapped.size} counsellor(s).`,
+      totalAssignmentsCreated: createdAssignments.length,
+      counsellorsCount: counsellorsMapped.size,
+      studentsCount: studentsMapped.size,
+      assignments: createdAssignments,
+      unmatchedStudents: Array.from(new Set(unmatchedStudents)),
+      unmatchedCounsellors: Array.from(new Set(unmatchedCounsellors)),
+    };
+  }
+
+  /**
+   * Find or create counsellor user
+   */
+  private async resolveCounsellor(query: string): Promise<any | null> {
+    const clean = query.trim().replace(/^Dr\.\s*|^Prof\.\s*|^Mr\.\s*|^Mrs\.\s*|^Ms\.\s*/i, '').trim();
+
+    // 1. By exact email
+    let user = await this.prisma.user.findFirst({
+      where: {
+        email: { equals: query.toLowerCase() },
+      },
+    });
+
+    if (user) return user;
+
+    // 2. By partial email or name match in existing counsellors/faculty
+    const candidates = await this.prisma.user.findMany({
+      where: {
+        role: { in: [UserRole.COUNSELLOR, UserRole.FACULTY, UserRole.HOD] },
+      },
+    });
+
+    // Check if query is contained in email or employeeCode
+    const cleanLower = clean.toLowerCase();
+    user = candidates.find(
+      (c) =>
+        c.email.toLowerCase().includes(cleanLower) ||
+        cleanLower.includes(c.email.split('@')[0].toLowerCase()),
+    );
+
+    if (user) return user;
+
+    // 3. If query literally contains "counsellor" or "mentor" and a counsellor user exists
+    if (query.toLowerCase().includes('counsellor') || query.toLowerCase().includes('mentor')) {
+      const defaultCounsellor = candidates.find((c) => c.role === UserRole.COUNSELLOR);
+      if (defaultCounsellor) return defaultCounsellor;
+    }
+
+    // 4. Provision a new Counsellor account for this name/email if not yet created
+    const emailSlug = clean.toLowerCase().replace(/[^a-z0-9]/g, '.');
+    const newEmail = emailSlug.includes('@') ? emailSlug : `${emailSlug}@charusat.edu.in`;
+    const passwordHash = await bcrypt.hash('clias123', 10);
+
+    return this.prisma.user.create({
+      data: {
+        email: newEmail,
+        passwordHash,
+        role: UserRole.COUNSELLOR,
+        status: UserStatus.ACTIVE,
+        emailVerified: true,
+      },
+    });
+  }
+
+  /**
+   * Find or provision student profile
+   */
+  private async resolveStudent(token: string): Promise<any | null> {
+    const clean = token.trim();
+    if (!clean) return null;
+
+    // 1. Search AuthorizedStudent by enrollmentNumber, name, or email
+    let authStudent = await this.prisma.authorizedStudent.findFirst({
+      where: {
+        OR: [
+          { enrollmentNumber: { equals: clean } },
+          { enrollmentNumber: { equals: clean.toUpperCase() } },
+          { email: { equals: clean.toLowerCase() } },
+          { name: { equals: clean } },
+        ],
+      },
+      include: {
+        studentProfile: true,
+      },
+    });
+
+    // Substring name match if clean token has more than 3 chars
+    if (!authStudent && clean.length > 3) {
+      authStudent = await this.prisma.authorizedStudent.findFirst({
+        where: {
+          name: { contains: clean },
+        },
+        include: {
+          studentProfile: true,
+        },
+      });
+    }
+
+    if (!authStudent) {
+      // Check if student profile exists with this enrollment or email in User
+      const user = await this.prisma.user.findFirst({
+        where: {
+          OR: [
+            { email: { equals: clean.toLowerCase() } },
+            { email: { startsWith: clean.toLowerCase() } },
+          ],
+        },
+        include: {
+          studentProfile: true,
+        },
+      });
+      if (user?.studentProfile) return user.studentProfile;
+      return null;
+    }
+
+    // If AuthorizedStudent already has a StudentProfile, return it
+    if (authStudent.studentProfile) {
+      return authStudent.studentProfile;
+    }
+
+    // If student hasn't logged in yet, auto-provision User and StudentProfile
+    let studentUser = await this.prisma.user.findUnique({
+      where: { email: authStudent.email },
+    });
+
+    if (!studentUser) {
+      const passwordHash = await bcrypt.hash('student123', 10);
+      studentUser = await this.prisma.user.create({
+        data: {
+          email: authStudent.email,
+          passwordHash,
+          role: UserRole.STUDENT,
+          status: UserStatus.ACTIVE,
+          emailVerified: true,
+        },
+      });
+    }
+
+    return this.prisma.studentProfile.create({
+      data: {
+        userId: studentUser.id,
+        authorizedStudentId: authStudent.id,
+      },
+    });
+  }
+
+  /**
+   * Get all assignments grouped by counsellor
+   */
+  async getAllAssignments(): Promise<any[]> {
+    const assignments = await this.prisma.counsellorAssignment.findMany({
+      include: {
+        student: {
+          include: {
+            authorizedStudent: true,
+            skillMasteries: true,
+            practiceSessions: {
+              select: { id: true },
+            },
+            proctoringSessions: {
+              select: { id: true, trustScore: true, violationsCount: true, status: true },
+            },
+          },
+        },
+      },
+      orderBy: { assignedAt: 'desc' },
+    });
+
+    // Fetch counsellors details
+    const counsellorIds = Array.from(new Set(assignments.map((a) => a.counsellorId)));
+    const counsellors = await this.prisma.user.findMany({
+      where: { id: { in: counsellorIds } },
+      select: { id: true, email: true, role: true },
+    });
+    const counsellorMap = new Map(counsellors.map((c) => [c.id, c]));
+
+    return assignments.map((a) => {
+      const c = counsellorMap.get(a.counsellorId);
+      const student = a.student;
+      const masteries = student.skillMasteries || [];
+      const avgMastery =
+        masteries.length > 0
+          ? Math.round(masteries.reduce((sum, m) => sum + m.masteryScore, 0) / masteries.length)
+          : 0;
+
+      const proctoring = student.proctoringSessions || [];
+      const totalViolations = proctoring.reduce((sum, p) => sum + (p.violationsCount || 0), 0);
+      const latestTrust = proctoring.length > 0 ? proctoring[0].trustScore : 100;
+
+      return {
+        id: a.id,
+        assignedAt: a.assignedAt,
+        counsellorId: a.counsellorId,
+        counsellorEmail: c?.email || a.counsellorId,
+        counsellorName: c?.email ? c.email.split('@')[0] : 'Counsellor',
+        studentId: student.id,
+        enrollmentNumber: student.authorizedStudent.enrollmentNumber,
+        studentName: student.authorizedStudent.name,
+        email: student.authorizedStudent.email,
+        semester: student.authorizedStudent.semester,
+        division: student.authorizedStudent.division,
+        averageMastery: avgMastery,
+        practiceSessionsCount: student.practiceSessions?.length || 0,
+        totalViolations,
+        trustScore: latestTrust,
+      };
+    });
+  }
+
+  /**
+   * Delete assignment by id
+   */
+  async deleteAssignment(assignmentId: string): Promise<any> {
+    return this.prisma.counsellorAssignment.delete({
+      where: { id: assignmentId },
+    });
+  }
+
+  /**
+   * Generate downloadable sample files for Excel, CSV, and PDF
+   */
+  getSampleFile(format: 'xlsx' | 'csv'): { buffer: Buffer; mimeType: string; filename: string } {
+    const sampleData = [
+      {
+        'Counsellor Name': 'Dr. Rajesh Patel',
+        'Counsellor Email': 'counsellor@charusat.edu.in',
+        'Assigned Student IDs / Range / Names': '24CS001-24CS045',
+      },
+      {
+        'Counsellor Name': 'Prof. Sneha Joshi',
+        'Counsellor Email': 'sneha.cse@charusat.ac.in',
+        'Assigned Student IDs / Range / Names': '24CS046-24CS090',
+      },
+      {
+        'Counsellor Name': 'Dr. Amit Dave',
+        'Counsellor Email': 'amit.cse@charusat.ac.in',
+        'Assigned Student IDs / Range / Names': 'Rahul Patel, Priya Sharma, Aarav Desai',
+      },
+    ];
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(sampleData);
+    XLSX.utils.book_append_sheet(wb, ws, 'Counsellor-Allocations');
+
+    if (format === 'csv') {
+      const csvStr = XLSX.utils.sheet_to_csv(ws);
+      return {
+        buffer: Buffer.from(csvStr, 'utf-8'),
+        mimeType: 'text/csv',
+        filename: 'clias_counsellor_student_allocation_sample.csv',
+      };
+    }
+
+    const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+    return {
+      buffer: buf,
+      mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      filename: 'clias_counsellor_student_allocation_sample.xlsx',
+    };
+  }
+}

@@ -7,6 +7,7 @@ import { api } from '@/lib/api';
 import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
 import { MetricCard } from '@/components/MetricCard';
+import { CounsellorAssignmentModal } from '@/components/CounsellorAssignmentModal';
 import { UserRole } from '@clias/shared-types';
 import {
   Building2,
@@ -55,6 +56,7 @@ export default function HodDashboard() {
   const [selectedCourseId, setSelectedCourseId] = useState<string>('');
   const [fetching, setFetching] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'obe' | 'divisions'>('obe');
+  const [isCounsellorModalOpen, setIsCounsellorModalOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && (!user || (user.role !== UserRole.HOD && user.role !== UserRole.SUPER_ADMIN))) {
@@ -133,7 +135,14 @@ export default function HodDashboard() {
                 Outcome-Based Education (OBE) metrics, NBA/NAAC CO-PO attainment matrices, and division-level comparative health.
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => setIsCounsellorModalOpen(true)}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl shadow-xs transition transform hover:-translate-y-0.5"
+              >
+                <Users className="w-4 h-4" />
+                <span>Assign Counsellors (Excel / PDF)</span>
+              </button>
               <span className="text-xs font-bold px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
                 <Award className="w-3.5 h-3.5" /> NBA Criteria 3 &amp; 4 Compliant
               </span>
@@ -420,6 +429,13 @@ export default function HodDashboard() {
           </div>
         </main>
       </div>
+
+      {/* Counsellor Allocation Modal */}
+      <CounsellorAssignmentModal
+        isOpen={isCounsellorModalOpen}
+        onClose={() => setIsCounsellorModalOpen(false)}
+        onSuccess={() => loadOBEAndCurriculumData()}
+      />
     </div>
   );
 }

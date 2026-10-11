@@ -185,6 +185,15 @@ export class AnalyticsController {
     return this.analyticsService.getCounsellorMenteesCohortAnalytics(req.user.id);
   }
 
+  @Get('counsellor/mentees/:studentId/full-profile')
+  @Roles(UserRole.COUNSELLOR, UserRole.HOD, UserRole.SUPER_ADMIN)
+  async getCounsellorStudentFullProfile(
+    @Request() req,
+    @Param('studentId') studentId: string,
+  ) {
+    return this.analyticsService.getCounsellorStudentFullProfile(req.user.id, studentId, req.user.role);
+  }
+
   @Post('counsellor/advisory')
   @Roles(UserRole.COUNSELLOR, UserRole.SUPER_ADMIN)
   async recordCounsellorAdvisory(
@@ -222,7 +231,8 @@ export class AnalyticsController {
   @Get('counsellor/at-risk')
   @Roles(UserRole.COUNSELLOR, UserRole.HOD, UserRole.SUPER_ADMIN)
   async getAtRiskAlerts(@Request() req) {
-    return this.analyticsService.getAtRiskAlerts();
+    const counsellorId = req.user?.role === UserRole.COUNSELLOR ? req.user.id : undefined;
+    return this.analyticsService.getAtRiskAlerts(counsellorId);
   }
 
   @Patch('counsellor/at-risk/:id')

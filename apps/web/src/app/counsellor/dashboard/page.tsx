@@ -166,9 +166,18 @@ export default function CounsellorDashboard() {
                 Institutional early-warning diagnostics identify disengagement, mastery decay, and persistent misconception traps.
               </p>
             </div>
-            <span className="text-xs font-bold px-3 py-1.5 rounded-xl bg-slate-900 text-indigo-300 border border-slate-800">
-              {menteesSummary?.totalAssignedMentees ? `Assigned Mentees: ${menteesSummary.totalAssignedMentees} Students` : 'Assigned Mentee Batch'}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold px-3 py-1.5 rounded-xl bg-slate-900 text-indigo-300 border border-slate-800">
+                {menteesSummary?.totalAssignedMentees ? `Assigned Mentees: ${menteesSummary.totalAssignedMentees} Students` : 'Assigned Mentee Batch'}
+              </span>
+              <button
+                onClick={() => router.push('/counsellor/students')}
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-xs transition"
+              >
+                <span>View Mentee Telemetry</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
 
           {/* Metric Cards */}

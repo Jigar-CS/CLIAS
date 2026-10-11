@@ -8,6 +8,7 @@ import { Sidebar } from '@/components/Sidebar';
 import { Navbar } from '@/components/Navbar';
 import { MetricCard } from '@/components/MetricCard';
 import { CsvImportModal } from '@/components/CsvImportModal';
+import { CounsellorAssignmentModal } from '@/components/CounsellorAssignmentModal';
 import { UserRole } from '@clias/shared-types';
 import {
   Users,
@@ -51,6 +52,7 @@ export default function AdminStudentsPage() {
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'ACTIVATED' | 'PENDING'>('ALL');
   const [divisionFilter, setDivisionFilter] = useState('ALL');
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isCounsellorModalOpen, setIsCounsellorModalOpen] = useState(false);
 
   useEffect(() => {
     if (!authLoading && (!user || user.role !== UserRole.SUPER_ADMIN)) {
@@ -128,7 +130,14 @@ export default function AdminStudentsPage() {
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => setIsCounsellorModalOpen(true)}
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs transition transform hover:-translate-y-0.5 shrink-0"
+              >
+                <Users className="w-4 h-4" />
+                <span>Assign Counsellors (Excel / PDF)</span>
+              </button>
               <button
                 onClick={() => setIsImportModalOpen(true)}
                 className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition transform hover:-translate-y-0.5 shrink-0"
@@ -306,6 +315,13 @@ export default function AdminStudentsPage() {
       <CsvImportModal
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
+        onSuccess={() => loadData()}
+      />
+
+      {/* Counsellor Allocation Modal */}
+      <CounsellorAssignmentModal
+        isOpen={isCounsellorModalOpen}
+        onClose={() => setIsCounsellorModalOpen(false)}
         onSuccess={() => loadData()}
       />
     </div>

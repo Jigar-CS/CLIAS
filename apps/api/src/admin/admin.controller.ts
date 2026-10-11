@@ -5,13 +5,17 @@ import {
   Body,
   Get,
   Query,
+  Param,
+  Delete,
   UseGuards,
   HttpCode,
   HttpStatus,
   Res,
+  BadRequestException,
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AdminService, ParsedStudentRow } from './admin.service';
+import { CounsellorAssignmentService } from './counsellor-assignment.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -21,7 +25,10 @@ import { UserRole } from '@prisma/client';
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Roles(UserRole.SUPER_ADMIN)
 export class AdminController {
-  constructor(private adminService: AdminService) {}
+  constructor(
+    private adminService: AdminService,
+    private counsellorAssignmentService: CounsellorAssignmentService,
+  ) {}
 
   @Get('dashboard')
   async getDashboardStats() {
@@ -84,5 +91,57 @@ export class AdminController {
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', 'attachment; filename="clias_authorized_students_sample.csv"');
     return res.send(csv);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Counsellor - Student Allocation Management (Super Admin & HOD)
+  // ---------------------------------------------------------------------------
+  @Post('counsellor-assignments/upload')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.HOD)
+  @HttpCode(HttpStatus.OK)
+  async uploadCounsellorAssignments(
+    @Body() body: { fileBase64?: string; fileName?: string; csvText?: string },
+  ) {
+    if (!body.fileBase64 && !body.csvText) {
+      throw new BadRequestException('File payload (fileBase64 or csvText) is required.');
+    }
+
+    const fileName = body.fileName || (body.csvText ? 'assignments.csv' : 'assignments.xlsx');
+    let buffer: Buffer;
+
+    if (body.fileBase64) {
+      // Strip potential base64 prefix (e.g. data:application/pdf;base64,...)
+      const cleanBase64 = body.fileBase64.replace(/^data:[^;]+;base64,/, '');
+      buffer = Buffer.from(cleanBase64, 'base64');
+    } else {
+      buffer = Buffer.from(body.csvText || '', 'utf-8');
+    }
+
+    return this.counsellorAssignmentService.processUploadedFile(buffer, fileName);
+  }
+
+  @Get('counsellor-assignments')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.HOD)
+  async getCounsellorAssignments() {
+    return this.counsellorAssignmentService.getAllAssignments();
+  }
+
+  @Delete('counsellor-assignments/:id')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.HOD)
+  async deleteCounsellorAssignment(@Param('id') id: string) {
+    return this.counsellorAssignmentService.deleteAssignment(id);
+  }
+
+  @Get('counsellor-assignments/sample')
+  @Roles(UserRole.SUPER_ADMIN, UserRole.HOD)
+  getSampleCounsellorAssignments(
+    @Query('format') format: 'xlsx' | 'csv',
+    @Res() res: Response,
+  ) {
+    const targetFormat = format === 'csv' ? 'csv' : 'xlsx';
+    const sample = this.counsellorAssignmentService.getSampleFile(targetFormat);
+    res.setHeader('Content-Type', sample.mimeType);
+    res.setHeader('Content-Disposition', `attachment; filename="${sample.filename}"`);
+    return res.send(sample.buffer);
   }
 }
