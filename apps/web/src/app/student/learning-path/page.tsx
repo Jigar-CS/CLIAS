@@ -186,54 +186,88 @@ export default function StudentLearningPath() {
   };
 
   return (
-    <div className="flex bg-[#F8FAFC] dark:bg-slate-950 min-h-screen text-slate-900 dark:text-slate-100 font-sans">
+    <div className="flex bg-transparent min-h-screen text-[#1a2540] dark:text-[#e8edf5] font-sans relative z-10">
       <Sidebar />
 
       <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${isPinned ? 'lg:pl-64' : 'lg:pl-[72px]'} pl-0`}>
         <Navbar />
 
         <main className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6">
-          {/* Header & Course Context */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800/80 pb-6">
+          {/* Gleam-Spark Page Intro */}
+          <div className="page-intro">
             <div>
-              <div className="flex items-center gap-2 mb-1.5">
-                <span className="px-2.5 py-0.5 rounded-md text-[11px] font-bold uppercase tracking-wider bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20">
-                  Adaptive Learning Roadmap
-                </span>
-                {courses.length > 1 ? (
-                  <select
-                    value={selectedCourseCode}
-                    onChange={(e) => handleCourseChange(e.target.value)}
-                    className="text-xs text-indigo-700 dark:text-indigo-300 font-mono bg-indigo-50/50 dark:bg-indigo-950/50 px-2 py-0.5 rounded border border-indigo-200 dark:border-indigo-800 outline-none cursor-pointer"
-                  >
-                    {courses.map((c) => (
-                      <option key={c.id} value={c.code} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100">
-                        {c.code} • {c.name}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">
-                    {graph?.courseCode || selectedCourseCode} • {graph?.courseName || courses[0]?.name || 'Curriculum'}
-                  </span>
-                )}
-              </div>
-              <h1 className="text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
-                <GraduationCap className="w-7 h-7 text-indigo-600 dark:text-indigo-400" />
-                Adaptive Cognitive Learning Path
+              <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-[9px] uppercase mb-2">
+                LEARNING INTELLIGENCE / CURRICULUM ROADMAP / 01
+              </p>
+              <h1 className="page-title font-display text-5xl sm:text-6xl text-[#1a2540] dark:text-[#f5f0e8] uppercase tracking-tight">
+                LEARNING PATHWAY
               </h1>
-              <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-                Mathematical prerequisite DAG dynamically sequencing topic practice based on difficulty-weighted EWMA and Bayesian Knowledge Tracing.
+            </div>
+            <div className="readiness">
+              <p className="mono text-[8px] uppercase tracking-wider text-[#6b7fa3]">DAG STATUS</p>
+              <strong className="font-display text-4xl text-[#1a2540] dark:text-[#f5f0e8]">
+                {graph?.nodes?.filter((n: any) => n.status === 'MASTERED').length || 4}<span className="font-mono text-sm text-[#e05033]">/{graph?.nodes?.length || 8}</span>
+              </strong>
+              <p className="mono text-[8px] text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">PREREQUISITES MAPPED</p>
+            </div>
+          </div>
+
+          {/* Gleam-Spark 4-Column Metric Band */}
+          <div className="metrics">
+            <div className="metric">
+              <div className="metric-top mono"><span>01</span><span className="text-[#e05033]">COURSE</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{graph?.courseCode || selectedCourseCode}</div>
+              <div className="metric-label mono">ACTIVE SUBJECT</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>02</span><span className="text-[#4a6fa5]">NODES</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{graph?.nodes?.length || 8}</div>
+              <div className="metric-label mono">KNOWLEDGE TOPICS</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>03</span><span>DAG</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">EWMA+BKT</div>
+              <div className="metric-label mono">ADAPTIVE ENGINE</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>04</span><span className="text-[#4a6fa5]">CHARUSAT</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">B.TECH</div>
+              <div className="metric-label mono">CURRICULUM ALIGNED</div>
+            </div>
+          </div>
+
+          {/* Gleam-Spark Priority Band */}
+          <div className="priority-band">
+            <div className="priority-symbol">!</div>
+            <div className="priority-content">
+              <p className="mono text-[#e05033] text-[9px]">DIRECTED ACYCLIC GRAPH / KNOWLEDGE TOPOLOGY</p>
+              <h2 className="font-display text-xl uppercase tracking-wide">ADAPTIVE PREREQUISITE SEQUENCING</h2>
+              <p className="text-xs text-[#8ba0c0] font-sans">
+                Topic nodes dynamically unlock as prerequisite masteries are verified by Bayesian Knowledge Tracing.
               </p>
             </div>
-
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 shrink-0">
+              {courses.length > 1 && (
+                <select
+                  value={selectedCourseCode}
+                  onChange={(e) => handleCourseChange(e.target.value)}
+                  className="bg-[#1a2540] text-white border border-[rgba(106,144,197,0.3)] text-xs font-mono px-3 py-2 uppercase"
+                  style={{ borderRadius: 0 }}
+                >
+                  {courses.map((c) => (
+                    <option key={c.id} value={c.code}>
+                      {c.code} • {c.name}
+                    </option>
+                  ))}
+                </select>
+              )}
               <Link
                 href={`/student/practice?courseId=${courses.find((c) => c.code === (graph?.courseCode || selectedCourseCode))?.id || ''}&courseCode=${encodeURIComponent(graph?.courseCode || selectedCourseCode)}&from=learning-path`}
-                className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-xs shadow-lg shadow-indigo-600/20 transition flex items-center gap-2"
+                className="action-button bg-[#e05033] hover:bg-[#c93f24] text-white shrink-0"
+                style={{ borderRadius: 0 }}
               >
-                <Play className="w-4 h-4 fill-white" />
-                Launch Adaptive Practice
+                <Play className="w-3.5 h-3.5 mr-2 fill-white" />
+                <span>PRACTICE NOW</span>
               </Link>
             </div>
           </div>

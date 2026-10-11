@@ -353,7 +353,7 @@ export function ProfileView({ forcedRole, roleTitle, roleDescription }: ProfileV
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
       {/* Top Banner Card */}
-      <div className="relative overflow-hidden rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 md:p-8 shadow-sm">
+      <div className="relative overflow-hidden panel p-6 md:p-8">
         <div className="absolute top-0 right-0 w-96 h-full bg-gradient-to-l from-blue-500/10 via-indigo-500/5 to-transparent pointer-events-none" />
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
@@ -488,7 +488,7 @@ export function ProfileView({ forcedRole, roleTitle, roleDescription }: ProfileV
       {/* TAB 1: Personal Profile */}
       {activeTab === 'profile' && (
         <form onSubmit={handleSaveProfile} className="space-y-6">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 md:p-8 shadow-sm space-y-6">
+          <div className="panel p-6 md:p-8 space-y-6">
             <div>
               <h3 className="text-base font-bold text-slate-900 dark:text-white">Identity & Contact Information</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -674,7 +674,7 @@ export function ProfileView({ forcedRole, roleTitle, roleDescription }: ProfileV
       {/* TAB 2: Academic / Professional Details */}
       {activeTab === 'academic' && (
         <form onSubmit={handleSaveProfile} className="space-y-6">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 md:p-8 shadow-sm space-y-6">
+          <div className="panel p-6 md:p-8 space-y-6">
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">
@@ -946,7 +946,7 @@ export function ProfileView({ forcedRole, roleTitle, roleDescription }: ProfileV
       {/* TAB 3: Security & Password */}
       {activeTab === 'security' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 md:p-8 shadow-sm space-y-6">
+          <div className="lg:col-span-2 panel p-6 md:p-8 space-y-6">
             <div>
               <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <KeyRound className="w-4 h-4 text-blue-600 dark:text-blue-400" />
@@ -1057,7 +1057,7 @@ export function ProfileView({ forcedRole, roleTitle, roleDescription }: ProfileV
 
           {/* Security status side card */}
           <div className="space-y-4">
-            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm space-y-4">
+            <div className="panel p-6 space-y-4">
               <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 text-emerald-600" />
                 <span>Security Diagnostics</span>
@@ -1097,7 +1097,7 @@ export function ProfileView({ forcedRole, roleTitle, roleDescription }: ProfileV
       {/* TAB 4: Notification Preferences */}
       {activeTab === 'preferences' && (
         <form onSubmit={handleSaveProfile} className="space-y-6">
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 md:p-8 shadow-sm space-y-6">
+          <div className="panel p-6 md:p-8 space-y-6">
             <div>
               <h3 className="text-base font-bold text-slate-900 dark:text-white">Communication &amp; Portal Preferences</h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">

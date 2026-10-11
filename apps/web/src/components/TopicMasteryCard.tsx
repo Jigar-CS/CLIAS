@@ -25,8 +25,8 @@ export function TopicMasteryCard({
 
   let statusBadge = {
     label: 'Needs Practice',
-    color: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/20 dark:text-rose-300 dark:border-rose-500/40',
-    barColor: 'bg-rose-500',
+    color: 'bg-red-50 text-red-700 border-red-200 dark:bg-red-500/20 dark:text-red-300 dark:border-red-500/40',
+    barColor: 'bg-red-600',
   };
 
   if (score >= 75) {
@@ -38,8 +38,8 @@ export function TopicMasteryCard({
   } else if (score >= 60) {
     statusBadge = {
       label: 'Proficient',
-      color: 'bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-500/20 dark:text-indigo-300 dark:border-indigo-500/40',
-      barColor: 'bg-indigo-600',
+      color: 'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-500/20 dark:text-teal-300 dark:border-teal-500/40',
+      barColor: 'bg-teal-600',
     };
   } else if (score >= 40) {
     statusBadge = {
@@ -50,23 +50,24 @@ export function TopicMasteryCard({
   }
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-xs dark:shadow-md hover-lift flex flex-col justify-between transition-colors duration-200">
+    <div className="bg-[#faf7f2] dark:bg-[#121b30] p-4 border border-[rgba(74,111,165,0.25)] dark:border-[rgba(106,144,197,0.2)] shadow-sm hover:shadow-md flex flex-col justify-between transition-all duration-200" style={{borderRadius:0}}>
       <div>
         <div className="flex items-start justify-between gap-2">
           <div>
-            <span className="text-[10px] font-bold tracking-wider text-slate-400 dark:text-slate-500 uppercase">
+            <span className="font-mono text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase">
               {courseCode}
             </span>
-            <h4 className="text-sm font-bold text-slate-900 dark:text-white leading-tight">{topicName}</h4>
+            <h4 className="text-sm font-bold text-slate-900 dark:text-white leading-tight mt-0.5">{topicName}</h4>
           </div>
           <div className="flex flex-col items-end gap-1">
             <span
-              className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${statusBadge.color}`}
+              className={`font-mono text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 border ${statusBadge.color}`}
+              style={{borderRadius:0}}
             >
               {statusBadge.label}
             </span>
             {retentionStatus && (retentionStatus === 'DECAYING' || retentionStatus === 'CRITICAL_DECAY') && (
-              <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/30">
+              <span className="font-mono text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/30">
                 Decay Alert
               </span>
             )}
@@ -75,17 +76,17 @@ export function TopicMasteryCard({
 
         <div className="mt-3">
           <div className="flex items-center justify-between text-xs mb-1">
-            <span className="text-slate-600 dark:text-slate-400 font-medium">Topic Mastery</span>
+            <span className="font-mono text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400">Mastery Level</span>
             <div className="flex items-center gap-1.5">
-              <span className="font-extrabold text-slate-900 dark:text-white">{score}%</span>
+              <span className="font-mono font-bold text-slate-900 dark:text-white">{score}%</span>
               {decayedMastery !== undefined && effectiveScore < score && (
-                <span className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold" title="Decayed effective retention score">
+                <span className="font-mono text-[10px] text-amber-600 dark:text-amber-400 font-semibold" title="Decayed effective retention score">
                   ({effectiveScore}%)
                 </span>
               )}
             </div>
           </div>
-          <div className="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+          <div className="w-full h-1.5 bg-[rgba(74,111,165,0.12)] dark:bg-[rgba(106,144,197,0.1)] overflow-hidden" style={{borderRadius:0}}>
             <div
               className={`h-full rounded-full transition-all duration-500 ${statusBadge.barColor}`}
               style={{ width: `${Math.min(100, Math.max(5, score))}%` }}
@@ -94,14 +95,14 @@ export function TopicMasteryCard({
         </div>
       </div>
 
-      <div className="mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
-        <span>{attemptCount ? `${attemptCount} attempts` : 'No attempts'}</span>
+      <div className="mt-3 pt-3 border-t border-[rgba(74,111,165,0.18)] dark:border-[rgba(106,144,197,0.15)] flex items-center justify-between text-[11px] text-[#6b7fa3] dark:text-[#8ba0c0]">
+        <span className="font-mono text-[10px] uppercase tracking-wider">{attemptCount ? `${attemptCount} attempts` : 'No attempts'}</span>
         {onPracticeClick && (
           <button
             onClick={onPracticeClick}
-            className="font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition flex items-center gap-1"
+            className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#e05033] dark:text-[#e8604a] hover:text-[#c8432b] dark:hover:text-[#d0503a] transition flex items-center gap-1 cursor-pointer"
           >
-            Practice Topic
+            Practice Topic →
           </button>
         )}
       </div>

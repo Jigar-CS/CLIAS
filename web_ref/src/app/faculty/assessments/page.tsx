@@ -1,0 +1,3443 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth-context';
+import { api } from '@/lib/api';
+import { Sidebar } from '@/components/Sidebar';
+import { Navbar } from '@/components/Navbar';
+import {
+  FileText,
+  Plus,
+  Clock,
+  Award,
+  Users,
+  CheckCircle,
+  TrendingUp,
+  X,
+  Loader2,
+  Check,
+  Search,
+  Download,
+  BarChart2,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  FileSpreadsheet,
+  Terminal,
+  Code,
+  Sparkles,
+  Trash2,
+  Eye,
+  Lock,
+  Layers,
+  Edit3,
+  BookOpen,
+  Cpu,
+  Play,
+  Copy,
+  Sliders,
+  AlertCircle,
+  Upload,
+  FileUp,
+  CheckSquare,
+  Square,
+  Trophy,
+  BrainCircuit,
+  Send,
+  RotateCcw,
+} from 'lucide-react';
+import { AssessmentLeaderboardModal } from '@/components/AssessmentLeaderboardModal';
+
+export default function FacultyAssessmentsPage() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+
+  const [courses, setCourses] = useState<any[]>([]);
+  const [selectedCourseId, setSelectedCourseId] = useState<string>('');
+  const [assessments, setAssessments] = useState<any[]>([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Cohort Analytics & Export State
+  const [analysisModalOpen, setAnalysisModalOpen] = useState(false);
+  const [activeAnalytics, setActiveAnalytics] = useState<any>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [searchStudent, setSearchStudent] = useState('');
+  const [filterDiv, setFilterDiv] = useState<'ALL' | 'DIV 1' | 'DIV 2'>('ALL');
+  const [leaderboardModalData, setLeaderboardModalData] = useState<{ id: string; title: string } | null>(null);
+
+  // Examination Mode & Coding Problem Engine State
+  const [examMode, setExamMode] = useState<'OBJECTIVE' | 'CODING' | 'HYBRID'>('OBJECTIVE');
+  const [authoredCodingProblems, setAuthoredCodingProblems] = useState<any[]>([]);
+  const [isProblemAuthorModalOpen, setIsProblemAuthorModalOpen] = useState(false);
+  const [editingProblemIdx, setEditingProblemIdx] = useState<number | null>(null);
+
+  // Active Coding Problem Authoring Form Fields
+  const [cpTitle, setCpTitle] = useState('');
+  const [cpDifficulty, setCpDifficulty] = useState<'EASY' | 'MEDIUM' | 'HARD'>('MEDIUM');
+  const [cpTags, setCpTags] = useState('Algorithms, Data Structures');
+  const [cpDescription, setCpDescription] = useState('');
+  const [cpConstraints, setCpConstraints] = useState('• 1 <= input.length <= 10^5\n• Time Limit: 2000ms\n• Memory Limit: 128MB');
+  const [cpHints, setCpHints] = useState('Consider optimal time and space asymptotic bounds.');
+  const [cpStarterPython, setCpStarterPython] = useState('');
+  const [cpStarterJs, setCpStarterJs] = useState('');
+  const [cpStarterCpp, setCpStarterCpp] = useState('');
+  const [cpStarterJava, setCpStarterJava] = useState('');
+  const [cpSampleTestCases, setCpSampleTestCases] = useState<Array<{ id: string; input: string; expectedOutput: string; explanation: string }>>([]);
+  const [cpCheckTestCases, setCpCheckTestCases] = useState<Array<{ id: string; input: string; expectedOutput: string; timeLimitMs: number; memoryLimitMb: number; explanation: string }>>([]);
+  const [isGeneratingWithAi, setIsGeneratingWithAi] = useState(false);
+  const [aiPromptTopic, setAiPromptTopic] = useState('');
+
+  // Problem Bank Selector State
+  const [isBankModalOpen, setIsBankModalOpen] = useState(false);
+  const [bankProblems, setBankProblems] = useState<any[]>([]);
+  const [bankLoading, setBankLoading] = useState(false);
+
+  // Problem Inspector Modal State
+  const [isInspectModalOpen, setIsInspectModalOpen] = useState(false);
+  const [inspectAssessment, setInspectAssessment] = useState<any | null>(null);
+
+  // New assessment form state
+  const [newTitle, setNewTitle] = useState('');
+  const [newCode, setNewCode] = useState('');
+  const [newType, setNewType] = useState('QUIZ');
+  const [newDivision, setNewDivision] = useState<'ALL' | 'DIV 1' | 'DIV 2'>('ALL');
+  const [newDuration, setNewDuration] = useState(30);
+  const [newTotalMarks, setNewTotalMarks] = useState(100);
+  const [newPassingMarks, setNewPassingMarks] = useState(40);
+  const [newStatus, setNewStatus] = useState<'DRAFT' | 'PUBLISHED'>('DRAFT');
+  const [availableQuestions, setAvailableQuestions] = useState<any[]>([]);
+  const [selectedQuestionIds, setSelectedQuestionIds] = useState<string[]>([]);
+  const [creating, setCreating] = useState(false);
+  const [questionsLoading, setQuestionsLoading] = useState(false);
+  const [filterTopic, setFilterTopic] = useState('ALL');
+  const [filterDifficulty, setFilterDifficulty] = useState('ALL');
+  const [filterQuestionType, setFilterQuestionType] = useState('ALL');
+  const [questionSearch, setQuestionSearch] = useState('');
+  const [expandedQuestionId, setExpandedQuestionId] = useState<string | null>(null);
+  const [showDraftPreview, setShowDraftPreview] = useState(false);
+
+  // Document AI / RAG Integration in Create Assessment
+  const [questionSourceWorkflow, setQuestionSourceWorkflow] = useState<'BANK' | 'DOCUMENT'>('BANK');
+  const [ragFile, setRagFile] = useState<File | null>(null);
+  const [ragExtracting, setRagExtracting] = useState<boolean>(false);
+  const [ragExtractProgress, setRagExtractProgress] = useState<string | null>(null);
+  const [ragExtractError, setRagExtractError] = useState<string | null>(null);
+  const [candidateQuestions, setCandidateQuestions] = useState<any[]>([]);
+  const [selectedCandidateIndices, setSelectedCandidateIndices] = useState<number[]>([]);
+  const [candidateTopicFilter, setCandidateTopicFilter] = useState<string>('ALL');
+  const [candidateOnlyAmbiguous, setCandidateOnlyAmbiguous] = useState<boolean>(false);
+  const [importingToAssessment, setImportingToAssessment] = useState<boolean>(false);
+  const [sourceAttributionMap, setSourceAttributionMap] = useState<Record<string, 'RAG' | 'BANK'>>({});
+
+  // Edit assessment modal state
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingAssessment, setEditingAssessment] = useState<any | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDescription, setEditDescription] = useState('');
+  const [editDuration, setEditDuration] = useState(30);
+  const [editPassingMarks, setEditPassingMarks] = useState(40);
+  const [editTotalMarks, setEditTotalMarks] = useState(100);
+  const [editDivision, setEditDivision] = useState<'ALL' | 'DIV 1' | 'DIV 2'>('ALL');
+  const [editAllowedAttempts, setEditAllowedAttempts] = useState(2);
+  const [editStatus, setEditStatus] = useState<string>('PUBLISHED');
+  const [editExtendMinutes, setEditExtendMinutes] = useState<number>(0);
+  const [savingEdit, setSavingEdit] = useState(false);
+
+  const openEditModal = (assessment: any) => {
+    setEditingAssessment(assessment);
+    setEditTitle(assessment.title || '');
+    setEditDescription(assessment.description || '');
+    setEditDuration(assessment.durationMinutes || 30);
+    setEditPassingMarks(assessment.passingMarks || 40);
+    setEditTotalMarks(assessment.totalMarks || 100);
+    setEditDivision(assessment.division || 'ALL');
+    setEditAllowedAttempts(assessment.allowedAttempts || 2);
+    setEditStatus(assessment.status || 'PUBLISHED');
+    setEditExtendMinutes(0);
+    setIsEditModalOpen(true);
+  };
+
+  const handleSaveEditAssessment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingAssessment) return;
+
+    setSavingEdit(true);
+    try {
+      await api.patch(`/assessments/${editingAssessment.id}`, {
+        title: editTitle,
+        description: editDescription,
+        durationMinutes: Number(editDuration),
+        passingMarks: Number(editPassingMarks),
+        totalMarks: Number(editTotalMarks),
+        division: editDivision,
+        allowedAttempts: Number(editAllowedAttempts),
+        status: editStatus,
+        extendMinutes: editExtendMinutes > 0 ? Number(editExtendMinutes) : undefined,
+      });
+
+      setIsEditModalOpen(false);
+      setEditingAssessment(null);
+      await loadCourseAssessments(selectedCourseId);
+    } catch (err: any) {
+      alert(err.message || 'Failed to update assessment');
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const handleReopenAssessmentNow = async () => {
+    if (!editingAssessment) return;
+    setSavingEdit(true);
+    try {
+      await api.patch(`/assessments/${editingAssessment.id}`, {
+        reopen: true,
+        durationMinutes: Number(editDuration),
+        status: 'PUBLISHED',
+      });
+      setIsEditModalOpen(false);
+      setEditingAssessment(null);
+      await loadCourseAssessments(selectedCourseId);
+    } catch (err: any) {
+      alert(err.message || 'Failed to reopen assessment');
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const handlePublishAssessment = async (assessment: any) => {
+    try {
+      await api.patch(`/assessments/${assessment.id}`, {
+        status: 'PUBLISHED',
+        reopen: true,
+      });
+      await loadCourseAssessments(selectedCourseId);
+    } catch (err: any) {
+      alert(err.message || 'Failed to publish assessment');
+    }
+  };
+
+  const handleUnpublishAssessment = async (assessment: any) => {
+    try {
+      await api.patch(`/assessments/${assessment.id}/status`, {
+        status: 'DRAFT',
+      });
+      await loadCourseAssessments(selectedCourseId);
+    } catch (err: any) {
+      alert(err.message || 'Failed to revert assessment to draft');
+    }
+  };
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      router.push('/auth/login');
+      return;
+    }
+    if (user) {
+      loadInitialData();
+    }
+  }, [user, authLoading]);
+
+  const loadInitialData = async () => {
+    setLoading(true);
+    try {
+      const courseList = await api.get('/courses');
+      setCourses(courseList);
+      
+      // If faculty user has an assigned course, lock to it
+      const facultyCourseId = user?.courseId || user?.assignedCourse?.id;
+      const targetCourseId = facultyCourseId && courseList.some((c: any) => c.id === facultyCourseId)
+        ? facultyCourseId
+        : (courseList.length > 0 ? courseList[0].id : '');
+
+      if (targetCourseId) {
+        setSelectedCourseId(targetCourseId);
+        await loadCourseAssessments(targetCourseId);
+      }
+    } catch (err) {
+      console.error('Failed to load courses', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadCourseAssessments = async (courseId: string) => {
+    try {
+      const data = await api.get(`/assessments/student?courseId=${courseId}`);
+      setAssessments(data);
+    } catch (err) {
+      console.error('Failed to load assessments', err);
+    }
+  };
+
+  const openAnalyticsModal = async (assessmentId: string) => {
+    setAnalysisModalOpen(true);
+    setAnalyticsLoading(true);
+    setSearchStudent('');
+    setFilterDiv('ALL');
+    try {
+      const data = await api.get(`/assessments/${assessmentId}/analytics`);
+      setActiveAnalytics(data);
+    } catch (err) {
+      console.error('Failed to load assessment analytics', err);
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  };
+
+  const exportMarksCsv = (analyticsData?: any) => {
+    const target = analyticsData || activeAnalytics;
+    if (!target || !target.submissions || target.submissions.length === 0) {
+      alert('No student submissions found to export.');
+      return;
+    }
+
+    const headers = [
+      'Student Name',
+      'Enrollment Number',
+      'Email',
+      'Division',
+      'Assessment Code',
+      'Assessment Title',
+      'Status',
+      'Marks Obtained',
+      'Total Marks',
+      'Percentage (%)',
+      'Outcome',
+      'Proctoring Trust Score (%)',
+      'Proctoring Status',
+      'Integrity Violations',
+      'Submitted At',
+    ];
+
+    const rows = target.submissions.map((s: any) => [
+      `"${s.studentName || 'Student'}"`,
+      `"${s.enrollmentNumber || 'N/A'}"`,
+      `"${s.email || 'N/A'}"`,
+      `"${s.division || target.division || 'DIV 1'}"`,
+      `"${target.code}"`,
+      `"${target.title}"`,
+      `"${s.status}"`,
+      s.score,
+      s.totalMarks,
+      `${s.percentage}%`,
+      `"${s.passed ? 'PASSED' : 'RETAKE'}"`,
+      `${s.trustScore}%`,
+      `"${s.proctoringStatus}"`,
+      s.violationsCount,
+      `"${new Date(s.submittedAt).toLocaleString()}"`,
+    ]);
+
+    const csvContent =
+      'data:text/csv;charset=utf-8,' +
+      [headers.join(','), ...rows.map((e: any[]) => e.join(','))].join('\n');
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `${target.code}_Student_Marks_Report.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const exportDirectCsv = async (assessmentId: string) => {
+    try {
+      const data = await api.get(`/assessments/${assessmentId}/analytics`);
+      exportMarksCsv(data);
+    } catch (err) {
+      console.error('Failed to export marks CSV', err);
+    }
+  };
+
+  const openCreateModal = async () => {
+    setIsModalOpen(true);
+    setQuestionsLoading(true);
+    setFilterTopic('ALL');
+    setFilterDifficulty('ALL');
+    setFilterQuestionType('ALL');
+    setQuestionSearch('');
+    setQuestionSourceWorkflow('BANK');
+    setNewStatus('DRAFT');
+    setRagFile(null);
+    setRagExtractError(null);
+    setRagExtractProgress(null);
+    setCandidateQuestions([]);
+    setSelectedCandidateIndices([]);
+    setShowDraftPreview(false);
+    try {
+      // Fetch approved questions directly for the selected course
+      const questions = await api.get(`/courses/${selectedCourseId}/questions`);
+      setAvailableQuestions(questions || []);
+    } catch (err) {
+      console.error('Failed to load question bank', err);
+    } finally {
+      setQuestionsLoading(false);
+    }
+  };
+
+  const handleSelectRagFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size (max 25 MB)
+    if (file.size > 25 * 1024 * 1024) {
+      setRagExtractError(
+        `File exceeds maximum size limit of 25 MB (${(file.size / (1024 * 1024)).toFixed(1)} MB). Please upload a smaller document.`,
+      );
+      setRagFile(null);
+      return;
+    }
+
+    // Validate file format
+    const allowed = ['.pdf', '.txt', '.doc', '.docx'];
+    const nameLower = file.name.toLowerCase();
+    if (!allowed.some((ext) => nameLower.endsWith(ext))) {
+      setRagExtractError('Unsupported file format. Please upload a PDF, TXT, or DOCX document.');
+      setRagFile(null);
+      return;
+    }
+
+    setRagFile(file);
+    setRagExtractError(null);
+    setRagExtractProgress(null);
+  };
+
+  const handleExtractFromDocument = async () => {
+    if (!ragFile) return;
+
+    setRagExtracting(true);
+    setRagExtractError(null);
+    setRagExtractProgress(`Reading ${ragFile.name} (${(ragFile.size / 1024).toFixed(1)} KB)...`);
+
+    try {
+      let fileBase64 = '';
+      let textContent = '';
+
+      if (ragFile.type === 'text/plain' || ragFile.name.endsWith('.txt')) {
+        textContent = await ragFile.text();
+      } else {
+        setRagExtractProgress(`Encoding ${ragFile.name} for Document AI...`);
+        fileBase64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = reject;
+          reader.readAsDataURL(ragFile);
+        });
+      }
+
+      setRagExtractProgress(
+        'Document AI & RAG Pipeline processing: extracting questions, choices, answers & Bloom taxonomy...',
+      );
+
+      const response: any = await api.post(
+        '/rag/extract-questions',
+        {
+          fileBase64,
+          text: textContent,
+          fileName: ragFile.name,
+          courseId: selectedCourseId,
+        },
+        { timeout: 90000 } as any,
+      );
+
+      if (Array.isArray(response) && response.length > 0) {
+        setCandidateQuestions(response);
+        // Pre-select all extracted candidate questions by default
+        setSelectedCandidateIndices(response.map((_, i) => i));
+        const ambiguousCount = response.filter((q) => q.isAmbiguous).length;
+        setRagExtractProgress(
+          `Extracted ${response.length} candidate questions!${
+            ambiguousCount > 0 ? ` (${ambiguousCount} flagged with ambiguous answers for review)` : ''
+          }`,
+        );
+
+        if (!newTitle.trim()) {
+          setNewTitle(`Assessment on ${ragFile.name.replace(/\.[^/.]+$/, '')}`);
+        }
+        if (!newCode.trim()) {
+          setNewCode(`EXAM-${Date.now().toString().slice(-4)}`);
+        }
+      } else {
+        setRagExtractError('No valid questions could be detected in this document. Please check the document format.');
+      }
+    } catch (err: any) {
+      console.error('Error extracting questions:', err);
+      setRagExtractError(err.message || 'Failed to extract questions from uploaded document.');
+      setRagExtractProgress(null);
+    } finally {
+      setRagExtracting(false);
+    }
+  };
+
+  const handleSetCandidateCorrectOption = (candidateIdx: number, optionIdx: number) => {
+    setCandidateQuestions((prev) => {
+      const copy = [...prev];
+      const targetQ = { ...copy[candidateIdx] };
+      targetQ.options = targetQ.options.map((opt: any, idx: number) => ({
+        ...opt,
+        isCorrect: idx === optionIdx,
+      }));
+      targetQ.isAmbiguous = false;
+      targetQ.explanation = targetQ.explanation?.replace(/\[Ambiguous Answer\]/i, '[Faculty Verified Answer]');
+      copy[candidateIdx] = targetQ;
+      return copy;
+    });
+  };
+
+  const toggleCandidateSelection = (candidateIdx: number) => {
+    setSelectedCandidateIndices((prev) =>
+      prev.includes(candidateIdx) ? prev.filter((i) => i !== candidateIdx) : [...prev, candidateIdx],
+    );
+  };
+
+  const handleImportCandidatesToAssessment = async () => {
+    if (candidateQuestions.length === 0 || selectedCandidateIndices.length === 0) {
+      alert('Please select at least one candidate question to import into the assessment.');
+      return;
+    }
+
+    setImportingToAssessment(true);
+    try {
+      const questionsToImport = selectedCandidateIndices.map((idx) => candidateQuestions[idx]);
+
+      const res: any = await api.post(`/rag/courses/${selectedCourseId}/import-questions`, {
+        questions: questionsToImport,
+      });
+
+      const imported = res?.questions || [];
+      if (imported.length > 0) {
+        const mapped = imported.map((q: any) => ({
+          id: q.id,
+          questionText: q.questionText,
+          difficulty: q.difficulty || 'MEDIUM',
+          bloomLevel: q.bloomLevel || 'APPLY',
+          topic: q.topic || { name: q.topic?.name || 'Document AI' },
+          options: (q.options || []).map((o: any) => ({
+            id: o.id,
+            text: o.optionText || o.text,
+            isCorrect: o.isCorrect,
+            misconception: o.misconception?.title || o.misconception,
+          })),
+          explanation: q.explanation || 'Extracted via Document AI.',
+          sourceType: 'DOCUMENT_AI',
+        }));
+
+        // Merge into available questions without duplicates
+        setAvailableQuestions((prev) => {
+          const existingIds = new Set(prev.map((item) => item.id));
+          const newItems = mapped.filter((item: any) => !existingIds.has(item.id));
+          return [...newItems, ...prev];
+        });
+
+        // Add newly imported question IDs to selectedQuestionIds
+        const newIds = mapped.map((item: any) => item.id);
+        setSelectedQuestionIds((prev) => Array.from(new Set([...prev, ...newIds])));
+
+        // Update attribution map
+        setSourceAttributionMap((prev) => {
+          const next = { ...prev };
+          newIds.forEach((id: string) => {
+            next[id] = 'RAG';
+          });
+          return next;
+        });
+
+        alert(`✓ Added ${newIds.length} Document AI questions to your assessment draft!`);
+        // Switch to Question Bank view so faculty can inspect the combined draft
+        setQuestionSourceWorkflow('BANK');
+      }
+    } catch (err: any) {
+      console.error('Failed to import candidate questions:', err);
+      alert(err.message || 'Failed to import questions to assessment draft.');
+    } finally {
+      setImportingToAssessment(false);
+    }
+  };
+
+  const toggleQuestionSelection = (id: string) => {
+    setSelectedQuestionIds((prev) =>
+      prev.includes(id) ? prev.filter((qId) => qId !== id) : [...prev, id],
+    );
+  };
+
+  const selectAllFiltered = () => {
+    const filteredIds = filteredQuestions.map((q) => q.id);
+    setSelectedQuestionIds((prev) => Array.from(new Set([...prev, ...filteredIds])));
+  };
+
+  const deselectAllFiltered = () => {
+    const filteredIdsSet = new Set(filteredQuestions.map((q) => q.id));
+    setSelectedQuestionIds((prev) => prev.filter((id) => !filteredIdsSet.has(id)));
+  };
+
+  const uniqueTopics = Array.from(
+    new Set(availableQuestions.map((q) => q.topic?.name).filter(Boolean))
+  ).sort() as string[];
+
+  const filteredQuestions = availableQuestions.filter((q) => {
+    const matchTopic = filterTopic === 'ALL' || q.topic?.name === filterTopic;
+    const matchDiff = filterDifficulty === 'ALL' || q.difficulty === filterDifficulty;
+    const matchSearch =
+      !questionSearch.trim() ||
+      q.questionText.toLowerCase().includes(questionSearch.toLowerCase()) ||
+      (q.topic?.name && q.topic.name.toLowerCase().includes(questionSearch.toLowerCase()));
+    return matchTopic && matchDiff && matchSearch;
+  });
+
+  const openAuthorModal = (editIdx?: number) => {
+    if (typeof editIdx === 'number' && authoredCodingProblems[editIdx]) {
+      const p = authoredCodingProblems[editIdx];
+      setEditingProblemIdx(editIdx);
+      setCpTitle(p.title);
+      setCpDifficulty(p.difficulty);
+      setCpTags(p.tags);
+      setCpDescription(p.description);
+      setCpConstraints(p.constraints);
+      setCpHints(Array.isArray(p.hints) ? p.hints.join('\n') : (p.hints || ''));
+      setCpStarterPython(p.starterCodes?.PYTHON || '');
+      setCpStarterJs(p.starterCodes?.JAVASCRIPT || '');
+      setCpStarterCpp(p.starterCodes?.CPP || '');
+      setCpStarterJava(p.starterCodes?.JAVA || '');
+      setCpSampleTestCases(
+        (p.sampleTestCases || []).map((s: any, idx: number) => ({
+          id: `sample-${idx}-${Date.now()}`,
+          input: s.input,
+          expectedOutput: s.expectedOutput,
+          explanation: s.explanation || '',
+        })),
+      );
+      setCpCheckTestCases(
+        (p.testCasesToCheck || []).map((c: any, idx: number) => ({
+          id: `check-${idx}-${Date.now()}`,
+          input: c.input,
+          expectedOutput: c.expectedOutput,
+          timeLimitMs: c.timeLimitMs || 2000,
+          memoryLimitMb: c.memoryLimitMb || 128,
+          explanation: c.explanation || '',
+        })),
+      );
+    } else {
+      setEditingProblemIdx(null);
+      setCpTitle('');
+      setCpDifficulty('MEDIUM');
+      setCpTags('Algorithms, Data Structures');
+      setCpDescription('');
+      setCpConstraints('• 1 <= input.length <= 10^5\n• Time Limit: 2000ms\n• Memory Limit: 128MB');
+      setCpHints('Consider optimal time and space asymptotic bounds.');
+      setCpStarterPython('def solution(nums):\n    # Write your algorithmic solution here\n    pass\n');
+      setCpStarterJs('function solution(nums) {\n    // Write your algorithmic solution here\n}\n');
+      setCpStarterCpp('#include <vector>\n\nint solution(std::vector<int>& nums) {\n    return 0;\n}\n');
+      setCpStarterJava('class Solution {\n    public int solution(int[] nums) {\n        return 0;\n    }\n}\n');
+      setCpSampleTestCases([
+        {
+          id: `sample-${Date.now()}-1`,
+          input: 'nums = [2, 7, 11, 15], target = 9',
+          expectedOutput: '[0, 1]',
+          explanation: 'nums[0] + nums[1] == 9, so return [0, 1]',
+        },
+      ]);
+      setCpCheckTestCases([
+        {
+          id: `check-${Date.now()}-1`,
+          input: 'nums = [3, 2, 4], target = 6',
+          expectedOutput: '[1, 2]',
+          timeLimitMs: 2000,
+          memoryLimitMb: 128,
+          explanation: 'Hidden evaluation case with non-sorted indices',
+        },
+        {
+          id: `check-${Date.now()}-2`,
+          input: 'nums = [3, 3], target = 6',
+          expectedOutput: '[0, 1]',
+          timeLimitMs: 2000,
+          memoryLimitMb: 128,
+          explanation: 'Hidden evaluation case with duplicate elements',
+        },
+      ]);
+      setAiPromptTopic('');
+    }
+    setIsProblemAuthorModalOpen(true);
+  };
+
+  const handleAddSampleTestCase = () => {
+    setCpSampleTestCases((prev) => [
+      ...prev,
+      {
+        id: `sample-${Date.now()}`,
+        input: '',
+        expectedOutput: '',
+        explanation: '',
+      },
+    ]);
+  };
+
+  const handleRemoveSampleTestCase = (id: string) => {
+    setCpSampleTestCases((prev) => prev.filter((tc) => tc.id !== id));
+  };
+
+  const handleAddCheckTestCase = () => {
+    setCpCheckTestCases((prev) => [
+      ...prev,
+      {
+        id: `check-${Date.now()}`,
+        input: '',
+        expectedOutput: '',
+        timeLimitMs: 2000,
+        memoryLimitMb: 128,
+        explanation: '',
+      },
+    ]);
+  };
+
+  const handleRemoveCheckTestCase = (id: string) => {
+    setCpCheckTestCases((prev) => prev.filter((tc) => tc.id !== id));
+  };
+
+  const handleAiGenerateProblem = async () => {
+    const topic = aiPromptTopic.trim() || cpTitle.trim() || cpTags.trim() || 'Dynamic Programming';
+    setIsGeneratingWithAi(true);
+    try {
+      const generated = await api.post('/coding/problems/generate-ai', {
+        topic,
+        difficulty: cpDifficulty,
+        customPrompt: aiPromptTopic,
+      });
+
+      if (generated) {
+        setCpTitle(generated.title || cpTitle);
+        setCpDescription(generated.description || cpDescription);
+        setCpDifficulty(generated.difficulty || cpDifficulty);
+        setCpTags(generated.tags || cpTags);
+        if (generated.constraints) setCpConstraints(generated.constraints);
+        if (generated.hints) {
+          setCpHints(Array.isArray(generated.hints) ? generated.hints.join('\n') : generated.hints);
+        }
+        if (generated.starterCodes) {
+          const sc = typeof generated.starterCodes === 'string'
+            ? JSON.parse(generated.starterCodes)
+            : generated.starterCodes;
+          if (sc.PYTHON) setCpStarterPython(sc.PYTHON);
+          if (sc.JAVASCRIPT) setCpStarterJs(sc.JAVASCRIPT);
+          if (sc.CPP) setCpStarterCpp(sc.CPP);
+          if (sc.JAVA) setCpStarterJava(sc.JAVA);
+        }
+
+        if (generated.testCases && generated.testCases.length > 0) {
+          const samples = generated.testCases
+            .filter((tc: any) => !tc.isHidden)
+            .map((tc: any, idx: number) => ({
+              id: `sample-${idx}-${Date.now()}`,
+              input: tc.input,
+              expectedOutput: tc.expectedOutput,
+              explanation: tc.explanation || `Sample test case ${idx + 1}`,
+            }));
+
+          const checks = generated.testCases
+            .filter((tc: any) => tc.isHidden)
+            .map((tc: any, idx: number) => ({
+              id: `check-${idx}-${Date.now()}`,
+              input: tc.input,
+              expectedOutput: tc.expectedOutput,
+              timeLimitMs: tc.timeLimitMs || 2000,
+              memoryLimitMb: tc.memoryLimitMb || 128,
+              explanation: tc.explanation || `Hidden evaluation case ${idx + 1}`,
+            }));
+
+          if (samples.length > 0) setCpSampleTestCases(samples);
+          if (checks.length > 0) setCpCheckTestCases(checks);
+        }
+      }
+    } catch (err: any) {
+      alert(`AI Generation failed: ${err.message}`);
+    } finally {
+      setIsGeneratingWithAi(false);
+    }
+  };
+
+  const handleSaveAuthoredProblem = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!cpTitle.trim()) {
+      alert('Please enter a problem title.');
+      return;
+    }
+    if (!cpDescription.trim()) {
+      alert('Please enter the full problem statement.');
+      return;
+    }
+    if (cpSampleTestCases.length === 0) {
+      alert('Please provide at least one sample testcase visible to students.');
+      return;
+    }
+    if (cpCheckTestCases.length === 0) {
+      alert('Please provide at least one hidden check testcase for automated evaluation.');
+      return;
+    }
+
+    const problemItem = {
+      title: cpTitle.trim(),
+      difficulty: cpDifficulty,
+      tags: cpTags.trim() || 'DSA, Algorithms',
+      description: cpDescription.trim(),
+      constraints: cpConstraints.trim() || '• Standard time & memory limits apply',
+      hints: cpHints.split('\n').filter(Boolean),
+      starterCodes: {
+        PYTHON: cpStarterPython,
+        JAVASCRIPT: cpStarterJs,
+        CPP: cpStarterCpp,
+        JAVA: cpStarterJava,
+      },
+      sampleTestCases: cpSampleTestCases.map((stc) => ({
+        input: stc.input,
+        expectedOutput: stc.expectedOutput,
+        explanation: stc.explanation,
+      })),
+      testCasesToCheck: cpCheckTestCases.map((ctc) => ({
+        input: ctc.input,
+        expectedOutput: ctc.expectedOutput,
+        timeLimitMs: Number(ctc.timeLimitMs) || 2000,
+        memoryLimitMb: Number(ctc.memoryLimitMb) || 128,
+        explanation: ctc.explanation,
+      })),
+    };
+
+    if (editingProblemIdx !== null) {
+      setAuthoredCodingProblems((prev) => {
+        const next = [...prev];
+        next[editingProblemIdx] = problemItem;
+        return next;
+      });
+    } else {
+      setAuthoredCodingProblems((prev) => [...prev, problemItem]);
+    }
+
+    setIsProblemAuthorModalOpen(false);
+  };
+
+  const handleRemoveAuthoredProblem = (idx: number) => {
+    setAuthoredCodingProblems((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleOpenBankModal = async () => {
+    setIsBankModalOpen(true);
+    setBankLoading(true);
+    try {
+      const data = await api.get('/coding/problems');
+      setBankProblems(data || []);
+    } catch (err: any) {
+      console.error('Failed to load coding problem bank', err);
+    } finally {
+      setBankLoading(false);
+    }
+  };
+
+  const handleImportProblemFromBank = async (prob: any) => {
+    try {
+      const detailed = await api.get(`/coding/problems/${prob.slug}`);
+      if (detailed) {
+        let starter = {
+          PYTHON: 'def solution(*args):\n    pass\n',
+          JAVASCRIPT: 'function solution(...args) {}\n',
+          CPP: '#include <vector>\nint solution() {\n    return 0;\n}\n',
+          JAVA: 'class Solution {\n    public int solution() {\n        return 0;\n    }\n}\n',
+        };
+        try {
+          if (detailed.starterCodes) {
+            starter = typeof detailed.starterCodes === 'string'
+              ? JSON.parse(detailed.starterCodes)
+              : detailed.starterCodes;
+          }
+        } catch (_) {}
+
+        let hintsArr = ['Analyze asymptotic complexity bounds.'];
+        try {
+          if (detailed.hints) {
+            hintsArr = typeof detailed.hints === 'string'
+              ? JSON.parse(detailed.hints)
+              : detailed.hints;
+          }
+        } catch (_) {}
+
+        const sampleCases = (detailed.testCases || [])
+          .filter((tc: any) => !tc.isHidden)
+          .map((tc: any) => ({
+            input: tc.input,
+            expectedOutput: tc.expectedOutput,
+            explanation: tc.explanation || 'Sample test case',
+          }));
+
+        const checkCases = (detailed.testCases || [])
+          .filter((tc: any) => tc.isHidden)
+          .map((tc: any) => ({
+            input: tc.input,
+            expectedOutput: tc.expectedOutput,
+            timeLimitMs: tc.timeLimitMs || 2000,
+            memoryLimitMb: tc.memoryLimitMb || 128,
+            explanation: tc.explanation || 'Evaluation check case',
+          }));
+
+        if (checkCases.length === 0 && sampleCases.length > 0) {
+          checkCases.push({
+            input: sampleCases[0].input,
+            expectedOutput: sampleCases[0].expectedOutput,
+            timeLimitMs: 2000,
+            memoryLimitMb: 128,
+            explanation: 'Evaluation check case',
+          });
+        }
+
+        const newProblem = {
+          title: detailed.title,
+          difficulty: detailed.difficulty,
+          tags: detailed.tags || 'Algorithms',
+          description: detailed.description,
+          constraints: detailed.constraints || '• Time Limit: 2000ms\n• Memory Limit: 128MB',
+          hints: hintsArr,
+          starterCodes: starter,
+          sampleTestCases: sampleCases.length > 0 ? sampleCases : [{ input: 'nums = [1, 2]', expectedOutput: '[1, 2]', explanation: 'Sample case' }],
+          testCasesToCheck: checkCases.length > 0 ? checkCases : [{ input: 'nums = [100]', expectedOutput: '[100]', timeLimitMs: 2000, memoryLimitMb: 128, explanation: 'Hidden boundary test case' }],
+        };
+
+        setAuthoredCodingProblems((prev) => [...prev, newProblem]);
+        setIsBankModalOpen(false);
+      }
+    } catch (err: any) {
+      alert(`Failed to import problem: ${err.message}`);
+    }
+  };
+
+  const handleInspectProblems = (assessment: any) => {
+    setInspectAssessment(assessment);
+    setIsInspectModalOpen(true);
+  };
+
+  const handleCreateAssessment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (examMode === 'OBJECTIVE' && selectedQuestionIds.length === 0) {
+      alert('Please select at least one question from the question bank for the assessment.');
+      return;
+    }
+    if (examMode === 'CODING' && authoredCodingProblems.length === 0) {
+      alert('Please author or import at least one coding problem for the coding examination.');
+      return;
+    }
+    if (examMode === 'HYBRID' && selectedQuestionIds.length === 0 && authoredCodingProblems.length === 0) {
+      alert('Please add at least one question or coding problem for the hybrid examination.');
+      return;
+    }
+
+    setCreating(true);
+    try {
+      await api.post('/assessments', {
+        title: newTitle,
+        code: newCode || `ASM-${Date.now().toString().slice(-4)}`,
+        courseId: selectedCourseId,
+        type: newType,
+        division: newDivision,
+        durationMinutes: Number(newDuration),
+        totalMarks: Number(newTotalMarks),
+        passingMarks: Number(newPassingMarks),
+        examMode,
+        status: newStatus,
+        questionIds: examMode === 'CODING' ? [] : selectedQuestionIds,
+        codingProblems: examMode === 'OBJECTIVE' ? [] : authoredCodingProblems,
+      });
+
+      setIsModalOpen(false);
+      setNewTitle('');
+      setNewCode('');
+      setAuthoredCodingProblems([]);
+      setSelectedQuestionIds([]);
+      setRagFile(null);
+      setCandidateQuestions([]);
+      await loadCourseAssessments(selectedCourseId);
+    } catch (err: any) {
+      alert(err.message || 'Failed to create assessment');
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-transparent text-[#1a2540] dark:text-[#e8edf5] flex relative z-10">
+      <Sidebar />
+
+      <div className="flex-1 ml-64 flex flex-col min-w-0">
+        <Navbar
+          title="Assessment & Examination Studio"
+          subtitle="Author formal quizzes, scheduled mid-terms, and evaluate class performance"
+        />
+
+        <main className="p-4 sm:p-6 lg:p-8 max-w-6xl w-full mx-auto space-y-6">
+          {/* Gleam-Spark Page Intro */}
+          <div className="page-intro">
+            <div>
+              <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-[9px] uppercase mb-2">
+                ACADEMIC INTELLIGENCE / EXAM STUDIO / 01
+              </p>
+              <h1 className="page-title font-display text-5xl sm:text-6xl text-[#1a2540] dark:text-[#f5f0e8] uppercase tracking-tight">
+                ASSESSMENT STUDIO
+              </h1>
+            </div>
+            <div className="readiness">
+              <p className="mono text-[8px] uppercase tracking-wider text-[#6b7fa3]">EXAM ENGINE</p>
+              <strong className="font-display text-4xl text-[#1a2540] dark:text-[#f5f0e8]">
+                {assessments.filter((a) => a.status === 'PUBLISHED').length}<span className="font-mono text-sm text-[#e05033]">/{assessments.length}</span>
+              </strong>
+              <p className="mono text-[8px] text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">PUBLISHED ASSESSMENTS</p>
+            </div>
+          </div>
+
+          {/* Gleam-Spark 4-Column Metric Band */}
+          <div className="metrics">
+            <div className="metric">
+              <div className="metric-top mono"><span>01</span><span className="text-[#e05033]">ACTIVE</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{assessments.length}</div>
+              <div className="metric-label mono">TOTAL ASSESSMENTS</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>02</span><span className="text-[#4a6fa5]">COURSES</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{courses.length}</div>
+              <div className="metric-label mono">ALLOCATED COURSES</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>03</span><span>SECURITY</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">SECURE</div>
+              <div className="metric-label mono">PROCTORED EVALUATION</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>04</span><span className="text-[#4a6fa5]">STATUS</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">ONLINE</div>
+              <div className="metric-label mono">ACADEMIC NETWORK</div>
+            </div>
+          </div>
+
+          {/* Gleam-Spark Priority Band with Create Button and Course Selector */}
+          <div className="priority-band">
+            <div className="priority-symbol">!</div>
+            <div className="priority-content">
+              <p className="mono text-[#e05033] text-[9px]">DEPARTMENT ASSESSMENT AUTHORING</p>
+              <h2 className="font-display text-xl uppercase tracking-wide">CONFIGURE & DISPATCH ASSESSMENTS</h2>
+              <p className="text-xs text-[#8ba0c0] font-sans">
+                Author formal quizzes, scheduled mid-terms, and evaluate class performance with automated proctoring.
+              </p>
+            </div>
+            <div className="flex items-center gap-3 shrink-0">
+              {courses.length > 1 && (
+                <select
+                  value={selectedCourseId}
+                  onChange={(e) => {
+                    setSelectedCourseId(e.target.value);
+                    loadCourseAssessments(e.target.value);
+                  }}
+                  className="bg-[#1a2540] text-white border border-[rgba(106,144,197,0.3)] text-xs font-mono px-3 py-2 uppercase"
+                  style={{ borderRadius: 0 }}
+                >
+                  {courses.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.code} - {c.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+              <button
+                type="button"
+                onClick={openCreateModal}
+                className="action-button bg-[#e05033] hover:bg-[#c93f24] text-white shrink-0"
+                style={{ borderRadius: 0 }}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                <span>CREATE ASSESSMENT</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Assessment Cards */}
+          {loading ? (
+            <div className="p-16 text-center text-xs font-mono font-semibold text-slate-400 flex items-center justify-center gap-2">
+              <Loader2 className="w-5 h-5 animate-spin text-[#e05033]" />
+              <span>Loading assessments...</span>
+            </div>
+          ) : assessments.length === 0 ? (
+            <div className="border border-[rgba(74,111,165,0.25)] dark:border-[rgba(106,144,197,0.2)] bg-[#faf7f2] dark:bg-[#121b30] p-12 text-center text-slate-400" style={{ borderRadius: 0 }}>
+              <FileText className="w-12 h-12 text-[#4a6fa5] mx-auto mb-3" />
+              <p className="text-base font-bold text-white">No Assessments Created</p>
+              <p className="text-xs text-slate-400 mt-1">Click Create Assessment to launch your first exam.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {assessments.map((a) => (
+                <div
+                  key={a.id}
+                  className="bg-[#111827] rounded-2xl border border-slate-800 p-6 shadow-md hover:border-slate-700 transition space-y-4"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                        {a.type} • {a.code}
+                      </span>
+                      { (a.isCodingExam || a.title?.includes('[CODING]') || a.description?.toLowerCase().includes('coding')) && (
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 flex items-center gap-1">
+                          <Terminal className="w-3 h-3 text-cyan-400" />
+                          Coding Exam
+                        </span>
+                      )}
+                      <span
+                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                          a.division === 'CS Div 1' || a.division === 'DIV 1'
+                            ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                            : a.division === 'CS Div 2' || a.division === 'DIV 2'
+                            ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
+                            : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                        }`}
+                      >
+                        {a.division === 'CS Div 1' || a.division === 'DIV 1'
+                          ? 'CS Div 1'
+                          : a.division === 'CS Div 2' || a.division === 'DIV 2'
+                          ? 'CS Div 2'
+                          : 'Both Divisions (All)'}
+                      </span>
+                    </div>
+
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1.5 ${
+                        a.status === 'DRAFT'
+                          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                          : a.isExpired || a.status === 'COMPLETED'
+                          ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                          : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                      }`}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full ${
+                        a.status === 'DRAFT'
+                          ? 'bg-amber-400'
+                          : a.isExpired || a.status === 'COMPLETED'
+                          ? 'bg-rose-400'
+                          : 'bg-emerald-400 animate-pulse'
+                      }`} />
+                      <span>{a.status === 'DRAFT' ? 'DRAFT (Not Published)' : a.isExpired || a.status === 'COMPLETED' ? 'ENDED' : 'PUBLISHED'}</span>
+                    </span>
+                  </div>
+
+                  <div>
+                    <h3 className="text-base font-bold text-white leading-snug">{a.title}</h3>
+                    {a.description && (
+                      <p className="text-xs text-slate-400 mt-1 line-clamp-2">{a.description}</p>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 text-center text-xs bg-[#1E293B] p-3 rounded-xl border border-slate-700/60">
+                    <div>
+                      <span className="text-[10px] text-slate-400 block font-medium">Duration</span>
+                      <strong className="text-white font-bold">{a.durationMinutes}m</strong>
+                      <span className="text-[9px] text-slate-500 block">
+                        (+5m: {a.durationMinutes + 5}m)
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400 block font-medium">Total Marks</span>
+                      <strong className="text-white font-bold">{a.totalMarks} pts</strong>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-slate-400 block font-medium">Items</span>
+                      <strong className="text-white font-bold">{a.totalQuestions} items</strong>
+                    </div>
+                  </div>
+
+                  {/* Assessment Card Action Buttons */}
+                  <div className="pt-2 flex items-center gap-2 border-t border-slate-800 flex-wrap">
+                    {a.status === 'DRAFT' ? (
+                      <button
+                        type="button"
+                        onClick={() => handlePublishAssessment(a)}
+                        className="py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-emerald-600/30"
+                        title="Publish assessment now so it reflects immediately in student panels"
+                      >
+                        <Send className="w-3.5 h-3.5" />
+                        <span>Publish Test</span>
+                      </button>
+                    ) : a.status === 'PUBLISHED' && !a.isExpired ? (
+                      <button
+                        type="button"
+                        onClick={() => handleUnpublishAssessment(a)}
+                        className="py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 text-xs font-bold transition flex items-center gap-1.5"
+                        title="Revert to draft (hide from student panels)"
+                      >
+                        <span>Move to Draft</span>
+                      </button>
+                    ) : null}
+
+                    <button
+                      type="button"
+                      onClick={() => openEditModal(a)}
+                      className="py-2 px-3 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-200 border border-indigo-500/40 text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+                      title="Edit assessment time limit, title, status and window"
+                    >
+                      <Sliders className="w-3.5 h-3.5 text-indigo-400" />
+                      <span>Edit Test</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => openAnalyticsModal(a.id)}
+                      className="py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold transition flex items-center justify-center gap-1.5"
+                    >
+                      <TrendingUp className="w-3.5 h-3.5" />
+                      <span>Cohort Analytics</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setLeaderboardModalData({ id: a.id, title: a.title })}
+                      className="py-2 px-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold transition flex items-center gap-1.5 shadow-2xs"
+                      title="View dynamic live ranking leaderboard"
+                    >
+                      <Trophy className="w-3.5 h-3.5 text-amber-400" />
+                      <span>Leaderboard</span>
+                    </button>
+                    {(a.isCodingExam || a.title?.includes('[CODING]') || a.description?.toLowerCase().includes('coding')) && (
+                      <button
+                        type="button"
+                        onClick={() => handleInspectProblems(a)}
+                        className="py-2 px-3 rounded-xl bg-cyan-950/60 hover:bg-cyan-900/60 text-cyan-300 border border-cyan-500/30 text-xs font-bold transition flex items-center gap-1.5"
+                        title="Inspect Coding Problems & Test Cases"
+                      >
+                        <Code className="w-3.5 h-3.5 text-cyan-400" />
+                        <span>Problem Spec</span>
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => exportDirectCsv(a.id)}
+                      className="py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold transition flex items-center gap-1.5"
+                      title="Export Student Marks CSV"
+                    >
+                      <Download className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Export</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </main>
+      </div>
+
+      {/* Create Assessment Wizard Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in">
+          <div className="bg-[#0F172A] w-full max-w-3xl rounded-3xl shadow-2xl border border-slate-700 overflow-hidden flex flex-col max-h-[92vh]">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-700/80 bg-[#1E293B]/80">
+              <div>
+                <h3 className="text-lg font-extrabold text-white tracking-tight">Create New Course Assessment</h3>
+                <p className="text-xs text-slate-300 mt-0.5">
+                  Allocate to target student division and select approved questions from question bank
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsModalOpen(false)}
+                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-700/80 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateAssessment} className="p-6 overflow-y-auto space-y-5">
+              {/* Assigned Course Header */}
+              <div className="p-3.5 bg-emerald-950/60 border border-emerald-500/30 rounded-2xl text-xs flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block">
+                    Assigned Teaching Subject
+                  </span>
+                  <span className="font-extrabold text-white text-sm">
+                    {courses.find((c) => c.id === selectedCourseId)?.code} - {courses.find((c) => c.id === selectedCourseId)?.name}
+                  </span>
+                </div>
+                <span className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  Fixed For Faculty
+                </span>
+              </div>
+
+              {/* Examination Format & Engine Selector */}
+              <div>
+                <label className="block text-xs font-bold text-slate-200 mb-2 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <Cpu className="w-4 h-4 text-cyan-400" />
+                    Examination Format & Evaluation Engine
+                  </span>
+                  <span className="text-[11px] text-slate-400 font-normal">
+                    Select automated code judge or objective question bank
+                  </span>
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  {/* Coding Exam Option */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setExamMode('CODING');
+                      if (!newTitle.includes('Coding') && !newTitle.includes('💻')) {
+                        setNewTitle(newTitle ? `${newTitle} (Coding)` : 'Data Structures Practical Coding Exam');
+                      }
+                    }}
+                    className={`p-3.5 rounded-2xl border text-left transition-all ${
+                      examMode === 'CODING'
+                        ? 'bg-cyan-950/70 border-2 border-cyan-400 ring-2 ring-cyan-500/30 text-white shadow-lg shadow-cyan-950/50'
+                        : 'bg-[#1E293B] border border-slate-700 hover:border-slate-500 text-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                        <Terminal className="w-4 h-4 text-cyan-400" />
+                        Coding Exam
+                      </span>
+                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-cyan-400 text-cyan-950">
+                        JUDGE
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-300 font-medium leading-snug">
+                      Problem statements, sample test cases & hidden check test cases
+                    </p>
+                  </button>
+
+                  {/* Objective MCQ Option */}
+                  <button
+                    type="button"
+                    onClick={() => setExamMode('OBJECTIVE')}
+                    className={`p-3.5 rounded-2xl border text-left transition-all ${
+                      examMode === 'OBJECTIVE'
+                        ? 'bg-indigo-950/70 border-2 border-indigo-400 ring-2 ring-indigo-500/30 text-white shadow-lg shadow-indigo-950/50'
+                        : 'bg-[#1E293B] border border-slate-700 hover:border-slate-500 text-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                        <FileText className="w-4 h-4 text-indigo-400" />
+                        Objective MCQ
+                      </span>
+                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-indigo-400 text-indigo-950">
+                        THEORY
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-300 font-medium leading-snug">
+                      Select approved questions from curriculum question bank
+                    </p>
+                  </button>
+
+                  {/* Hybrid Option */}
+                  <button
+                    type="button"
+                    onClick={() => setExamMode('HYBRID')}
+                    className={`p-3.5 rounded-2xl border text-left transition-all ${
+                      examMode === 'HYBRID'
+                        ? 'bg-purple-950/70 border-2 border-purple-400 ring-2 ring-purple-500/30 text-white shadow-lg shadow-purple-950/50'
+                        : 'bg-[#1E293B] border border-slate-700 hover:border-slate-500 text-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-xs font-bold text-white flex items-center gap-1.5">
+                        <Layers className="w-4 h-4 text-purple-400" />
+                        Hybrid Exam
+                      </span>
+                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-purple-400 text-purple-950">
+                        MIXED
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-300 font-medium leading-snug">
+                      Both theoretical questions and practical coding problems
+                    </p>
+                  </button>
+                </div>
+              </div>
+
+              {/* Title & Code */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-200 mb-1.5">Assessment Title</label>
+                  <input
+                    type="text"
+                    required
+                    value={newTitle}
+                    onChange={(e) => setNewTitle(e.target.value)}
+                    placeholder={examMode === 'CODING' ? 'e.g. DSA In-Browser Practical Examination' : 'e.g. Trees & BST Mastery Exam'}
+                    className="w-full p-3 text-xs bg-[#1E293B] border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 font-medium"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-200 mb-1.5">Assessment Code</label>
+                  <input
+                    type="text"
+                    required
+                    value={newCode}
+                    onChange={(e) => setNewCode(e.target.value)}
+                    placeholder={examMode === 'CODING' ? 'e.g. CS301-CODE-LAB-01' : 'e.g. CS301-QUIZ-02'}
+                    className="w-full p-3 text-xs bg-[#1E293B] border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 font-medium"
+                  />
+                </div>
+              </div>
+
+              {/* Target Division Allocation */}
+              <div>
+                <label className="block text-xs font-bold text-slate-200 mb-2 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5 text-slate-200">
+                    <Users className="w-4 h-4 text-indigo-400" />
+                    Target Student Allocation (Division)
+                  </span>
+                  <span className="text-[11px] text-slate-400 font-normal">
+                    Reflected directly in assigned students' portals
+                  </span>
+                </label>
+                <div className="grid grid-cols-3 gap-3">
+                  {/* Division A */}
+                  <button
+                    type="button"
+                    onClick={() => setNewDivision('DIV 1')}
+                    className={`p-3.5 rounded-2xl border text-left transition-all ${
+                      newDivision === 'DIV 1'
+                        ? 'bg-amber-950/60 border-2 border-amber-400 ring-2 ring-amber-500/30 text-white shadow-lg shadow-amber-950/50'
+                        : 'bg-[#1E293B] border border-slate-700 hover:border-slate-500 text-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-xs font-bold text-white">Division A</span>
+                      <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-amber-400 text-amber-950">
+                        DIV 1
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-300 font-medium leading-snug">
+                      Roll 24CS001 – 24CS065
+                    </p>
+                  </button>
+
+                  {/* Division B */}
+                  <button
+                    type="button"
+                    onClick={() => setNewDivision('DIV 2')}
+                    className={`p-3.5 rounded-2xl border text-left transition-all ${
+                      newDivision === 'DIV 2'
+                        ? 'bg-purple-950/60 border-2 border-purple-400 ring-2 ring-purple-500/30 text-white shadow-lg shadow-purple-950/50'
+                        : 'bg-[#1E293B] border border-slate-700 hover:border-slate-500 text-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-xs font-bold text-white">Division B</span>
+                      <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-purple-400 text-purple-950">
+                        DIV 2
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-300 font-medium leading-snug">
+                      Roll 24CS066 & above
+                    </p>
+                  </button>
+
+                  {/* Both Divisions */}
+                  <button
+                    type="button"
+                    onClick={() => setNewDivision('ALL')}
+                    className={`p-3.5 rounded-2xl border text-left transition-all ${
+                      newDivision === 'ALL'
+                        ? 'bg-indigo-950/60 border-2 border-indigo-400 ring-2 ring-indigo-500/30 text-white shadow-lg shadow-indigo-950/50'
+                        : 'bg-[#1E293B] border border-slate-700 hover:border-slate-500 text-slate-300'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="text-xs font-bold text-white">Both Divisions</span>
+                      <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-indigo-400 text-indigo-950">
+                        ALL
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-300 font-medium leading-snug">
+                      All enrolled students
+                    </p>
+                  </button>
+                </div>
+              </div>
+
+              {/* Assessment Type, Duration, Passing */}
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-200 mb-1.5">Type</label>
+                  <select
+                    value={newType}
+                    onChange={(e) => setNewType(e.target.value)}
+                    className="w-full p-3 text-xs bg-[#1E293B] border border-slate-600 rounded-xl text-white font-medium focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="QUIZ">Quiz / Lab Quiz</option>
+                    <option value="UNIT_TEST">Unit Test</option>
+                    <option value="MID_TERM">Mid-Term Practical</option>
+                    <option value="FINAL_EXAM">Final Exam</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-200 mb-1.5">Duration (Min)</label>
+                  <input
+                    type="number"
+                    min={5}
+                    max={180}
+                    value={newDuration}
+                    onChange={(e) => setNewDuration(Number(e.target.value))}
+                    className="w-full p-3 text-xs bg-[#1E293B] border border-slate-600 rounded-xl text-white font-medium focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-200 mb-1.5">Passing %</label>
+                  <input
+                    type="number"
+                    min={10}
+                    max={100}
+                    value={newPassingMarks}
+                    onChange={(e) => setNewPassingMarks(Number(e.target.value))}
+                    className="w-full p-3 text-xs bg-[#1E293B] border border-slate-600 rounded-xl text-white font-medium focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+
+              {/* SECTION: Coding Problem Authoring & Management (For CODING and HYBRID modes) */}
+              {(examMode === 'CODING' || examMode === 'HYBRID') && (
+                <div className="space-y-4 pt-4 border-t border-slate-700/80">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#111827] p-4 rounded-2xl border border-cyan-500/40">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Terminal className="w-5 h-5 text-cyan-400" />
+                        <h4 className="text-sm font-extrabold text-white">Coding Examination Problems & Code Judge</h4>
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                          {authoredCodingProblems.length} Added
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Add problem statements, sample test cases (visible to student), and evaluation test cases to check (hidden).
+                      </p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => openAuthorModal()}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-xs font-bold shadow-md shadow-cyan-600/30 transition transform hover:-translate-y-0.5"
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>Author Problem</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleOpenBankModal}
+                        className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold transition"
+                      >
+                        <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
+                        <span>From Problem Bank</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* List of Authored Coding Problems */}
+                  {authoredCodingProblems.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-slate-700 p-8 text-center bg-[#0B0F19]/50">
+                      <Code className="w-10 h-10 text-cyan-500/50 mx-auto mb-2.5 animate-pulse" />
+                      <p className="text-xs font-bold text-white">No Coding Problems Added Yet</p>
+                      <p className="text-[11px] text-slate-400 mt-1 max-w-md mx-auto">
+                        Click <strong className="text-cyan-300">Author Problem</strong> to compose a problem statement, sample test cases, and hidden check cases, or select from the pre-seeded DSA bank.
+                      </p>
+                      <div className="mt-4 flex items-center justify-center gap-3">
+                        <button
+                          type="button"
+                          onClick={() => openAuthorModal()}
+                          className="px-3.5 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-xl transition"
+                        >
+                          + Author Problem
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleOpenBankModal}
+                          className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl border border-slate-700 transition"
+                        >
+                          📚 Browse Problem Bank
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {authoredCodingProblems.map((prob, idx) => (
+                        <div
+                          key={idx}
+                          className="p-4 rounded-2xl border border-slate-700 bg-[#1E293B]/70 hover:border-slate-600 transition space-y-3"
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="w-5 h-5 rounded-md bg-cyan-600 text-white text-[11px] font-black flex items-center justify-center">
+                                  {idx + 1}
+                                </span>
+                                <h5 className="text-xs sm:text-sm font-extrabold text-white">{prob.title}</h5>
+                                <span
+                                  className={`text-[9px] font-bold px-2 py-0.5 rounded-md uppercase border ${
+                                    prob.difficulty === 'EASY'
+                                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                                      : prob.difficulty === 'HARD'
+                                      ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                                      : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                                  }`}
+                                >
+                                  {prob.difficulty}
+                                </span>
+                                {prob.tags && (
+                                  <span className="text-[10px] text-slate-400 font-medium bg-slate-800/80 px-2 py-0.5 rounded-md border border-slate-700">
+                                    {prob.tags}
+                                  </span>
+                                )}
+                              </div>
+                              <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed pl-7">
+                                {prob.description}
+                              </p>
+                            </div>
+
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => openAuthorModal(idx)}
+                                className="p-1.5 text-slate-400 hover:text-cyan-300 hover:bg-slate-800 rounded-lg transition"
+                                title="Edit Problem"
+                              >
+                                <Edit3 className="w-4 h-4" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveAuthoredProblem(idx)}
+                                className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition"
+                                title="Remove Problem"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Testcase Badges */}
+                          <div className="flex items-center gap-2 pt-2 border-t border-slate-700/60 pl-7 text-[11px] flex-wrap">
+                            <span className="px-2.5 py-1 rounded-lg bg-emerald-950/60 text-emerald-300 border border-emerald-500/30 font-bold flex items-center gap-1.5">
+                              <Eye className="w-3.5 h-3.5 text-emerald-400" />
+                              <span>{prob.sampleTestCases?.length || 0} Sample Test Cases (Visible)</span>
+                            </span>
+                            <span className="px-2.5 py-1 rounded-lg bg-indigo-950/60 text-indigo-300 border border-indigo-500/30 font-bold flex items-center gap-1.5">
+                              <Lock className="w-3.5 h-3.5 text-indigo-400" />
+                              <span>{prob.testCasesToCheck?.length || 0} Check Test Cases (Hidden Judge)</span>
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* SECTION: Objective MCQ Selection & Document AI / RAG Engine (For OBJECTIVE and HYBRID modes) */}
+              {(examMode === 'OBJECTIVE' || examMode === 'HYBRID') && (
+                <div className="space-y-4 pt-4 border-t border-slate-700/80">
+                  {/* Workflow Mode Selector Header */}
+                  <div className="bg-[#111827] p-4 rounded-2xl border border-indigo-500/40 space-y-3">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <BrainCircuit className="w-5 h-5 text-indigo-400" />
+                          <h4 className="text-sm font-extrabold text-white">Objective Question Composition Engine</h4>
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">
+                            {selectedQuestionIds.length} in Draft
+                          </span>
+                        </div>
+                        <p className="text-xs text-slate-400 mt-0.5">
+                          Choose how to compose questions: extract grounded candidate questions from course documents or browse the existing repository.
+                        </p>
+                      </div>
+
+                      {/* Source Toggle Pills */}
+                      <div className="flex items-center p-1 bg-[#0F172A] rounded-xl border border-slate-700 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => setQuestionSourceWorkflow('DOCUMENT')}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                            questionSourceWorkflow === 'DOCUMENT'
+                              ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
+                              : 'text-slate-400 hover:text-white'
+                          }`}
+                        >
+                          <Upload className="w-3.5 h-3.5" />
+                          <span>Upload Document (RAG)</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setQuestionSourceWorkflow('BANK')}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                            questionSourceWorkflow === 'BANK'
+                              ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md'
+                              : 'text-slate-400 hover:text-white'
+                          }`}
+                        >
+                          <BookOpen className="w-3.5 h-3.5" />
+                          <span>Select from Question Bank</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Quick Source Explanatory Banner */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-[11px]">
+                      <div
+                        onClick={() => setQuestionSourceWorkflow('DOCUMENT')}
+                        className={`p-2.5 rounded-xl border cursor-pointer transition ${
+                          questionSourceWorkflow === 'DOCUMENT'
+                            ? 'bg-blue-950/40 border-blue-500/60 text-blue-200'
+                            : 'bg-[#1E293B]/40 border-slate-800 text-slate-400 hover:border-slate-700'
+                        }`}
+                      >
+                        <div className="font-bold flex items-center gap-1.5 text-white">
+                          <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                          <span>Option A: Document AI & RAG Extraction</span>
+                        </div>
+                        <p className="mt-0.5 leading-snug">
+                          Upload syllabus notes, question banks, or Viva PDFs up to 25 MB. Review candidate questions and import them directly.
+                        </p>
+                      </div>
+
+                      <div
+                        onClick={() => setQuestionSourceWorkflow('BANK')}
+                        className={`p-2.5 rounded-xl border cursor-pointer transition ${
+                          questionSourceWorkflow === 'BANK'
+                            ? 'bg-indigo-950/40 border-indigo-500/60 text-indigo-200'
+                            : 'bg-[#1E293B]/40 border-slate-800 text-slate-400 hover:border-slate-700'
+                        }`}
+                      >
+                        <div className="font-bold flex items-center gap-1.5 text-white">
+                          <Layers className="w-3.5 h-3.5 text-indigo-400" />
+                          <span>Option B: Course Question Bank</span>
+                        </div>
+                        <p className="mt-0.5 leading-snug">
+                          Select from previously approved questions for this course with topic, difficulty, and type filtering.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* WORKFLOW VIEW 1: Document AI & RAG Upload and Candidate Review */}
+                  {questionSourceWorkflow === 'DOCUMENT' && (
+                    <div className="space-y-3 p-4 bg-[#111827] rounded-2xl border border-blue-500/30">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+                        <div>
+                          <h5 className="text-xs font-bold text-white flex items-center gap-1.5">
+                            <Upload className="w-4 h-4 text-blue-400" />
+                            <span>Document AI Question Extractor & RAG Ingestion</span>
+                          </h5>
+                          <span className="text-[11px] text-slate-400">
+                            Upload a course document (PDF, TXT, DOCX up to 25 MB) to parse candidate questions grounded in the content.
+                          </span>
+                        </div>
+                        {ragFile && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setRagFile(null);
+                              setRagExtractError(null);
+                              setRagExtractProgress(null);
+                              setCandidateQuestions([]);
+                              setSelectedCandidateIndices([]);
+                            }}
+                            className="text-[11px] text-slate-400 hover:text-rose-400 flex items-center gap-1 transition"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                            <span>Clear File</span>
+                          </button>
+                        )}
+                      </div>
+
+                      {/* File Dropzone / Picker */}
+                      {!ragFile ? (
+                        <div className="relative border-2 border-dashed border-slate-700 hover:border-blue-500/70 rounded-2xl p-6 text-center bg-[#0B0F19]/60 transition group cursor-pointer">
+                          <input
+                            type="file"
+                            accept=".pdf,.txt,.doc,.docx,application/pdf,text/plain"
+                            onChange={handleSelectRagFile}
+                            className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                          />
+                          <FileUp className="w-9 h-9 text-blue-400/80 group-hover:text-blue-400 mx-auto mb-2 transition transform group-hover:-translate-y-0.5" />
+                          <p className="text-xs font-bold text-white">
+                            Click or drag and drop your course PDF or question document
+                          </p>
+                          <p className="text-[11px] text-slate-400 mt-1">
+                            Supports <strong className="text-blue-300">PDF, TXT, DOCX</strong> files up to <strong className="text-blue-300">25 MB</strong>
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-[#1E293B] rounded-xl border border-blue-500/40">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="p-2.5 rounded-lg bg-blue-500/20 text-blue-400 border border-blue-500/40 shrink-0">
+                              <FileText className="w-5 h-5" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-xs font-bold text-white truncate">{ragFile.name}</p>
+                              <p className="text-[11px] text-slate-400">
+                                {ragFile.size > 1024 * 1024
+                                  ? `${(ragFile.size / (1024 * 1024)).toFixed(2)} MB`
+                                  : `${(ragFile.size / 1024).toFixed(1)} KB`} • {ragFile.type || 'Document'}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2 shrink-0">
+                            <button
+                              type="button"
+                              onClick={handleExtractFromDocument}
+                              disabled={ragExtracting}
+                              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-600/30 transition disabled:opacity-50 flex items-center gap-1.5"
+                            >
+                              {ragExtracting ? (
+                                <>
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                  <span>Extracting...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Sparkles className="w-3.5 h-3.5" />
+                                  <span>Extract Candidate Questions</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Status / Error feedback */}
+                      {ragExtractError && (
+                        <div className="p-3 rounded-xl bg-rose-950/60 border border-rose-500/40 text-rose-300 text-xs flex items-center gap-2">
+                          <AlertTriangle className="w-4 h-4 shrink-0 text-rose-400" />
+                          <span>{ragExtractError}</span>
+                        </div>
+                      )}
+
+                      {ragExtractProgress && (
+                        <div className="p-3 rounded-xl bg-blue-950/40 border border-blue-500/40 text-blue-200 text-xs flex items-center gap-2">
+                          {ragExtracting ? (
+                            <Loader2 className="w-4 h-4 shrink-0 animate-spin text-blue-400" />
+                          ) : (
+                            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+                          )}
+                          <span>{ragExtractProgress}</span>
+                        </div>
+                      )}
+
+                      {/* Candidate Questions Review List */}
+                      {candidateQuestions.length > 0 && (
+                        <div className="space-y-3 pt-2">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-[#0F172A] rounded-xl border border-slate-800">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-xs font-bold text-white">
+                                Candidate Questions ({candidateQuestions.length})
+                              </span>
+                              <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                                {selectedCandidateIndices.length} Selected
+                              </span>
+                              {candidateQuestions.some((q) => q.isAmbiguous) && (
+                                <button
+                                  type="button"
+                                  onClick={() => setCandidateOnlyAmbiguous((prev) => !prev)}
+                                  className={`px-2 py-0.5 rounded-full text-[10px] font-black border transition ${
+                                    candidateOnlyAmbiguous
+                                      ? 'bg-amber-400 text-amber-950 border-amber-400'
+                                      : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                                  }`}
+                                >
+                                  ⚠️ {candidateQuestions.filter((q) => q.isAmbiguous).length} Ambiguous Keys
+                                </button>
+                              )}
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <button
+                                type="button"
+                                onClick={() => setSelectedCandidateIndices(candidateQuestions.map((_, i) => i))}
+                                className="px-2.5 py-1 text-[11px] font-bold text-blue-400 hover:text-blue-300 hover:bg-blue-950/50 rounded-lg transition"
+                              >
+                                Select All ({candidateQuestions.length})
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setSelectedCandidateIndices([])}
+                                className="px-2.5 py-1 text-[11px] font-medium text-slate-400 hover:text-white rounded-lg transition"
+                              >
+                                Deselect All
+                              </button>
+                              <button
+                                type="button"
+                                onClick={handleImportCandidatesToAssessment}
+                                disabled={importingToAssessment || selectedCandidateIndices.length === 0}
+                                className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-600/30 transition disabled:opacity-50 flex items-center gap-1.5"
+                              >
+                                {importingToAssessment ? (
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                ) : (
+                                  <Check className="w-3.5 h-3.5 stroke-[3]" />
+                                )}
+                                <span>Add {selectedCandidateIndices.length} to Draft</span>
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Candidate List Scroll */}
+                          <div className="max-h-72 overflow-y-auto space-y-2.5 pr-1">
+                            {candidateQuestions
+                              .map((q, candidateIdx) => ({ q, candidateIdx }))
+                              .filter(({ q }) => (candidateOnlyAmbiguous ? q.isAmbiguous : true))
+                              .map(({ q, candidateIdx }) => {
+                                const isSelected = selectedCandidateIndices.includes(candidateIdx);
+
+                                return (
+                                  <div
+                                    key={candidateIdx}
+                                    className={`p-3.5 rounded-xl border transition-all space-y-2.5 ${
+                                      isSelected
+                                        ? 'bg-[#1E293B] border-blue-500 shadow-md shadow-blue-500/10'
+                                        : 'bg-[#1E293B]/60 border-slate-800 hover:border-slate-700'
+                                    }`}
+                                  >
+                                    <div className="flex items-start justify-between gap-3">
+                                      <div className="flex-1 space-y-1">
+                                        <div className="flex items-center gap-2 flex-wrap">
+                                          <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                                            #{candidateIdx + 1}
+                                          </span>
+                                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-800 text-indigo-300 border border-indigo-500/30">
+                                            {q.topic || 'Document Concepts'}
+                                          </span>
+                                          <span
+                                            className={`text-[9px] font-bold px-2 py-0.5 rounded-md uppercase border ${
+                                              q.difficulty === 'EASY'
+                                                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                                                : q.difficulty === 'HARD'
+                                                ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                                                : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                                            }`}
+                                          >
+                                            {q.difficulty || 'MEDIUM'}
+                                          </span>
+                                          <span className="text-[9px] font-bold px-2 py-0.5 rounded-md uppercase bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                                            {q.bloomLevel || 'APPLY'}
+                                          </span>
+                                        </div>
+
+                                        <p className="text-xs font-semibold text-white leading-relaxed">
+                                          {q.questionText}
+                                        </p>
+                                      </div>
+
+                                      <button
+                                        type="button"
+                                        onClick={() => toggleCandidateSelection(candidateIdx)}
+                                        className={`w-5 h-5 rounded-md flex items-center justify-center border-2 transition shrink-0 ${
+                                          isSelected
+                                            ? 'bg-blue-600 border-blue-600 text-white shadow-md'
+                                            : 'border-slate-500 bg-transparent hover:border-blue-400'
+                                        }`}
+                                      >
+                                        {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                                      </button>
+                                    </div>
+
+                                    {/* Ambiguity Alert Notice if answer was flagged */}
+                                    {q.isAmbiguous && (
+                                      <div className="px-3 py-1.5 rounded-lg bg-amber-950/60 border border-amber-500/40 text-amber-300 text-[11px] flex items-center gap-1.5">
+                                        <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-amber-400" />
+                                        <span>
+                                          Ambiguous source key: click any option below to confirm the intended correct answer.
+                                        </span>
+                                      </div>
+                                    )}
+
+                                    {/* 4 Options Grid */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 pt-1">
+                                      {(q.options || []).map((opt: any, optIdx: number) => {
+                                        const letter = String.fromCharCode(65 + optIdx);
+                                        return (
+                                          <div
+                                            key={optIdx}
+                                            onClick={() => handleSetCandidateCorrectOption(candidateIdx, optIdx)}
+                                            className={`p-2 rounded-lg border text-left cursor-pointer transition flex items-start gap-2 ${
+                                              opt.isCorrect
+                                                ? 'bg-emerald-950/70 border-emerald-400 text-emerald-100 shadow-sm'
+                                                : 'bg-[#0F172A]/80 border-slate-700/80 hover:border-slate-600 text-slate-300'
+                                            }`}
+                                          >
+                                            <span
+                                              className={`w-4 h-4 rounded text-[10px] font-black flex items-center justify-center shrink-0 ${
+                                                opt.isCorrect
+                                                  ? 'bg-emerald-400 text-emerald-950'
+                                                  : 'bg-slate-800 text-slate-400'
+                                              }`}
+                                            >
+                                              {letter}
+                                            </span>
+                                            <div className="min-w-0 flex-1">
+                                              <p className="text-[11px] leading-tight break-words">{opt.text}</p>
+                                              {opt.isCorrect && (
+                                                <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wide block mt-0.5">
+                                                  ✓ Correct Answer
+                                                </span>
+                                              )}
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+
+                                    {q.explanation && (
+                                      <p className="text-[11px] text-slate-400 bg-[#0B0F19]/60 p-2 rounded-lg border border-slate-800 leading-snug">
+                                        <strong className="text-slate-300">Explanation:</strong> {q.explanation}
+                                      </p>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* WORKFLOW VIEW 2: Select from Existing Course Question Bank */}
+                  {questionSourceWorkflow === 'BANK' && (
+                    <div className="space-y-3">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                          <label className="block text-sm font-bold text-white flex items-center gap-1.5">
+                            <BookOpen className="w-4 h-4 text-indigo-400" />
+                            <span>Course Question Bank Repository</span>
+                          </label>
+                          <span className="text-xs text-slate-400">
+                            Approved curriculum questions for {courses.find((c) => c.id === selectedCourseId)?.name}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <span className="px-3 py-1 rounded-xl text-xs font-black bg-indigo-500/20 border border-indigo-500/40 text-indigo-300">
+                            {selectedQuestionIds.length} Selected
+                          </span>
+                          <button
+                            type="button"
+                            onClick={selectAllFiltered}
+                            className="px-3 py-1 text-xs font-bold text-indigo-400 hover:text-indigo-300 hover:bg-indigo-950/50 rounded-lg transition"
+                          >
+                            Select All Filtered
+                          </button>
+                          <button
+                            type="button"
+                            onClick={deselectAllFiltered}
+                            className="px-3 py-1 text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"
+                          >
+                            Deselect
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Filters Row: Topic, Search, Difficulty */}
+                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 bg-[#1E293B]/80 p-3 rounded-2xl border border-slate-700">
+                        {/* Topic Filter */}
+                        <div className="sm:col-span-5">
+                          <select
+                            value={filterTopic}
+                            onChange={(e) => setFilterTopic(e.target.value)}
+                            className="w-full p-2.5 text-xs bg-[#0F172A] border border-slate-600 rounded-xl text-white font-semibold focus:outline-none focus:border-indigo-500"
+                          >
+                            <option value="ALL">All Topics ({availableQuestions.length})</option>
+                            {uniqueTopics.map((top) => {
+                              const count = availableQuestions.filter((q) => q.topic?.name === top).length;
+                              return (
+                                <option key={top} value={top}>
+                                  {top} ({count})
+                                </option>
+                              );
+                            })}
+                          </select>
+                        </div>
+
+                        {/* Search Bar */}
+                        <div className="sm:col-span-4 relative">
+                          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                          <input
+                            type="text"
+                            value={questionSearch}
+                            onChange={(e) => setQuestionSearch(e.target.value)}
+                            placeholder="Search questions..."
+                            className="w-full pl-9 pr-3 py-2 text-xs bg-[#0F172A] border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500"
+                          />
+                        </div>
+
+                        {/* Difficulty Filter */}
+                        <div className="sm:col-span-3">
+                          <select
+                            value={filterDifficulty}
+                            onChange={(e) => setFilterDifficulty(e.target.value)}
+                            className="w-full p-2.5 text-xs bg-[#0F172A] border border-slate-600 rounded-xl text-white font-semibold focus:outline-none focus:border-indigo-500"
+                          >
+                            <option value="ALL">All Levels</option>
+                            <option value="EASY">Easy</option>
+                            <option value="MEDIUM">Medium</option>
+                            <option value="HARD">Hard</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* Question List */}
+                      <div className="max-h-64 overflow-y-auto space-y-2.5 border border-slate-700 rounded-2xl p-3 bg-[#0F172A]/80">
+                        {questionsLoading ? (
+                          <div className="p-10 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
+                            <Loader2 className="w-5 h-5 animate-spin text-indigo-400" />
+                            <span>Loading approved questions...</span>
+                          </div>
+                        ) : filteredQuestions.length === 0 ? (
+                          <div className="p-10 text-center text-xs text-slate-400">
+                            No questions found matching the selected criteria.
+                          </div>
+                        ) : (
+                          filteredQuestions.map((q) => {
+                            const isSelected = selectedQuestionIds.includes(q.id);
+                            const isRAG = sourceAttributionMap[q.id] === 'RAG' || q.sourceType === 'DOCUMENT_AI';
+
+                            return (
+                              <div
+                                key={q.id}
+                                className={`rounded-2xl border transition-all overflow-hidden ${
+                                  isSelected
+                                    ? 'bg-[#1E293B] border-2 border-indigo-500 shadow-md shadow-indigo-500/10'
+                                    : 'bg-[#1E293B]/60 border border-slate-700/80 hover:border-slate-600'
+                                }`}
+                              >
+                                <div
+                                  onClick={() => toggleQuestionSelection(q.id)}
+                                  className="p-3.5 cursor-pointer flex items-start justify-between gap-3"
+                                >
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                                      {isRAG && (
+                                        <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-300 border border-blue-500/40">
+                                          📄 Document AI
+                                        </span>
+                                      )}
+                                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-800 text-indigo-300 border border-indigo-500/30">
+                                        {q.topic?.name || 'General'}
+                                      </span>
+                                      <span
+                                        className={`text-[10px] font-bold px-2 py-0.5 rounded-md uppercase border ${
+                                          q.difficulty === 'EASY'
+                                            ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                                            : q.difficulty === 'HARD'
+                                            ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                                            : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                                        }`}
+                                      >
+                                        {q.difficulty}
+                                      </span>
+                                    </div>
+                                    <p className="text-xs text-white leading-relaxed font-semibold">
+                                      {q.questionText}
+                                    </p>
+                                  </div>
+
+                                  <div className="flex items-center gap-2 shrink-0 pt-0.5">
+                                    <div
+                                      className={`w-5 h-5 rounded-md flex items-center justify-center border-2 transition ${
+                                        isSelected
+                                          ? 'bg-indigo-600 border-indigo-600 text-white shadow-md'
+                                          : 'border-slate-500 bg-transparent hover:border-indigo-400'
+                                      }`}
+                                    >
+                                      {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* UNIFIED DRAFT INSPECTION DRAWER: Displays combined questions from both sources */}
+                  {selectedQuestionIds.length > 0 && (
+                    <div className="p-3.5 bg-[#0B0F19] rounded-2xl border border-indigo-500/30 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                          <span className="text-xs font-bold text-white">
+                            Current Assessment Draft: {selectedQuestionIds.length} Questions Selected
+                          </span>
+                          <span className="text-[11px] text-indigo-300 bg-indigo-950/60 px-2 py-0.5 rounded-md border border-indigo-500/30">
+                            ~{(Number(newTotalMarks) / selectedQuestionIds.length).toFixed(1)} marks each ({newTotalMarks} marks total)
+                          </span>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => setShowDraftPreview((prev) => !prev)}
+                          className="text-xs font-bold text-indigo-400 hover:text-indigo-300 transition"
+                        >
+                          {showDraftPreview ? 'Hide Draft Preview' : 'Review Drafted Questions'}
+                        </button>
+                      </div>
+
+                      {showDraftPreview && (
+                        <div className="max-h-48 overflow-y-auto space-y-1.5 pt-2 border-t border-slate-800">
+                          {selectedQuestionIds.map((qId, orderIdx) => {
+                            const foundQ = availableQuestions.find((item) => item.id === qId);
+                            if (!foundQ) return null;
+                            const isRag = sourceAttributionMap[qId] === 'RAG' || foundQ.sourceType === 'DOCUMENT_AI';
+
+                            return (
+                              <div
+                                key={qId}
+                                className="flex items-center justify-between gap-2 p-2 bg-[#1E293B] rounded-xl border border-slate-700 text-xs"
+                              >
+                                <div className="flex items-center gap-2 min-w-0">
+                                  <span className="w-5 h-5 rounded bg-slate-800 text-slate-300 text-[10px] font-bold flex items-center justify-center shrink-0">
+                                    {orderIdx + 1}
+                                  </span>
+                                  {isRag && (
+                                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30 shrink-0">
+                                      RAG
+                                    </span>
+                                  )}
+                                  <span className="text-white truncate font-medium">{foundQ.questionText}</span>
+                                </div>
+
+                                <button
+                                  type="button"
+                                  onClick={() => toggleQuestionSelection(qId)}
+                                  className="text-slate-400 hover:text-rose-400 p-1 transition shrink-0"
+                                  title="Remove from draft"
+                                >
+                                  <X className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Action buttons & Publish Status Selection */}
+              <div className="pt-4 border-t border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <span className="text-xs text-slate-300">
+                    Target: <strong className="text-white font-bold">{newDivision === 'DIV 1' ? 'Division A' : newDivision === 'DIV 2' ? 'Division B' : 'All Divisions'}</strong> • {examMode === 'CODING' ? (
+                      <strong className="text-cyan-400 font-bold">{authoredCodingProblems.length} Problems</strong>
+                    ) : examMode === 'HYBRID' ? (
+                      <strong className="text-purple-400 font-bold">{selectedQuestionIds.length} MCQs + {authoredCodingProblems.length} Problems</strong>
+                    ) : (
+                      <strong className="text-indigo-400 font-bold">{selectedQuestionIds.length} MCQs</strong>
+                    )}
+                  </span>
+
+                  {/* Draft vs Published Selector */}
+                  <div className="flex items-center p-0.5 bg-[#1E293B] rounded-lg border border-slate-700 text-[11px]">
+                    <button
+                      type="button"
+                      onClick={() => setNewStatus('DRAFT')}
+                      className={`px-2.5 py-1 rounded-md font-bold transition ${
+                        newStatus === 'DRAFT'
+                          ? 'bg-slate-700 text-white shadow-sm'
+                          : 'text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      Draft Mode
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setNewStatus('PUBLISHED')}
+                      className={`px-2.5 py-1 rounded-md font-bold transition ${
+                        newStatus === 'PUBLISHED'
+                          ? 'bg-indigo-600 text-white shadow-sm'
+                          : 'text-slate-400 hover:text-slate-200'
+                      }`}
+                    >
+                      Publish Now
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 font-semibold text-xs rounded-xl transition"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="submit"
+                    disabled={
+                      creating ||
+                      (examMode === 'CODING'
+                        ? authoredCodingProblems.length === 0
+                        : examMode === 'HYBRID'
+                        ? selectedQuestionIds.length === 0 && authoredCodingProblems.length === 0
+                        : selectedQuestionIds.length === 0)
+                    }
+                    className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-600/30 transition disabled:opacity-50 flex items-center gap-2"
+                  >
+                    {creating && <Loader2 className="w-4 h-4 animate-spin" />}
+                    <span>{newStatus === 'DRAFT' ? 'Save Assessment Draft' : 'Publish Assessment'}</span>
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 1: Interactive Coding Problem Authoring Drawer/Modal */}
+      {isProblemAuthorModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in">
+          <div className="bg-[#0F172A] w-full max-w-4xl rounded-3xl shadow-2xl border border-cyan-500/40 overflow-hidden flex flex-col max-h-[92vh]">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700/80 bg-[#1E293B]">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/30 text-cyan-400">
+                  <Terminal className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-white">
+                    {editingProblemIdx !== null ? 'Edit Coding Problem Statement & Test Cases' : 'Author Coding Problem Statement & Test Cases'}
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Define algorithmic prompt, sample cases (visible to student), and check cases (hidden evaluation)
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsProblemAuthorModalOpen(false)}
+                className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-700 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveAuthoredProblem} className="p-6 overflow-y-auto space-y-6">
+              {/* Quick AI Synthesizer Bar (Groq LPU) */}
+              <div className="bg-gradient-to-r from-cyan-950/40 via-indigo-950/40 to-slate-900 border border-cyan-500/40 rounded-2xl p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-cyan-300 flex items-center gap-1.5">
+                    <Sparkles className="w-4 h-4 text-cyan-400" />
+                    Ultra-Fast Problem Synthesizer (Groq LPU ~1.5s)
+                  </span>
+                  <span className="text-[10px] text-slate-400">
+                    Generates full problem statement, constraints, starter codes & test cases
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={aiPromptTopic}
+                    onChange={(e) => setAiPromptTopic(e.target.value)}
+                    placeholder="e.g. Search in Rotated Sorted Array, Dynamic Programming 0/1 Knapsack, Two Sum II..."
+                    className="flex-1 px-3.5 py-2.5 text-xs bg-[#0F172A] border border-slate-700 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAiGenerateProblem}
+                    disabled={isGeneratingWithAi}
+                    className="px-4 py-2.5 bg-gradient-to-r from-cyan-600 to-indigo-600 hover:from-cyan-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-lg shadow-cyan-600/30 transition disabled:opacity-50"
+                  >
+                    {isGeneratingWithAi ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin text-white" />
+                        <span>Generating (~1.5s)...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-4 h-4" />
+                        <span>Auto-Fill Problem</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Title, Difficulty, Tags */}
+              <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+                <div className="sm:col-span-6">
+                  <label className="block text-xs font-bold text-slate-200 mb-1.5">Problem Title *</label>
+                  <input
+                    type="text"
+                    required
+                    value={cpTitle}
+                    onChange={(e) => setCpTitle(e.target.value)}
+                    placeholder="e.g. Rotate Array by K Steps"
+                    className="w-full p-3 text-xs bg-[#1E293B] border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-cyan-400 font-semibold"
+                  />
+                </div>
+
+                <div className="sm:col-span-3">
+                  <label className="block text-xs font-bold text-slate-200 mb-1.5">Difficulty</label>
+                  <select
+                    value={cpDifficulty}
+                    onChange={(e: any) => setCpDifficulty(e.target.value)}
+                    className="w-full p-3 text-xs bg-[#1E293B] border border-slate-600 rounded-xl text-white font-semibold focus:outline-none focus:border-cyan-400"
+                  >
+                    <option value="EASY">Easy</option>
+                    <option value="MEDIUM">Medium</option>
+                    <option value="HARD">Hard</option>
+                  </select>
+                </div>
+
+                <div className="sm:col-span-3">
+                  <label className="block text-xs font-bold text-slate-200 mb-1.5">Tags / Topic</label>
+                  <input
+                    type="text"
+                    value={cpTags}
+                    onChange={(e) => setCpTags(e.target.value)}
+                    placeholder="e.g. Array, Two Pointers"
+                    className="w-full p-3 text-xs bg-[#1E293B] border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-cyan-400"
+                  />
+                </div>
+              </div>
+
+              {/* Full Problem Description */}
+              <div>
+                <label className="block text-xs font-bold text-slate-200 mb-1.5 flex items-center justify-between">
+                  <span>Full Problem Statement & Requirements *</span>
+                  <span className="text-[10px] text-slate-400">Detailed instructions, input specifications, and expectations</span>
+                </label>
+                <textarea
+                  required
+                  rows={5}
+                  value={cpDescription}
+                  onChange={(e) => setCpDescription(e.target.value)}
+                  placeholder="Given an integer array nums, rotate the array to the right by k steps, where k is non-negative...&#10;&#10;Input Format:&#10;nums = [1,2,3,4,5,6,7], k = 3&#10;&#10;Output Format:&#10;[5,6,7,1,2,3,4]"
+                  className="w-full p-3.5 text-xs bg-[#1E293B] border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 font-mono leading-relaxed"
+                />
+              </div>
+
+              {/* Constraints & Hints */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-200 mb-1.5">Constraints</label>
+                  <textarea
+                    rows={3}
+                    value={cpConstraints}
+                    onChange={(e) => setCpConstraints(e.target.value)}
+                    placeholder="• 1 <= nums.length <= 10^5&#10;• -10^4 <= nums[i] <= 10^4&#10;• Time Limit: 2000ms"
+                    className="w-full p-3 text-xs bg-[#1E293B] border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-200 mb-1.5">Hints (Optional)</label>
+                  <textarea
+                    rows={3}
+                    value={cpHints}
+                    onChange={(e) => setCpHints(e.target.value)}
+                    placeholder="• Try reversing the whole array first, then reverse the sub-segments."
+                    className="w-full p-3 text-xs bg-[#1E293B] border border-slate-600 rounded-xl text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"
+                  />
+                </div>
+              </div>
+
+              {/* Starter Codes (Python & JavaScript) */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-200 mb-1.5 flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <Code className="w-3.5 h-3.5 text-amber-400" />
+                      Python Starter Code
+                    </span>
+                    <span className="text-[10px] text-slate-400">Function Signature</span>
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={cpStarterPython}
+                    onChange={(e) => setCpStarterPython(e.target.value)}
+                    placeholder="def solution(nums, k):&#10;    # Write your solution here&#10;    pass"
+                    className="w-full p-3 text-xs bg-[#0F172A] border border-slate-700 rounded-xl text-amber-300 placeholder-slate-500 focus:outline-none focus:border-amber-400 font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-200 mb-1.5 flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">
+                      <Code className="w-3.5 h-3.5 text-yellow-400" />
+                      JavaScript Starter Code
+                    </span>
+                    <span className="text-[10px] text-slate-400">Function Signature</span>
+                  </label>
+                  <textarea
+                    rows={4}
+                    value={cpStarterJs}
+                    onChange={(e) => setCpStarterJs(e.target.value)}
+                    placeholder="function solution(nums, k) {&#10;    // Write your solution here&#10;}"
+                    className="w-full p-3 text-xs bg-[#0F172A] border border-slate-700 rounded-xl text-yellow-300 placeholder-slate-500 focus:outline-none focus:border-yellow-400 font-mono"
+                  />
+                </div>
+              </div>
+
+              {/* 1. SAMPLE TEST CASES (Visible to Student in Exam) */}
+              <div className="space-y-3 pt-3 border-t border-slate-700/80">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h5 className="text-xs font-extrabold text-white flex items-center gap-1.5">
+                      <Eye className="w-4 h-4 text-emerald-400" />
+                      Sample Test Cases (Visible to Students in Exam)
+                    </h5>
+                    <p className="text-[11px] text-slate-400">
+                      Students can execute code against these sample test cases during the exam.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAddSampleTestCase}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-500/30 rounded-xl text-xs font-bold transition"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add Sample Case</span>
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  {cpSampleTestCases.map((tc, idx) => (
+                    <div
+                      key={tc.id}
+                      className="p-3.5 rounded-2xl border border-emerald-500/30 bg-[#0F172A] space-y-2.5"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-extrabold text-emerald-300 flex items-center gap-1.5">
+                          <span className="w-4 h-4 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-[10px]">
+                            {idx + 1}
+                          </span>
+                          Sample Case {idx + 1}
+                        </span>
+                        {cpSampleTestCases.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveSampleTestCase(tc.id)}
+                            className="p-1 text-slate-400 hover:text-rose-400 rounded-lg transition"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-300 mb-1">
+                            Sample Input (Python assignment format, e.g. nums = [1,2], k = 1)
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={tc.input}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setCpSampleTestCases((prev) =>
+                                prev.map((item) => (item.id === tc.id ? { ...item, input: val } : item)),
+                              );
+                            }}
+                            placeholder="nums = [1, 2, 3, 4], target = 5"
+                            className="w-full p-2.5 text-xs bg-[#1E293B] border border-slate-700 rounded-xl text-white font-mono focus:outline-none focus:border-emerald-400"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-300 mb-1">
+                            Sample Expected Output (Exact return value)
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={tc.expectedOutput}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setCpSampleTestCases((prev) =>
+                                prev.map((item) => (item.id === tc.id ? { ...item, expectedOutput: val } : item)),
+                              );
+                            }}
+                            placeholder="[0, 3]"
+                            className="w-full p-2.5 text-xs bg-[#1E293B] border border-slate-700 rounded-xl text-white font-mono focus:outline-none focus:border-emerald-400"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <input
+                          type="text"
+                          value={tc.explanation}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setCpSampleTestCases((prev) =>
+                              prev.map((item) => (item.id === tc.id ? { ...item, explanation: val } : item)),
+                            );
+                          }}
+                          placeholder="Explanation: nums[0] + nums[3] == 5, so return indices [0, 3]."
+                          className="w-full p-2 text-xs bg-[#1E293B]/70 border border-slate-700 rounded-xl text-slate-300 focus:outline-none focus:border-emerald-400"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 2. TEST CASES TO CHECK (Hidden Evaluation Test Cases for Code Judge) */}
+              <div className="space-y-3 pt-3 border-t border-slate-700/80">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h5 className="text-xs font-extrabold text-white flex items-center gap-1.5">
+                      <Lock className="w-4 h-4 text-indigo-400" />
+                      Test Cases to Check (Hidden Evaluation & Scoring Judge)
+                    </h5>
+                    <p className="text-[11px] text-slate-400">
+                      Used by automated code judge upon exam submission. Hidden from students to prevent hardcoding.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleAddCheckTestCase}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 rounded-xl text-xs font-bold transition"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add Check Case</span>
+                  </button>
+                </div>
+
+                <div className="space-y-3">
+                  {cpCheckTestCases.map((tc, idx) => (
+                    <div
+                      key={tc.id}
+                      className="p-3.5 rounded-2xl border border-indigo-500/30 bg-[#0F172A] space-y-2.5"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-[11px] font-extrabold text-indigo-300 flex items-center gap-1.5">
+                          <span className="w-4 h-4 rounded-full bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-[10px]">
+                            {idx + 1}
+                          </span>
+                          Evaluation Check Case {idx + 1} (Hidden)
+                        </span>
+                        {cpCheckTestCases.length > 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveCheckTestCase(tc.id)}
+                            className="p-1 text-slate-400 hover:text-rose-400 rounded-lg transition"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-300 mb-1">
+                            Input to Check (Boundary, negative, large array values)
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={tc.input}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setCpCheckTestCases((prev) =>
+                                prev.map((item) => (item.id === tc.id ? { ...item, input: val } : item)),
+                              );
+                            }}
+                            placeholder="nums = [-1, -2, -3], target = -5"
+                            className="w-full p-2.5 text-xs bg-[#1E293B] border border-slate-700 rounded-xl text-white font-mono focus:outline-none focus:border-indigo-400"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-300 mb-1">
+                            Expected Output to Check
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={tc.expectedOutput}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setCpCheckTestCases((prev) =>
+                                prev.map((item) => (item.id === tc.id ? { ...item, expectedOutput: val } : item)),
+                              );
+                            }}
+                            placeholder="[1, 2]"
+                            className="w-full p-2.5 text-xs bg-[#1E293B] border border-slate-700 rounded-xl text-white font-mono focus:outline-none focus:border-indigo-400"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <div className="sm:col-span-2">
+                          <input
+                            type="text"
+                            value={tc.explanation}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setCpCheckTestCases((prev) =>
+                                prev.map((item) => (item.id === tc.id ? { ...item, explanation: val } : item)),
+                              );
+                            }}
+                            placeholder="Reason: Negative numbers edge case"
+                            className="w-full p-2 text-xs bg-[#1E293B]/70 border border-slate-700 rounded-xl text-slate-300 focus:outline-none focus:border-indigo-400"
+                          />
+                        </div>
+                        <div>
+                          <input
+                            type="number"
+                            value={tc.timeLimitMs}
+                            onChange={(e) => {
+                              const val = Number(e.target.value);
+                              setCpCheckTestCases((prev) =>
+                                prev.map((item) => (item.id === tc.id ? { ...item, timeLimitMs: val } : item)),
+                              );
+                            }}
+                            placeholder="Time Limit (ms)"
+                            className="w-full p-2 text-xs bg-[#1E293B]/70 border border-slate-700 rounded-xl text-slate-300 focus:outline-none focus:border-indigo-400"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Author Modal Footer */}
+              <div className="pt-4 border-t border-slate-700 flex items-center justify-between">
+                <span className="text-xs text-slate-400">
+                  {cpSampleTestCases.length} Visible Cases • {cpCheckTestCases.length} Hidden Check Cases
+                </span>
+
+                <div className="flex gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setIsProblemAuthorModalOpen(false)}
+                    className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-xs font-bold shadow-md shadow-cyan-600/30 transition"
+                  >
+                    {editingProblemIdx !== null ? 'Update Problem' : 'Add Problem to Exam'}
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 2: Browse & Import from CLIAS Coding Problem Bank */}
+      {isBankModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in">
+          <div className="bg-[#0F172A] w-full max-w-3xl rounded-3xl shadow-2xl border border-indigo-500/40 overflow-hidden flex flex-col max-h-[85vh]">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700/80 bg-[#1E293B]">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/30">
+                  <BookOpen className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-white">Import from CLIAS Coding Problem Bank</h3>
+                  <p className="text-xs text-slate-400">
+                    Select tested algorithms with verified starter codes and comprehensive test suites
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsBankModalOpen(false)}
+                className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-700 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto space-y-3">
+              {bankLoading ? (
+                <div className="p-12 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
+                  <Loader2 className="w-5 h-5 animate-spin text-cyan-400" />
+                  <span>Loading coding problems from database...</span>
+                </div>
+              ) : bankProblems.length === 0 ? (
+                <div className="p-12 text-center text-xs text-slate-400">
+                  No coding problems found in bank.
+                </div>
+              ) : (
+                bankProblems.map((bp) => (
+                  <div
+                    key={bp.id}
+                    className="p-4 rounded-2xl border border-slate-700 bg-[#1E293B]/60 hover:border-slate-500 transition flex items-center justify-between gap-3"
+                  >
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h4 className="text-xs sm:text-sm font-bold text-white">{bp.title}</h4>
+                        <span
+                          className={`text-[9px] font-bold px-2 py-0.5 rounded-md uppercase border ${
+                            bp.difficulty === 'EASY'
+                              ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                              : bp.difficulty === 'HARD'
+                              ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                              : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                          }`}
+                        >
+                          {bp.difficulty}
+                        </span>
+                        {bp.tags && (
+                          <span className="text-[10px] text-slate-400 font-medium bg-slate-800 px-2 py-0.5 rounded-md border border-slate-700">
+                            {bp.tags}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-slate-400">
+                        {bp._count?.testCases || 0} Testcases • Slug: <span className="font-mono text-cyan-400">{bp.slug}</span>
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => handleImportProblemFromBank(bp)}
+                      className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-indigo-600/30"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Import</span>
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL 3: Inspect Coding Problems of Created Assessment */}
+      {isInspectModalOpen && inspectAssessment && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-in fade-in">
+          <div className="bg-[#0F172A] w-full max-w-4xl rounded-3xl shadow-2xl border border-cyan-500/40 overflow-hidden flex flex-col max-h-[88vh]">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700/80 bg-[#1E293B]">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+                  <Code className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-white">
+                    {inspectAssessment.title}
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Exam Code: <span className="font-mono text-cyan-300">{inspectAssessment.code}</span> • Duration: {inspectAssessment.durationMinutes}m • Total Marks: {inspectAssessment.totalMarks}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsInspectModalOpen(false)}
+                className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-700 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto space-y-4">
+              <div className="p-4 rounded-2xl bg-cyan-950/30 border border-cyan-500/30 text-xs text-cyan-200">
+                This assessment is configured with the <strong>CLIAS Automated In-Browser Code Judge</strong>. Students will write code directly in the browser editor and evaluate against sample cases before submitting for final automated grading.
+              </div>
+
+              {inspectAssessment.questions && inspectAssessment.questions.length > 0 ? (
+                <div className="space-y-4">
+                  {inspectAssessment.questions.map((aq: any, idx: number) => {
+                    let parsedMeta: any = null;
+                    try {
+                      parsedMeta = JSON.parse(aq.question?.explanation || '{}');
+                    } catch (_) {}
+
+                    return (
+                      <div
+                        key={aq.id || idx}
+                        className="p-4 rounded-2xl border border-slate-700 bg-[#1E293B]/70 space-y-3"
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="w-5 h-5 rounded-md bg-cyan-600 text-white text-[11px] font-black flex items-center justify-center">
+                              {idx + 1}
+                            </span>
+                            <h4 className="text-sm font-bold text-white">
+                              {aq.question?.questionText || `Problem ${idx + 1}`}
+                            </h4>
+                          </div>
+                          <span className="text-xs font-bold text-cyan-400">
+                            {aq.points || 20} Points
+                          </span>
+                        </div>
+
+                        {parsedMeta?.description && (
+                          <div className="p-3 bg-[#0F172A] rounded-xl border border-slate-700 text-xs text-slate-300 font-mono whitespace-pre-wrap">
+                            {parsedMeta.description}
+                          </div>
+                        )}
+
+                        {parsedMeta?.sampleTestCases && parsedMeta.sampleTestCases.length > 0 && (
+                          <div>
+                            <span className="text-[11px] font-bold text-emerald-400 block mb-1.5">
+                              Sample Test Cases ({parsedMeta.sampleTestCases.length}):
+                            </span>
+                            <div className="space-y-2">
+                              {parsedMeta.sampleTestCases.map((stc: any, sIdx: number) => (
+                                <div
+                                  key={sIdx}
+                                  className="p-2.5 rounded-xl bg-[#0F172A] border border-emerald-500/30 text-xs font-mono space-y-1"
+                                >
+                                  <div><span className="text-slate-400">Input:</span> <span className="text-emerald-300">{stc.input}</span></div>
+                                  <div><span className="text-slate-400">Expected:</span> <span className="text-white">{stc.expectedOutput}</span></div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="p-8 text-center text-xs text-slate-400 border border-slate-800 rounded-2xl">
+                  Questions are stored in the secure question bank for this assessment code.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Cohort Analytics & Student Marks Modal */}
+      {analysisModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-[#111827] border border-slate-800 rounded-3xl w-full max-w-5xl max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-slate-800 flex items-center justify-between bg-slate-900/60">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-indigo-500/10 text-indigo-400 rounded-2xl border border-indigo-500/20">
+                  <BarChart2 className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-xl font-bold text-white">Cohort Attempt Analytics & Marks</h3>
+                    {activeAnalytics && (
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-900/60 text-indigo-300 border border-indigo-700/50">
+                        {activeAnalytics.code}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {activeAnalytics ? activeAnalytics.title : 'Loading cohort performance metrics...'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                {activeAnalytics && (
+                  <button
+                    onClick={() =>
+                      setLeaderboardModalData({
+                        id: activeAnalytics.assessmentId,
+                        title: activeAnalytics.title,
+                      })
+                    }
+                    className="flex items-center gap-2 px-3.5 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 rounded-xl text-xs font-bold transition shadow-xs"
+                    title="Open full dynamic live ranking leaderboard"
+                  >
+                    <Trophy className="w-4 h-4 text-amber-400" />
+                    <span>Live Leaderboard</span>
+                  </button>
+                )}
+                {activeAnalytics && activeAnalytics.submissions?.length > 0 && (
+                  <button
+                    onClick={() => exportMarksCsv(activeAnalytics)}
+                    className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-emerald-600/20"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>Export Marks (.CSV)</span>
+                  </button>
+                )}
+                <button
+                  onClick={() => setAnalysisModalOpen(false)}
+                  className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto space-y-6 flex-1">
+              {analyticsLoading ? (
+                <div className="py-20 flex flex-col items-center justify-center gap-3 text-slate-400">
+                  <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+                  <p className="text-sm">Compiling student attempt reports & integrity logs...</p>
+                </div>
+              ) : !activeAnalytics ? (
+                <div className="py-16 text-center text-slate-400">
+                  <AlertTriangle className="w-10 h-10 text-amber-400 mx-auto mb-2 opacity-80" />
+                  <p className="font-semibold text-white">Analytics Unavailable</p>
+                  <p className="text-xs text-slate-400 mt-1">Unable to load analytics for this assessment.</p>
+                </div>
+              ) : (
+                <>
+                  {/* Summary Metric Cards */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
+                      <span className="text-xs text-slate-400 font-medium">Total Attempts</span>
+                      <p className="text-2xl font-black text-white mt-1">
+                        {activeAnalytics.totalSubmissions}
+                      </p>
+                      <span className="text-[11px] text-slate-400">Enrolled submissions</span>
+                    </div>
+
+                    <div className="bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
+                      <span className="text-xs text-slate-400 font-medium">Class Average</span>
+                      <p className="text-2xl font-black text-indigo-400 mt-1">
+                        {activeAnalytics.averageScore}{' '}
+                        <span className="text-xs font-normal text-slate-400">/ {activeAnalytics.totalMarks}</span>
+                      </p>
+                      <span className="text-[11px] text-slate-400">
+                        {activeAnalytics.totalMarks > 0
+                          ? Math.round((activeAnalytics.averageScore / activeAnalytics.totalMarks) * 100)
+                          : 0}
+                        % cohort score
+                      </span>
+                    </div>
+
+                    <div className="bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
+                      <span className="text-xs text-slate-400 font-medium">Pass Rate</span>
+                      <p className="text-2xl font-black text-emerald-400 mt-1">
+                        {activeAnalytics.passRate}%
+                      </p>
+                      <span className="text-[11px] text-slate-400">Benchmark: {activeAnalytics.passingMarks} marks</span>
+                    </div>
+
+                    <div className="bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
+                      <span className="text-xs text-slate-400 font-medium">Score Range</span>
+                      <p className="text-2xl font-black text-white mt-1">
+                        {activeAnalytics.highestScore}{' '}
+                        <span className="text-xs font-normal text-slate-400">high</span> •{' '}
+                        <span className="text-amber-400">{activeAnalytics.lowestScore}</span>{' '}
+                        <span className="text-xs font-normal text-slate-400">low</span>
+                      </p>
+                      <span className="text-[11px] text-slate-400">Max possible: {activeAnalytics.totalMarks}</span>
+                    </div>
+                  </div>
+
+                  {/* Filter & Search Bar */}
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-900/40 p-3 rounded-2xl border border-slate-800">
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                      <div className="relative w-full sm:w-72">
+                        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                        <input
+                          type="text"
+                          value={searchStudent}
+                          onChange={(e) => setSearchStudent(e.target.value)}
+                          placeholder="Search student, enrollment, email..."
+                          className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                        />
+                      </div>
+
+                      <select
+                        value={filterDiv}
+                        onChange={(e) => setFilterDiv(e.target.value as any)}
+                        className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-indigo-500"
+                      >
+                        <option value="ALL">All Divisions</option>
+                        <option value="DIV 1">Division A (DIV 1)</option>
+                        <option value="DIV 2">Division B (DIV 2)</option>
+                      </select>
+                    </div>
+
+                    <span className="text-xs text-slate-400 font-medium whitespace-nowrap">
+                      Showing{' '}
+                      {(activeAnalytics.submissions || []).filter((s: any) => {
+                        const matchDiv = filterDiv === 'ALL' || (s.division || activeAnalytics.division) === filterDiv;
+                        const matchSearch =
+                          !searchStudent.trim() ||
+                          (s.studentName || '').toLowerCase().includes(searchStudent.toLowerCase()) ||
+                          (s.enrollmentNumber || '').toLowerCase().includes(searchStudent.toLowerCase()) ||
+                          (s.email || '').toLowerCase().includes(searchStudent.toLowerCase());
+                        return matchDiv && matchSearch;
+                      }).length}{' '}
+                      of {activeAnalytics.submissions?.length || 0} attempts
+                    </span>
+                  </div>
+
+                  {/* Students Attempt List Table */}
+                  <div className="border border-slate-800 rounded-2xl overflow-hidden bg-slate-900/30">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs">
+                        <thead className="bg-slate-900/90 text-slate-400 uppercase font-semibold border-b border-slate-800">
+                          <tr>
+                            <th className="px-4 py-3.5">Student Details</th>
+                            <th className="px-4 py-3.5">Division</th>
+                            <th className="px-4 py-3.5">Marks Obtained</th>
+                            <th className="px-4 py-3.5">Percentage</th>
+                            <th className="px-4 py-3.5">Status</th>
+                            <th className="px-4 py-3.5">AI Proctoring Trust</th>
+                            <th className="px-4 py-3.5 text-right">Attempt Date</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-800/60 font-medium">
+                          {(activeAnalytics.submissions || [])
+                            .filter((s: any) => {
+                              const matchDiv = filterDiv === 'ALL' || (s.division || activeAnalytics.division) === filterDiv;
+                              const matchSearch =
+                                !searchStudent.trim() ||
+                                (s.studentName || '').toLowerCase().includes(searchStudent.toLowerCase()) ||
+                                (s.enrollmentNumber || '').toLowerCase().includes(searchStudent.toLowerCase()) ||
+                                (s.email || '').toLowerCase().includes(searchStudent.toLowerCase());
+                              return matchDiv && matchSearch;
+                            })
+                            .map((sub: any) => (
+                              <tr key={sub.submissionId || sub.id} className="hover:bg-slate-800/40 transition">
+                                <td className="px-4 py-3.5">
+                                  <div className="flex flex-col">
+                                    <span className="text-white font-bold">{sub.studentName}</span>
+                                    <span className="text-[11px] text-slate-400 font-mono">
+                                      {sub.enrollmentNumber || sub.email}
+                                    </span>
+                                  </div>
+                                </td>
+                                <td className="px-4 py-3.5">
+                                  <span className="px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700/60 text-[11px] font-mono">
+                                    {sub.division || activeAnalytics.division || 'DIV 1'}
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3.5">
+                                  <span className="text-white font-bold text-sm">
+                                    {sub.score}{' '}
+                                    <span className="text-slate-500 font-normal text-xs">
+                                      / {sub.totalMarks}
+                                    </span>
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3.5">
+                                  <span
+                                    className={`px-2 py-0.5 rounded-md text-xs font-bold ${
+                                      sub.percentage >= 60
+                                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                        : sub.percentage >= 40
+                                        ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                                        : 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                                    }`}
+                                  >
+                                    {sub.percentage}%
+                                  </span>
+                                </td>
+                                <td className="px-4 py-3.5">
+                                  {sub.passed ? (
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                                      <CheckCircle2 className="w-3.5 h-3.5" />
+                                      PASSED
+                                    </span>
+                                  ) : (
+                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30">
+                                      <XCircle className="w-3.5 h-3.5" />
+                                      RETAKE
+                                    </span>
+                                  )}
+                                </td>
+                                <td className="px-4 py-3.5">
+                                  <div className="flex items-center gap-2">
+                                    <span
+                                      className={`px-2 py-0.5 rounded text-[11px] font-bold ${
+                                        sub.trustScore >= 80
+                                          ? 'bg-emerald-950 text-emerald-300 border border-emerald-800'
+                                          : sub.trustScore >= 50
+                                          ? 'bg-amber-950 text-amber-300 border border-amber-800'
+                                          : 'bg-rose-950 text-rose-300 border border-rose-800'
+                                      }`}
+                                    >
+                                      {sub.trustScore}% Trust
+                                    </span>
+                                    {sub.violationsCount > 0 && (
+                                      <span className="text-[11px] text-rose-400 font-semibold">
+                                        ({sub.violationsCount} violations)
+                                      </span>
+                                    )}
+                                  </div>
+                                </td>
+                                <td className="px-4 py-3.5 text-right text-slate-400 font-mono text-[11px]">
+                                  {new Date(sub.submittedAt).toLocaleDateString()} •{' '}
+                                  {new Date(sub.submittedAt).toLocaleTimeString([], {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })}
+                                </td>
+                              </tr>
+                            ))}
+
+                          {(!activeAnalytics.submissions || activeAnalytics.submissions.length === 0) && (
+                            <tr>
+                              <td colSpan={7} className="px-4 py-12 text-center text-slate-500">
+                                No students have completed or submitted this assessment yet.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Assessment & Time Limit Modal */}
+      {isEditModalOpen && editingAssessment && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in">
+          <div className="bg-[#0F172A] w-full max-w-xl rounded-3xl shadow-2xl border border-slate-700 overflow-hidden flex flex-col max-h-[92vh]">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-700/80 bg-[#1E293B]/80">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                  <Sliders className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-extrabold text-white tracking-tight">Edit Assessment &amp; Time Limit</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {editingAssessment.code} • {courses.find((c) => c.id === selectedCourseId)?.code}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsEditModalOpen(false)}
+                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-700/80 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditAssessment} className="p-6 overflow-y-auto space-y-5">
+              {/* Expiration Status Indicator */}
+              <div className={`p-4 rounded-2xl border text-xs flex items-center justify-between gap-3 ${
+                editingAssessment.isExpired || editingAssessment.status === 'COMPLETED'
+                  ? 'bg-rose-950/40 border-rose-500/30 text-rose-200'
+                  : 'bg-emerald-950/40 border-emerald-500/30 text-emerald-200'
+              }`}>
+                <div className="flex items-center gap-2.5">
+                  <Clock className={`w-4 h-4 shrink-0 ${editingAssessment.isExpired || editingAssessment.status === 'COMPLETED' ? 'text-rose-400' : 'text-emerald-400'}`} />
+                  <div>
+                    <span className="font-bold block">
+                      {editingAssessment.isExpired || editingAssessment.status === 'COMPLETED'
+                        ? 'Test is currently ENDED / EXPIRED'
+                        : 'Test is currently ACTIVE'}
+                    </span>
+                    <span className="text-[11px] opacity-80 block mt-0.5">
+                      {editingAssessment.isExpired || editingAssessment.status === 'COMPLETED'
+                        ? 'Students cannot take or resume this test. Extend duration or reopen below to allow access.'
+                        : 'Students can access this test. Will automatically close 5 mins after duration.'}
+                    </span>
+                  </div>
+                </div>
+
+                {(editingAssessment.isExpired || editingAssessment.status === 'COMPLETED') && (
+                  <button
+                    type="button"
+                    onClick={handleReopenAssessmentNow}
+                    disabled={savingEdit}
+                    className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs shrink-0 shadow-md transition"
+                  >
+                    Reopen Now
+                  </button>
+                )}
+              </div>
+
+              {/* Assessment Title */}
+              <div>
+                <label className="block text-xs font-bold text-slate-200 mb-1.5">Assessment Title</label>
+                <input
+                  type="text"
+                  required
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="w-full p-3 text-xs bg-[#1E293B] border border-slate-600 rounded-xl text-white font-medium focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              {/* Core Feature: Entire Test Time Limit / Duration */}
+              <div className="p-4 rounded-2xl bg-[#1E293B]/70 border border-indigo-500/30 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="block text-xs font-bold text-white flex items-center gap-1.5">
+                      <Clock className="w-4 h-4 text-indigo-400" />
+                      Entire Test Time Limit / Duration (Minutes)
+                    </label>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      The total exam countdown timer for participating students.
+                    </p>
+                  </div>
+                  <span className="text-xs font-mono font-bold px-2.5 py-1 bg-indigo-500/20 text-indigo-300 rounded-lg border border-indigo-500/30">
+                    {editDuration} Mins
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <input
+                    type="number"
+                    min={5}
+                    max={300}
+                    value={editDuration}
+                    onChange={(e) => setEditDuration(Number(e.target.value))}
+                    className="w-32 p-3 text-xs bg-[#0F172A] border border-slate-600 rounded-xl text-white font-bold text-center focus:outline-none focus:border-indigo-500"
+                  />
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {[15, 30, 45, 60, 90, 120].map((mins) => (
+                      <button
+                        key={mins}
+                        type="button"
+                        onClick={() => setEditDuration(mins)}
+                        className={`px-2.5 py-1.5 rounded-lg text-xs font-bold border transition ${
+                          editDuration === mins
+                            ? 'bg-indigo-600 border-indigo-500 text-white'
+                            : 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white'
+                        }`}
+                      >
+                        {mins}m
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Expiration Buffer Notice */}
+                <div className="p-3 rounded-xl bg-indigo-950/40 border border-indigo-800/40 text-[11px] text-indigo-300 flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+                  <span>
+                    <strong>Automatic Expiration:</strong> The test window will automatically expire after{' '}
+                    <strong>{editDuration + 5} minutes</strong> ({editDuration} mins + 5 mins grace period). Once expired, students will see &quot;Test Ended&quot; and will not be able to start or resume.
+                  </span>
+                </div>
+
+                {/* Quick Extend Window */}
+                <div className="pt-2 border-t border-slate-700/60 flex items-center justify-between text-xs">
+                  <span className="text-slate-400 font-medium">Quick Time Extension from Now:</span>
+                  <div className="flex items-center gap-1.5">
+                    {[10, 15, 30].map((ext) => (
+                      <button
+                        key={ext}
+                        type="button"
+                        onClick={() => setEditExtendMinutes(ext)}
+                        className={`px-2.5 py-1 rounded-lg font-bold border text-[11px] transition ${
+                          editExtendMinutes === ext
+                            ? 'bg-emerald-600 border-emerald-500 text-white'
+                            : 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white'
+                        }`}
+                      >
+                        +{ext}m
+                      </button>
+                    ))}
+                    {editExtendMinutes > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setEditExtendMinutes(0)}
+                        className="text-[10px] text-slate-400 hover:text-white px-1"
+                      >
+                        Reset
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Status & Division */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-200 mb-1.5">Status</label>
+                  <select
+                    value={editStatus}
+                    onChange={(e) => setEditStatus(e.target.value)}
+                    className="w-full p-3 text-xs bg-[#1E293B] border border-slate-600 rounded-xl text-white font-medium focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="DRAFT">DRAFT (Hidden from students)</option>
+                    <option value="PUBLISHED">PUBLISHED (Visible to cohort)</option>
+                    <option value="ACTIVE">ACTIVE (Open for submissions)</option>
+                    <option value="COMPLETED">COMPLETED (Test Ended)</option>
+                    <option value="ARCHIVED">ARCHIVED</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-200 mb-1.5">Division</label>
+                  <select
+                    value={editDivision}
+                    onChange={(e) => setEditDivision(e.target.value as any)}
+                    className="w-full p-3 text-xs bg-[#1E293B] border border-slate-600 rounded-xl text-white font-medium focus:outline-none focus:border-indigo-500"
+                  >
+                    <option value="ALL">Both Divisions (All)</option>
+                    <option value="DIV 1">Division A (DIV 1)</option>
+                    <option value="DIV 2">Division B (DIV 2)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Passing Marks & Allowed Attempts */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-200 mb-1.5">Passing %</label>
+                  <input
+                    type="number"
+                    min={10}
+                    max={100}
+                    value={editPassingMarks}
+                    onChange={(e) => setEditPassingMarks(Number(e.target.value))}
+                    className="w-full p-3 text-xs bg-[#1E293B] border border-slate-600 rounded-xl text-white font-medium focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-200 mb-1.5">Allowed Attempts</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={10}
+                    value={editAllowedAttempts}
+                    onChange={(e) => setEditAllowedAttempts(Number(e.target.value))}
+                    className="w-full p-3 text-xs bg-[#1E293B] border border-slate-600 rounded-xl text-white font-medium focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-4 border-t border-slate-700/80 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsEditModalOpen(false)}
+                  className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={savingEdit}
+                  className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-600/30 transition flex items-center gap-1.5 disabled:opacity-50"
+                >
+                  {savingEdit ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                  <span>Save Changes</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Dynamic Assessment Leaderboard Modal for Faculty */}
+      {leaderboardModalData && (
+        <AssessmentLeaderboardModal
+          assessmentId={leaderboardModalData.id}
+          assessmentTitle={leaderboardModalData.title}
+          isOpen={!!leaderboardModalData}
+          onClose={() => setLeaderboardModalData(null)}
+          isFacultyView={true}
+        />
+      )}
+    </div>
+  );
+}
+

@@ -1,0 +1,1154 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ==============================================================================
+   CLIAS x GLEAM-SPARK DESIGN SYSTEM
+   Reference: https://github.com/h-240407/gleam-spark-builder
+   Palette: warm parchment bg · coral primary · steel blue secondary
+   Typography: Anton (display) · Inter (sans) · IBM Plex Mono (mono)
+   ============================================================================== */
+
+:root {
+  /* Fonts */
+  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-display: 'Anton', Impact, sans-serif;
+
+  /* gleam-spark light tokens — warm parchment */
+  --background:    #f5f0e8;          /* oklch(0.964 0.013 85) */
+  --foreground:    #1a2540;          /* oklch(0.205 0.044 256) */
+  --card:          #faf7f2;
+  --card-foreground: #1a2540;
+  --popover:       #faf7f2;
+  --popover-foreground: #1a2540;
+
+  /* Coral / Vermilion primary (gleam-spark --primary oklch(0.641 0.221 28)) */
+  --primary:           #e05033;
+  --primary-foreground: #fef9f7;
+
+  /* Steel-blue secondary (gleam-spark --secondary oklch(0.53 0.096 246)) */
+  --secondary:          #4a6fa5;
+  --secondary-foreground: #fef9f7;
+
+  /* Muted parchment surfaces */
+  --muted:          #ede8df;
+  --muted-foreground: #6b7fa3;      /* gleam oklch(0.555 0.04 252) */
+
+  /* Accent teal */
+  --accent:         #d6e4f0;
+  --accent-foreground: #1a2540;
+
+  --destructive:    #e05033;
+  --destructive-foreground: #fef9f7;
+
+  /* hairline borders */
+  --border:         rgba(74, 111, 165, 0.32);
+  --strong-border:  rgba(26, 37, 64, 0.7);
+  --input:          rgba(74, 111, 165, 0.25);
+  --ring:           #e05033;
+
+  /* gleam-spark special tokens */
+  --grid-line:      rgba(74, 111, 165, 0.36);
+  --chart-fill:     rgba(74, 111, 165, 0.15);
+  --heat-strong:    #4a6fa5;
+  --heat-medium:    #7b9bbf;
+  --heat-low:       #f0c8a8;
+  --heat-priority:  #d0795a;
+
+  color-scheme: light;
+}
+
+html.dark {
+  /* gleam-spark inspired dark — technical obsidian */
+  --background:    #0c1220;
+  --foreground:    #e8edf5;
+  --card:          #121b30;
+  --card-foreground: #e8edf5;
+  --popover:       #121b30;
+  --popover-foreground: #e8edf5;
+
+  --primary:           #e8604a;
+  --primary-foreground: #fef9f7;
+
+  --secondary:          #6a90c5;
+  --secondary-foreground: #0c1220;
+
+  --muted:          #1a2540;
+  --muted-foreground: #8ba0c0;
+
+  --accent:         #1e3050;
+  --accent-foreground: #e8edf5;
+
+  --destructive:    #e8604a;
+  --destructive-foreground: #fef9f7;
+
+  --border:         rgba(106, 144, 197, 0.3);
+  --strong-border:  rgba(232, 237, 245, 0.6);
+  --input:          rgba(106, 144, 197, 0.25);
+  --ring:           #e8604a;
+
+  --grid-line:      rgba(106, 144, 197, 0.34);
+  --chart-fill:     rgba(106, 144, 197, 0.12);
+  --heat-strong:    #6a90c5;
+  --heat-medium:    #4a6fa5;
+  --heat-low:       #3a2010;
+  --heat-priority:  #8f3a28;
+
+  color-scheme: dark;
+}
+
+/* ==============================================================================
+   BASE STYLES & PERSISTENT MATRIX GRID BACKGROUND
+   ============================================================================== */
+html,
+body {
+  font-family: var(--font-sans);
+  background-color: var(--background) !important;
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-image:
+    radial-gradient(circle at 1px 1px, var(--secondary) 2px, transparent 0),
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px) !important;
+  background-size: 80px 80px, 80px 80px, 80px 80px !important;
+  background-attachment: fixed !important;
+}
+
+/* Universal 0px border-radius in accordance with gleam-spark design */
+* {
+  border-radius: 0 !important;
+}
+
+/* Keep circular status indicator dots and small avatars rounded */
+.status-dot,
+.rounded-full.w-2,
+.rounded-full.h-2,
+.rounded-full.w-1,
+.rounded-full.h-1 {
+  border-radius: 50% !important;
+}
+
+/* ==============================================================================
+   GLEAM-SPARK GRID PAPER (grid-paper class + body background)
+   ============================================================================== */
+.grid-paper,
+.matrix-grid,
+.atlas-grid {
+  background-image:
+    radial-gradient(circle at 1px 1px, var(--secondary) 2px, transparent 0),
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px) !important;
+  background-size: 80px 80px, 80px 80px, 80px 80px !important;
+  background-attachment: fixed !important;
+}
+
+.matrix-crosshairs {
+  background-image:
+    radial-gradient(circle at 1px 1px, var(--primary) 2px, transparent 0),
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px) !important;
+  background-size: 80px 80px, 80px 80px, 80px 80px !important;
+}
+
+/* Translucent panels allowing background matrix grid to shine through */
+.matrix-box,
+.matrix-card,
+.panel {
+  background-color: rgba(250, 247, 242, 0.55) !important;
+  backdrop-filter: blur(2px) !important;
+  -webkit-backdrop-filter: blur(2px) !important;
+  border: 1px solid var(--strong-border) !important;
+  position: relative;
+  border-radius: 0 !important;
+}
+
+html.dark .matrix-box,
+html.dark .matrix-card,
+html.dark .panel {
+  background-color: rgba(18, 27, 48, 0.55) !important;
+  backdrop-filter: blur(2px) !important;
+  -webkit-backdrop-filter: blur(2px) !important;
+  border: 1px solid var(--strong-border) !important;
+}
+
+/* Soften all heavy opaque white/dark surfaces across pages to let matrix grid show */
+.bg-white,
+[class*="bg-white"] {
+  background-color: rgba(250, 247, 242, 0.55) !important;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+html.dark .bg-white,
+html.dark [class*="bg-white"],
+html.dark .bg-slate-900,
+html.dark .bg-slate-950,
+html.dark [class*="bg-slate-900"],
+html.dark [class*="bg-slate-950"],
+html.dark [class*="bg-[#121b30]"] {
+  background-color: rgba(18, 27, 48, 0.55) !important;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+/* ==============================================================================
+   GLEAM-SPARK TYPOGRAPHY UTILITIES
+   ============================================================================== */
+.font-display,
+.display {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.font-mono,
+.mono {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 1.4px;
+}
+
+/* Brand size */
+.brand {
+  font-family: var(--font-display);
+  font-size: 30px;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+/* ==============================================================================
+   GLEAM-SPARK STATUS DOT
+   ============================================================================== */
+.status {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  background: var(--primary);
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px var(--heat-low);
+}
+
+/* ==============================================================================
+   GLEAM-SPARK ACTION BUTTON (square edges, IBM Plex Mono)
+   ============================================================================== */
+.action-button {
+  height: 51px;
+  padding: 0 24px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 1.2px;
+  border-radius: 0 !important;
+  gap: 28px;
+  box-shadow: none;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* ==============================================================================
+   GLEAM-SPARK INDEX BOX (colored label with hard edges)
+   ============================================================================== */
+.index-box {
+  background: var(--secondary);
+  color: var(--primary-foreground);
+  padding: 3px 7px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  border-radius: 0;
+}
+
+/* data rule divider */
+.data-rule {
+  border-top: 1px solid var(--border);
+}
+
+/* ==============================================================================
+   CUSTOM SCROLLBAR
+   ============================================================================== */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted-foreground);
+}
+
+/* ==============================================================================
+   SIDEBAR LAYOUT TRANSITIONS
+   ============================================================================== */
+@media (min-width: 1024px) {
+  .pl-64,
+  .ml-64,
+  .pl-\[72px\],
+  .ml-\[72px\],
+  .sidebar-offset {
+    transition: padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+                margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  }
+
+  body[data-sidebar="pinned"] .pl-64,
+  body[data-sidebar="pinned"] .sidebar-offset {
+    padding-left: 16rem !important;
+  }
+
+  body[data-sidebar="pinned"] .ml-64 {
+    margin-left: 16rem !important;
+  }
+
+  body[data-sidebar="collapsed"] .pl-64,
+  body[data-sidebar="collapsed"] .sidebar-offset {
+    padding-left: 72px !important;
+  }
+
+  body[data-sidebar="collapsed"] .ml-64 {
+    margin-left: 72px !important;
+  }
+}
+
+@media (max-width: 1023px) {
+  .pl-64,
+  .ml-64,
+  .pl-\[72px\],
+  .ml-\[72px\],
+  .sidebar-offset,
+  body[data-sidebar="pinned"] .pl-64,
+  body[data-sidebar="pinned"] .sidebar-offset,
+  body[data-sidebar="pinned"] .ml-64,
+  body[data-sidebar="collapsed"] .pl-64,
+  body[data-sidebar="collapsed"] .sidebar-offset,
+  body[data-sidebar="collapsed"] .ml-64 {
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+  }
+}
+
+/* ==============================================================================
+   LIGHT MODE OVERRIDES — GLEAM-SPARK PARCHMENT SURFACES
+   ============================================================================== */
+html:not(.dark) body {
+  background-color: #f5f0e8 !important;
+  color: #1a2540 !important;
+}
+
+html:not(.dark) .bg-white:not([data-keep-pure-white]) {
+  background-color: #faf7f2 !important;
+  color: #1a2540 !important;
+  border-color: rgba(26, 37, 64, 0.12) !important;
+}
+
+html:not(.dark) .bg-slate-50 {
+  background-color: #ede8df !important;
+  color: #1a2540 !important;
+}
+
+html:not(.dark) .bg-slate-100 {
+  background-color: #e8e2d8 !important;
+}
+
+html:not(.dark) .border-slate-200,
+html:not(.dark) .border-slate-100 {
+  border-color: rgba(74, 111, 165, 0.22) !important;
+}
+
+html:not(.dark) .border-slate-300 {
+  border-color: rgba(26, 37, 64, 0.28) !important;
+}
+
+/* Inputs in light mode */
+html:not(.dark) input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+html:not(.dark) select,
+html:not(.dark) textarea {
+  background-color: #faf7f2 !important;
+  color: #1a2540 !important;
+  border-color: rgba(74, 111, 165, 0.3) !important;
+}
+
+html:not(.dark) input:focus,
+html:not(.dark) select:focus,
+html:not(.dark) textarea:focus {
+  border-color: #e05033 !important;
+  box-shadow: 0 0 0 2px rgba(224, 80, 51, 0.15) !important;
+}
+
+html:not(.dark) select option {
+  background-color: #faf7f2 !important;
+  color: #1a2540 !important;
+}
+
+/* Color badges in light mode */
+html:not(.dark) [class*="bg-indigo-500/20"],
+html:not(.dark) [class*="bg-indigo-500/10"],
+html:not(.dark) [class*="bg-blue-500/20"],
+html:not(.dark) [class*="bg-blue-500/10"],
+html:not(.dark) .bg-blue-50 {
+  background-color: rgba(74, 111, 165, 0.12) !important;
+  color: #1a3a6e !important;
+  border-color: rgba(74, 111, 165, 0.28) !important;
+}
+
+html:not(.dark) [class*="bg-purple-500/20"],
+html:not(.dark) [class*="bg-purple-500/10"],
+html:not(.dark) .bg-purple-50 {
+  background-color: rgba(138, 72, 180, 0.1) !important;
+  color: #581c87 !important;
+  border-color: rgba(138, 72, 180, 0.22) !important;
+}
+
+html:not(.dark) [class*="bg-emerald-500/20"],
+html:not(.dark) [class*="bg-emerald-500/10"],
+html:not(.dark) .bg-emerald-50 {
+  background-color: rgba(6, 95, 70, 0.1) !important;
+  color: #065f46 !important;
+  border-color: rgba(6, 95, 70, 0.2) !important;
+}
+
+html:not(.dark) [class*="bg-amber-500/20"],
+html:not(.dark) [class*="bg-amber-500/10"],
+html:not(.dark) .bg-amber-50 {
+  background-color: rgba(180, 105, 20, 0.1) !important;
+  color: #92400e !important;
+  border-color: rgba(146, 64, 14, 0.2) !important;
+}
+
+html:not(.dark) [class*="bg-rose-500/20"],
+html:not(.dark) [class*="bg-rose-500/10"],
+html:not(.dark) .bg-rose-50,
+html:not(.dark) .bg-red-50 {
+  background-color: rgba(224, 80, 51, 0.1) !important;
+  color: #9b1c1c !important;
+  border-color: rgba(224, 80, 51, 0.2) !important;
+}
+
+/* White text preservation */
+button.text-white,
+a.text-white,
+[class*="bg-blue-600"] .text-white,
+[class*="bg-indigo-600"] .text-white,
+[class*="bg-emerald-600"] .text-white,
+[class*="bg-rose-600"] .text-white,
+[class*="bg-red-600"] .text-white,
+[class*="bg-purple-600"] .text-white {
+  color: #ffffff !important;
+}
+
+/* ==============================================================================
+   DARK MODE OVERRIDES — GLEAM-SPARK OBSIDIAN TECHNICAL
+   ============================================================================== */
+html.dark body {
+  background-color: #0c1220 !important;
+  color: #e8edf5 !important;
+}
+
+html.dark [class*="min-h-screen"]:not(aside):not([data-opaque-bg]) {
+  background-color: transparent !important;
+  color: #e8edf5;
+}
+
+html.dark .bg-white:not([data-keep-light]) {
+  background-color: #121b30 !important;
+  color: #e8edf5 !important;
+  border-color: rgba(106, 144, 197, 0.18) !important;
+}
+
+html.dark .bg-slate-50 {
+  background-color: #0e1828 !important;
+  color: #e8edf5 !important;
+}
+
+html.dark .bg-slate-100 {
+  background-color: #162038 !important;
+}
+
+html.dark .text-slate-900,
+html.dark .text-slate-800 {
+  color: #e8edf5 !important;
+}
+
+html.dark .text-slate-700,
+html.dark .text-slate-600 {
+  color: #b0c4d8 !important;
+}
+
+html.dark .text-slate-500 {
+  color: #8ba0c0 !important;
+}
+
+html.dark .border-slate-200,
+html.dark .border-slate-100 {
+  border-color: rgba(106, 144, 197, 0.18) !important;
+}
+
+html.dark .border-slate-300 {
+  border-color: rgba(106, 144, 197, 0.28) !important;
+}
+
+html.dark input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+html.dark select,
+html.dark textarea {
+  background-color: #0e1828 !important;
+  color: #e8edf5 !important;
+  border-color: rgba(106, 144, 197, 0.22) !important;
+}
+
+html.dark input:focus,
+html.dark select:focus,
+html.dark textarea:focus {
+  border-color: #e8604a !important;
+  box-shadow: 0 0 0 2px rgba(232, 96, 74, 0.2) !important;
+}
+
+html.dark select option {
+  background-color: #121b30 !important;
+  color: #e8edf5 !important;
+}
+
+html.dark [class*="bg-indigo-500/20"],
+html.dark [class*="bg-indigo-500/10"],
+html.dark [class*="bg-blue-500/20"],
+html.dark [class*="bg-blue-500/10"],
+html.dark .bg-blue-50 {
+  background-color: rgba(74, 111, 165, 0.2) !important;
+  color: #93c5fd !important;
+  border-color: rgba(106, 144, 197, 0.3) !important;
+}
+
+html.dark [class*="bg-purple-500/20"],
+html.dark [class*="bg-purple-500/10"],
+html.dark .bg-purple-50 {
+  background-color: rgba(88, 28, 135, 0.22) !important;
+  color: #d8b4fe !important;
+  border-color: rgba(216, 180, 254, 0.25) !important;
+}
+
+html.dark [class*="bg-emerald-500/20"],
+html.dark [class*="bg-emerald-500/10"],
+html.dark .bg-emerald-50 {
+  background-color: rgba(6, 95, 70, 0.22) !important;
+  color: #6ee7b7 !important;
+  border-color: rgba(110, 231, 183, 0.25) !important;
+}
+
+html.dark [class*="bg-amber-500/20"],
+html.dark [class*="bg-amber-500/10"],
+html.dark .bg-amber-50 {
+  background-color: rgba(146, 64, 14, 0.22) !important;
+  color: #fcd34d !important;
+  border-color: rgba(252, 211, 77, 0.25) !important;
+}
+
+html.dark [class*="bg-rose-500/20"],
+html.dark [class*="bg-rose-500/10"],
+html.dark .bg-rose-50,
+html.dark .bg-red-50 {
+  background-color: rgba(224, 80, 51, 0.18) !important;
+  color: #fca5a5 !important;
+  border-color: rgba(252, 165, 165, 0.25) !important;
+}
+
+/* ==============================================================================
+   GLEAM-SPARK COMPONENT CLASSES
+   ============================================================================== */
+
+/* Panel / Card */
+.gs-panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 0;
+}
+
+/* Eyebrow label row */
+.gs-eyebrow {
+  color: var(--secondary);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+}
+
+/* Section header rule */
+.gs-section-rule {
+  border-bottom: 1px solid var(--strong-border);
+  padding-bottom: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Intelligence map node accent */
+.map-node-accent {
+  fill: var(--background);
+  stroke: var(--secondary);
+  stroke-width: 1.5;
+}
+
+/* Coral text accent */
+.text-coral,
+.coral {
+  color: var(--primary);
+}
+
+/* Blue text accent */
+.text-steel,
+.blue {
+  color: var(--secondary);
+}
+
+/* ==============================================================================
+   EXACT GLEAM-SPARK BUILDER DASHBOARD & WORKSPACE CLASSES
+   ============================================================================== */
+
+.page-intro {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 32px;
+  gap: 24px;
+}
+
+.page-intro .mono {
+  color: var(--secondary);
+  margin-bottom: 18px;
+}
+
+.page-title {
+  font-size: 76px;
+  line-height: .94;
+}
+
+.page-title span {
+  display: block;
+}
+
+.readiness {
+  border-left: 1px solid var(--strong-border);
+  padding-left: 20px;
+  margin-bottom: 3px;
+  min-width: 188px;
+}
+
+.readiness .mono {
+  font-size: 8px;
+  margin: 0;
+  color: var(--foreground);
+}
+
+.readiness strong {
+  font-family: var(--font-display);
+  font-size: 56px;
+  font-weight: 400;
+  line-height: 1.15;
+}
+
+.readiness strong span {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: var(--primary);
+}
+
+.readiness .blue {
+  font-size: 8px;
+}
+
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border: 1px solid var(--strong-border);
+  margin-bottom: 24px;
+  background: var(--card);
+}
+
+.metric {
+  border-right: 1px solid var(--strong-border);
+  padding: 19px;
+}
+
+.metric:last-child {
+  border-right: 0;
+}
+
+.metric-top {
+  display: flex;
+  justify-content: space-between;
+  font-size: 8px;
+  letter-spacing: .5px;
+  color: var(--secondary);
+  margin-bottom: 25px;
+}
+
+.metric-top span:last-child {
+  color: var(--primary);
+}
+
+.metric-value {
+  font-family: var(--font-display);
+  font-size: 38px;
+  margin-bottom: 5px;
+  line-height: 1;
+}
+
+.metric-label {
+  font-size: 8px;
+  color: var(--secondary);
+  letter-spacing: 1px;
+}
+
+.priority-band {
+  background: var(--foreground);
+  color: var(--background);
+  display: flex;
+  align-items: center;
+  padding: 26px 24px;
+  gap: 25px;
+  margin-bottom: 24px;
+}
+
+.priority-symbol {
+  color: var(--primary);
+  border: 1px solid var(--primary);
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  font-size: 26px;
+  font-family: var(--font-display);
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+.priority-content {
+  flex: 1;
+}
+
+.priority-content .mono {
+  color: var(--primary);
+  font-size: 8px;
+  margin-bottom: 8px;
+}
+
+.priority-content h2 {
+  font-size: 22px;
+  letter-spacing: 0.5px;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+}
+
+.priority-content p {
+  color: var(--muted-foreground);
+  font-size: 12px;
+  margin-top: 6px;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1.55fr 1fr;
+  gap: 24px;
+}
+
+.panel {
+  border: 1px solid var(--strong-border);
+  background: var(--card);
+  min-width: 0;
+}
+
+.panel-head {
+  min-height: 90px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 19px 20px;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+}
+
+.panel-head .mono {
+  font-size: 8px;
+  color: var(--secondary);
+  margin-bottom: 9px;
+  letter-spacing: 1px;
+}
+
+.panel-head h2 {
+  font-size: 24px;
+  font-family: var(--font-display);
+  text-transform: uppercase;
+}
+
+.panel-head .panel-meta {
+  font-size: 8px;
+  letter-spacing: .5px;
+}
+
+.period-select {
+  border: 1px solid var(--border);
+  background: transparent;
+  padding: 7px 10px;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  text-transform: uppercase;
+  color: var(--foreground);
+}
+
+.topic-list {
+  padding: 8px 20px 15px;
+}
+
+.topic-row {
+  padding: 18px 0 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.topic-row:last-child {
+  border-bottom: 0;
+}
+
+.topic-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  margin-bottom: 10px;
+}
+
+.topic-info strong {
+  font-size: 11px;
+  font-family: var(--font-mono);
+}
+
+.topic-bar {
+  height: 4px;
+  background: var(--accent);
+}
+
+.topic-bar span {
+  display: block;
+  height: 100%;
+  background: var(--secondary);
+}
+
+.topic-status {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 8px;
+  color: var(--primary);
+  margin-top: 5px;
+  text-transform: uppercase;
+}
+
+.skill-table {
+  width: 100%;
+  padding: 25px 15px 30px;
+  border-spacing: 4px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+}
+
+.skill-table th {
+  font-size: 7px;
+  font-weight: 600;
+  padding-bottom: 6px;
+  color: var(--muted-foreground);
+  text-transform: uppercase;
+}
+
+.skill-table td {
+  text-align: center;
+  height: 35px;
+}
+
+.skill-table td:first-child {
+  background: none;
+  text-align: left;
+  width: 90px;
+  font-weight: 600;
+}
+
+.heat-strong { background: var(--heat-strong); color: var(--background); }
+.heat-medium { background: var(--heat-medium); color: var(--foreground); }
+.heat-low { background: var(--heat-low); color: var(--foreground); }
+.heat-priority { background: var(--heat-priority); color: var(--primary-foreground); }
+
+.recommendation {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  width: 100%;
+  padding: 20px 18px;
+  min-height: 61px;
+  border-bottom: 1px solid var(--border);
+  border-radius: 0;
+  justify-content: flex-start;
+  white-space: normal;
+  text-align: left;
+  background: transparent;
+  transition: background 0.15s ease;
+}
+
+.recommendation:hover {
+  background: var(--accent);
+}
+
+.recommendation:last-child {
+  border-bottom: 0;
+}
+
+.recommendation .mono {
+  color: var(--primary);
+  font-size: 9px;
+}
+
+.recommendation-text {
+  text-align: left;
+  flex: 1;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.recommendation-text small {
+  display: block;
+  color: var(--secondary);
+  font-family: var(--font-mono);
+  font-size: 7px;
+  margin-top: 6px;
+  text-transform: uppercase;
+}
+
+@media (max-width: 1100px) {
+  .page-title { font-size: 60px; }
+  .dashboard-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  .page-title { font-size: 44px; }
+  .page-intro { flex-direction: column; align-items: flex-start; gap: 16px; }
+  .readiness { border-left: none; padding-left: 0; border-top: 1px solid var(--strong-border); padding-top: 14px; width: 100%; }
+  .metrics { grid-template-columns: repeat(2, 1fr); }
+  .metric:nth-child(2) { border-right: 0; }
+  .metric:nth-child(-n+2) { border-bottom: 1px solid var(--strong-border); }
+  .priority-band { flex-direction: column; align-items: flex-start; gap: 16px; }
+}
+
+/* ==============================================================================
+   GLEAM-SPARK CATALOG, COURSE, EXERCISE, ANSWER, FEEDBACK & UTILITIES
+   ============================================================================== */
+.catalog {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 22px;
+}
+
+.course {
+  border: 1px solid var(--strong-border);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  min-height: 245px;
+  background: rgba(250, 247, 242, 0.55);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  border-radius: 0 !important;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+html.dark .course {
+  background: rgba(18, 27, 48, 0.55);
+}
+
+.course:hover {
+  border-color: var(--primary);
+}
+
+.course .mono {
+  font-size: 8px;
+  color: var(--secondary);
+  letter-spacing: 1.2px;
+  margin-bottom: 8px;
+}
+
+.course h2 {
+  font-family: var(--font-display);
+  font-size: 28px;
+  margin: 16px 0 12px;
+  text-transform: uppercase;
+  line-height: 1.05;
+}
+
+.course p {
+  font-size: 11px;
+  color: var(--muted-foreground);
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+
+.course .action-button {
+  margin-top: auto;
+  align-self: flex-start;
+}
+
+.exercise {
+  max-width: 900px;
+  border-top: 1px solid var(--strong-border);
+  padding-top: 28px;
+}
+
+.exercise h2 {
+  font-family: var(--font-display);
+  font-size: 27px;
+  margin: 18px 0 26px;
+  line-height: 1.3;
+  text-transform: uppercase;
+}
+
+.answer {
+  width: 100%;
+  justify-content: flex-start;
+  min-height: 58px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+  white-space: normal;
+  border-radius: 0 !important;
+  text-align: left;
+  padding: 16px 20px;
+  background: rgba(250, 247, 242, 0.65);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: all 0.15s ease;
+}
+
+html.dark .answer {
+  background: rgba(18, 27, 48, 0.65);
+}
+
+.answer:hover {
+  border-color: var(--secondary);
+  background: var(--accent);
+}
+
+.answer.selected {
+  border-color: var(--secondary);
+  background: var(--accent);
+  box-shadow: inset 3px 0 0 var(--primary);
+}
+
+.feedback {
+  margin: 20px 0;
+  padding: 20px;
+  border-left: 3px solid var(--secondary);
+  background: var(--accent);
+  font-size: 13px;
+  line-height: 1.8;
+  border-radius: 0 !important;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.data-table th {
+  text-align: left;
+  font: 9px var(--font-mono);
+  color: var(--secondary);
+  padding: 18px;
+  border-bottom: 1px solid var(--strong-border);
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+.data-table td {
+  padding: 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.editor {
+  background: var(--foreground) !important;
+  color: var(--background) !important;
+  padding: 24px;
+  width: 100%;
+  min-height: 320px;
+  border: 0;
+  resize: vertical;
+  font: 13px/1.8 var(--font-mono);
+  outline: none;
+  margin: 20px 0;
+  border-radius: 0 !important;
+}
+
+.profile-form {
+  max-width: 650px;
+  display: grid;
+  gap: 22px;
+  border-top: 1px solid var(--strong-border);
+  padding-top: 28px;
+}
+
+.field-label {
+  font: 9px var(--font-mono);
+  display: grid;
+  gap: 10px;
+  color: var(--secondary);
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+.field-label input,
+.field-label select,
+.field-label textarea {
+  border: 1px solid var(--border);
+  background: rgba(250, 247, 242, 0.65);
+  padding: 14px 16px;
+  font: 13px var(--font-sans);
+  color: var(--foreground);
+  border-radius: 0 !important;
+  outline: none;
+}
+
+html.dark .field-label input,
+html.dark .field-label select,
+html.dark .field-label textarea {
+  background: rgba(18, 27, 48, 0.65);
+  color: var(--foreground);
+}
+
+.notice {
+  border: 1px solid var(--secondary);
+  background: rgba(250, 247, 242, 0.85);
+  padding: 18px;
+  margin-bottom: 24px;
+  font-size: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  border-radius: 0 !important;
+}
+
+html.dark .notice {
+  background: rgba(18, 27, 48, 0.85);
+}

@@ -23,7 +23,7 @@ export default function UniversalProfilePage() {
   }, [user, loading, router]);
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex font-sans">
+    <div className="min-h-screen bg-transparent text-[#1a2540] dark:text-[#e8edf5] flex font-sans relative z-10">
       <Sidebar />
 
       <div className="flex-1 ml-64 flex flex-col min-w-0">

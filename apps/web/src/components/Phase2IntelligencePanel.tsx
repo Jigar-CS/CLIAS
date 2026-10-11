@@ -51,51 +51,54 @@ export function Phase2IntelligencePanel() {
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs dark:shadow-md overflow-hidden transition-colors duration-200">
+    <div className="bg-[#faf7f2] dark:bg-[#121b30] border border-[rgba(74,111,165,0.25)] dark:border-[rgba(106,144,197,0.2)] shadow-sm overflow-hidden transition-colors duration-200" style={{borderRadius:0}}>
       {/* Header with Badges */}
-      <div className="p-6 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="p-6 bg-[#1a2540] dark:bg-[#0c1220] text-white flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[rgba(74,111,165,0.25)]">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-indigo-300 text-xs font-bold mb-2">
-            <Sparkles className="w-3.5 h-3.5 text-indigo-300" />
+          <div className="inline-flex items-center gap-2 px-2.5 py-1 bg-[#e05033]/20 border border-[#e05033]/40 text-[#fca5a5] text-[10px] font-mono uppercase tracking-widest mb-2" style={{borderRadius:0}}>
+            <Sparkles className="w-3.5 h-3.5 text-[#e05033]" />
             <span>Cognitive Intelligence Active</span>
           </div>
-          <h3 className="text-xl font-black tracking-tight">Advanced Student Knowledge Modeling</h3>
-          <p className="text-xs text-indigo-200 mt-1 max-w-2xl">
+          <h3 className="text-xl md:text-2xl font-bold tracking-tight font-display uppercase">Advanced Student Knowledge Modeling</h3>
+          <p className="text-xs text-slate-300 mt-1 max-w-2xl font-sans">
             Mathematical validation across Bayesian Knowledge Tracing (BKT), Item Response Theory (IRT), Ebbinghaus Forgetting Curves, and Multi-Topic Prerequisite DAGs.
           </p>
         </div>
 
         {/* Tab Navigation */}
-        <div className="flex bg-slate-800/80 p-1.5 rounded-xl border border-slate-700/60 shrink-0">
+        <div className="flex bg-[#121b30] dark:bg-[#0a0f1a] p-1 border border-[rgba(74,111,165,0.3)] shrink-0 font-mono" style={{borderRadius:0}}>
           <button
             onClick={() => setActiveTab('bkt')}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition ${
+            className={`flex items-center gap-1.5 px-3 py-2 text-[10px] font-bold uppercase tracking-wider transition ${
               activeTab === 'bkt'
-                ? 'bg-indigo-600 text-white shadow-md'
-                : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+                ? 'bg-[#e05033] text-white'
+                : 'text-slate-300 hover:text-white hover:bg-white/5'
             }`}
+            style={{borderRadius:0}}
           >
             <Brain className="w-3.5 h-3.5" />
             <span>BKT & IRT Benchmark</span>
           </button>
           <button
             onClick={() => setActiveTab('decay')}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition ${
+            className={`flex items-center gap-1.5 px-3 py-2 text-[10px] font-bold uppercase tracking-wider transition ${
               activeTab === 'decay'
-                ? 'bg-indigo-600 text-white shadow-md'
-                : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+                ? 'bg-[#e05033] text-white'
+                : 'text-slate-300 hover:text-white hover:bg-white/5'
             }`}
+            style={{borderRadius:0}}
           >
             <Clock className="w-3.5 h-3.5" />
             <span>Retention & Decay</span>
           </button>
           <button
             onClick={() => setActiveTab('graph')}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-bold transition ${
+            className={`flex items-center gap-1.5 px-3 py-2 text-[10px] font-bold uppercase tracking-wider transition ${
               activeTab === 'graph'
-                ? 'bg-indigo-600 text-white shadow-md'
-                : 'text-slate-300 hover:text-white hover:bg-slate-700/50'
+                ? 'bg-[#e05033] text-white'
+                : 'text-slate-300 hover:text-white hover:bg-white/5'
             }`}
+            style={{borderRadius:0}}
           >
             <GitFork className="w-3.5 h-3.5" />
             <span>Knowledge Graph</span>
@@ -121,30 +124,31 @@ export function Phase2IntelligencePanel() {
               <div className="space-y-6">
                 {/* Dynamic Cognitive Intelligence Advice Card */}
                 {bktData.cognitiveAdvice && (
-                  <div className="p-5 rounded-2xl bg-gradient-to-r from-indigo-50/80 via-blue-50/50 to-slate-50 dark:from-slate-900 dark:via-indigo-950/40 dark:to-slate-900 border border-indigo-100 dark:border-indigo-900/50 shadow-xs">
+                  <div className="p-5 bg-[#faf7f2] dark:bg-[#0c1220] border border-[rgba(74,111,165,0.3)] shadow-xs" style={{borderRadius:0}}>
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-md shadow-indigo-600/20">
+                        <div className="w-8 h-8 bg-[#e05033] text-white flex items-center justify-center font-bold" style={{borderRadius:0}}>
                           <Sparkles className="w-4 h-4" />
                         </div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <h4 className="text-sm font-extrabold text-slate-900 dark:text-white">
+                            <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-slate-900 dark:text-white">
                               Cognitive Intelligence Advice
                             </h4>
                             <span
-                              className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider border ${
+                              className={`px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wider border ${
                                 bktData.cognitiveAdvice.urgency === 'HIGH'
-                                  ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-400'
+                                  ? 'bg-[#e05033]/15 text-[#e05033] border-[#e05033]/40'
                                   : bktData.cognitiveAdvice.urgency === 'MEDIUM'
-                                  ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-400'
-                                  : 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-400'
+                                  ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/40'
+                                  : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/40'
                               }`}
+                              style={{borderRadius:0}}
                             >
                               {bktData.cognitiveAdvice.focusType.replace('_', ' ')}
                             </span>
                           </div>
-                          <p className="text-xs font-bold text-indigo-700 dark:text-indigo-400 mt-0.5">
+                          <p className="text-xs font-bold text-[#4a6fa5] dark:text-[#6a90c5] mt-0.5">
                             {bktData.cognitiveAdvice.headline}
                           </p>
                         </div>
@@ -153,7 +157,8 @@ export function Phase2IntelligencePanel() {
                       {bktData.cognitiveAdvice.targetTopicId && (
                         <a
                           href={`/student/practice?topicId=${bktData.cognitiveAdvice.targetTopicId}`}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 transition shadow-sm shrink-0"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#e05033] text-white text-[10px] font-mono font-bold uppercase tracking-wider hover:bg-[#c93f25] transition shadow-sm shrink-0"
+                          style={{borderRadius:0}}
                         >
                           <span>Practice {bktData.cognitiveAdvice.targetTopicName}</span>
                           <ChevronRight className="w-3.5 h-3.5" />
@@ -161,15 +166,15 @@ export function Phase2IntelligencePanel() {
                       )}
                     </div>
 
-                    <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed mb-3">
+                    <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed mb-3 font-mono">
                       {bktData.cognitiveAdvice.advice}
                     </p>
 
                     {bktData.cognitiveAdvice.actionItems && bktData.cognitiveAdvice.actionItems.length > 0 && (
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 pt-2 border-t border-indigo-100/80 dark:border-slate-800">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 pt-2 border-t border-[rgba(74,111,165,0.2)]">
                         {bktData.cognitiveAdvice.actionItems.map((item: string, idx: number) => (
                           <div key={idx} className="flex items-start gap-2 text-[11px] text-slate-700 dark:text-slate-300">
-                            <span className="w-4 h-4 rounded-full bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300 flex items-center justify-center font-bold shrink-0 text-[10px] mt-0.5">
+                            <span className="w-4 h-4 bg-[#4a6fa5] text-white flex items-center justify-center font-bold shrink-0 text-[10px] mt-0.5" style={{borderRadius:0}}>
                               {idx + 1}
                             </span>
                             <span>{item}</span>
@@ -182,22 +187,22 @@ export function Phase2IntelligencePanel() {
 
                 {/* Latent Ability Banner */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-4 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/40 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-sm">
+                  <div className="p-4 bg-[#faf7f2] dark:bg-[#0c1220] border border-[rgba(74,111,165,0.3)] flex items-center gap-3" style={{borderRadius:0}}>
+                    <div className="w-10 h-10 bg-[#4a6fa5] text-white flex items-center justify-center font-bold text-sm" style={{borderRadius:0}}>
                       θ
                     </div>
                     <div>
-                      <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                      <p className="text-[10px] font-mono font-bold text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">
                         IRT Latent Ability (θ)
                       </p>
-                      <p className="text-lg font-black text-slate-900 dark:text-white">
+                      <p className="text-lg font-black text-slate-900 dark:text-white font-mono">
                         {bktData.totalTopicsEvaluated > 0
                           ? bktData.overallIrtAbility?.theta >= 0
                             ? `+${bktData.overallIrtAbility?.theta}`
                             : bktData.overallIrtAbility?.theta
                           : '0.00 (Uncalibrated)'}
                       </p>
-                      <span className="text-[10px] text-indigo-700 dark:text-indigo-400 font-semibold">
+                      <span className="text-[10px] text-[#4a6fa5] dark:text-[#6a90c5] font-semibold font-mono">
                         {bktData.totalTopicsEvaluated > 0
                           ? `${bktData.overallIrtAbility?.abilityPercentile ?? 50}th Percentile Rank`
                           : 'Baseline Calibration'}
@@ -205,31 +210,31 @@ export function Phase2IntelligencePanel() {
                     </div>
                   </div>
 
-                  <div className="p-4 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/40 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-sm">
+                  <div className="p-4 bg-[#faf7f2] dark:bg-[#0c1220] border border-[rgba(74,111,165,0.3)] flex items-center gap-3" style={{borderRadius:0}}>
+                    <div className="w-10 h-10 bg-[#e05033] text-white flex items-center justify-center font-bold text-sm" style={{borderRadius:0}}>
                       P(L)
                     </div>
                     <div>
-                      <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                      <p className="text-[10px] font-mono font-bold text-[#e05033] dark:text-[#e8604a] uppercase tracking-wider">
                         BKT Knowledge State
                       </p>
-                      <p className="text-lg font-black text-slate-900 dark:text-white">Probabilistic Tracing</p>
-                      <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold">
+                      <p className="text-lg font-black text-slate-900 dark:text-white font-mono">Probabilistic Tracing</p>
+                      <span className="text-[10px] text-emerald-700 dark:text-emerald-400 font-semibold font-mono">
                         Slip: 10% | Guess: 20% | Transition: 15%
                       </span>
                     </div>
                   </div>
 
-                  <div className="p-4 rounded-xl bg-amber-50/70 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/40 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-amber-600 text-white flex items-center justify-center font-bold text-sm">
+                  <div className="p-4 bg-[#faf7f2] dark:bg-[#0c1220] border border-[rgba(74,111,165,0.3)] flex items-center gap-3" style={{borderRadius:0}}>
+                    <div className="w-10 h-10 bg-amber-600 text-white flex items-center justify-center font-bold text-sm" style={{borderRadius:0}}>
                       α
                     </div>
                     <div>
-                      <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                      <p className="text-[10px] font-mono font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">
                         EWMA Recency Weight
                       </p>
-                      <p className="text-lg font-black text-slate-900 dark:text-white">α = 0.25</p>
-                      <span className="text-[10px] text-amber-700 dark:text-amber-400 font-semibold">
+                      <p className="text-lg font-black text-slate-900 dark:text-white font-mono">α = 0.25</p>
+                      <span className="text-[10px] text-amber-700 dark:text-amber-400 font-semibold font-mono">
                         Difficulty-Weighted (1.0x - 1.5x)
                       </span>
                     </div>
@@ -237,9 +242,9 @@ export function Phase2IntelligencePanel() {
                 </div>
 
                 {/* Side-by-Side Comparison Table */}
-                <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
+                <div className="border border-[rgba(74,111,165,0.25)] overflow-hidden" style={{borderRadius:0}}>
                   <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 font-bold uppercase tracking-wider text-[10px]">
+                    <thead className="bg-[#ede8df] dark:bg-[#162038] border-b border-[rgba(74,111,165,0.25)] text-[#1a2540] dark:text-[#e8edf5] font-mono font-bold uppercase tracking-wider text-[10px]">
                       <tr>
                         <th className="p-3">Topic</th>
                         <th className="p-3">EWMA Score</th>
@@ -249,15 +254,15 @@ export function Phase2IntelligencePanel() {
                         <th className="p-3">Recommended Mastery</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-slate-700 dark:text-slate-300 font-medium">
+                    <tbody className="divide-y divide-[rgba(74,111,165,0.15)] text-slate-700 dark:text-slate-300 font-medium">
                       {bktData.topicComparisons && bktData.topicComparisons.length > 0 ? (
                         bktData.topicComparisons.map((t: any) => (
-                          <tr key={t.topicId} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition">
+                          <tr key={t.topicId} className="hover:bg-black/5 dark:hover:bg-white/5 transition">
                             <td className="p-3">
                               <span className="font-bold text-slate-900 dark:text-white">{t.topicName}</span>
-                              <span className="block text-[10px] text-slate-400">{t.courseCode}</span>
+                              <span className="block text-[10px] text-[#4a6fa5] dark:text-[#6a90c5] font-mono">{t.courseCode}</span>
                             </td>
-                            <td className="p-3 font-mono font-bold text-indigo-700 dark:text-indigo-400">
+                            <td className="p-3 font-mono font-bold text-[#4a6fa5] dark:text-[#6a90c5]">
                               {t.ewmaScore}%
                             </td>
                             <td className="p-3 font-mono font-bold text-emerald-700 dark:text-emerald-400">
@@ -268,23 +273,24 @@ export function Phase2IntelligencePanel() {
                             </td>
                             <td className="p-3">
                               <span
-                                className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                                className={`px-2 py-0.5 text-[10px] font-mono font-bold border ${
                                   t.concordance === 'STRONG_AGREEMENT'
-                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-400 dark:border-emerald-800'
-                                    : 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-400 dark:border-amber-800'
+                                    ? 'bg-emerald-50 text-emerald-700 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-400 dark:border-emerald-800'
+                                    : 'bg-amber-50 text-amber-700 border-amber-300 dark:bg-amber-950/60 dark:text-amber-400 dark:border-amber-800'
                                 }`}
+                                style={{borderRadius:0}}
                               >
                                 {t.concordance.replace('_', ' ')}
                               </span>
                             </td>
-                            <td className="p-3 font-extrabold text-slate-900 dark:text-white">
+                            <td className="p-3 font-extrabold text-slate-900 dark:text-white font-mono">
                               {t.recommendedMastery}%
                             </td>
                           </tr>
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={6} className="p-8 text-center text-slate-400 italic">
+                          <td colSpan={6} className="p-8 text-center text-slate-400 italic font-mono">
                             No topics evaluated yet. Complete practice questions to benchmark EWMA vs Bayesian Knowledge Tracing.
                           </td>
                         </tr>
@@ -300,42 +306,42 @@ export function Phase2IntelligencePanel() {
               <div className="space-y-6">
                 {/* Summary Metrics */}
                 <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                  <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
-                    <p className="text-[11px] font-bold text-slate-400 uppercase">Raw Baseline</p>
-                    <p className="text-xl font-black text-slate-900">
+                  <div className="p-4 bg-[#faf7f2] dark:bg-[#0c1220] border border-[rgba(74,111,165,0.3)]" style={{borderRadius:0}}>
+                    <p className="text-[10px] font-mono font-bold text-slate-400 uppercase tracking-wider">Raw Baseline</p>
+                    <p className="text-xl font-black text-slate-900 dark:text-white font-mono">
                       {retentionData.overallRawMastery}%
                     </p>
-                    <span className="text-[10px] text-slate-500">Unadjusted Score</span>
+                    <span className="text-[10px] text-slate-500 font-mono">Unadjusted Score</span>
                   </div>
 
-                  <div className="p-4 rounded-xl bg-indigo-50 border border-indigo-200">
-                    <p className="text-[11px] font-bold text-indigo-600 uppercase">Effective Mastery</p>
-                    <p className="text-xl font-black text-indigo-900">
+                  <div className="p-4 bg-[#faf7f2] dark:bg-[#0c1220] border border-[rgba(74,111,165,0.3)]" style={{borderRadius:0}}>
+                    <p className="text-[10px] font-mono font-bold text-[#4a6fa5] uppercase tracking-wider">Effective Mastery</p>
+                    <p className="text-xl font-black text-[#4a6fa5] dark:text-[#6a90c5] font-mono">
                       {retentionData.overallEffectiveMastery}%
                     </p>
-                    <span className="text-[10px] text-indigo-700">Decayed Retention</span>
+                    <span className="text-[10px] text-[#4a6fa5] font-mono">Decayed Retention</span>
                   </div>
 
-                  <div className="p-4 rounded-xl bg-amber-50 border border-amber-200">
-                    <p className="text-[11px] font-bold text-amber-600 uppercase">Reviews Due</p>
-                    <p className="text-xl font-black text-amber-900">
+                  <div className="p-4 bg-[#faf7f2] dark:bg-[#0c1220] border border-[rgba(74,111,165,0.3)]" style={{borderRadius:0}}>
+                    <p className="text-[10px] font-mono font-bold text-amber-600 uppercase tracking-wider">Reviews Due</p>
+                    <p className="text-xl font-black text-amber-600 dark:text-amber-400 font-mono">
                       {retentionData.reviewsDueCount} Topics
                     </p>
-                    <span className="text-[10px] text-amber-700">Spaced Repetition Trigger</span>
+                    <span className="text-[10px] text-amber-700 font-mono">Spaced Repetition Trigger</span>
                   </div>
 
-                  <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200">
-                    <p className="text-[11px] font-bold text-emerald-600 uppercase">Retention Index</p>
-                    <p className="text-xl font-black text-emerald-900">
+                  <div className="p-4 bg-[#faf7f2] dark:bg-[#0c1220] border border-[rgba(74,111,165,0.3)]" style={{borderRadius:0}}>
+                    <p className="text-[10px] font-mono font-bold text-emerald-600 uppercase tracking-wider">Retention Index</p>
+                    <p className="text-xl font-black text-emerald-600 dark:text-emerald-400 font-mono">
                       {retentionData.overallRetentionRate}%
                     </p>
-                    <span className="text-[10px] text-emerald-700">Consolidated Memory</span>
+                    <span className="text-[10px] text-emerald-700 font-mono">Consolidated Memory</span>
                   </div>
                 </div>
 
                 {/* Topics Retention Grid */}
                 <div className="space-y-3">
-                  <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                  <h4 className="text-[10px] font-mono font-bold text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">
                     Ebbinghaus Concept Decay Status
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -343,33 +349,35 @@ export function Phase2IntelligencePanel() {
                       retentionData.topics.map((topic: any) => (
                         <div
                           key={topic.topicId}
-                          className="p-4 rounded-xl border border-slate-200 bg-white hover:border-slate-300 transition space-y-2.5"
+                          className="p-4 border border-[rgba(74,111,165,0.25)] bg-[#faf7f2] dark:bg-[#0c1220] hover:border-[#4a6fa5] transition space-y-2.5"
+                          style={{borderRadius:0}}
                         >
                           <div className="flex items-start justify-between">
                             <div>
-                              <span className="text-[10px] font-bold text-slate-400 uppercase">
+                              <span className="text-[10px] font-mono font-bold text-[#4a6fa5] dark:text-[#6a90c5] uppercase">
                                 {topic.courseCode}
                               </span>
-                              <h5 className="text-sm font-bold text-slate-900">{topic.topicName}</h5>
+                              <h5 className="text-sm font-bold text-slate-900 dark:text-white">{topic.topicName}</h5>
                             </div>
                             <span
-                              className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                              className={`px-2 py-0.5 text-[10px] font-mono font-bold border ${
                                 topic.retentionStatus === 'FRESH'
                                   ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                   : topic.retentionStatus === 'STABLE'
                                   ? 'bg-blue-50 text-blue-700 border-blue-200'
-                                  : 'bg-rose-50 text-rose-700 border-rose-200'
+                                  : 'bg-[#e05033]/15 text-[#e05033] border-[#e05033]/30'
                               }`}
+                              style={{borderRadius:0}}
                             >
                               {topic.retentionStatus.replace('_', ' ')}
                             </span>
                           </div>
 
-                          <div className="flex items-center justify-between text-xs pt-1">
+                          <div className="flex items-center justify-between text-xs pt-1 font-mono">
                             <span className="text-slate-500">
                               Last practiced {topic.daysSinceLastPractice}d ago
                             </span>
-                            <span className="font-extrabold text-slate-800">
+                            <span className="font-extrabold text-slate-800 dark:text-slate-200">
                               Effective: {topic.decayedMastery}%{' '}
                               <span className="text-slate-400 font-normal">
                                 (Raw: {topic.rawMastery}%)
@@ -377,26 +385,26 @@ export function Phase2IntelligencePanel() {
                             </span>
                           </div>
 
-                          <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                          <div className="w-full h-1.5 bg-[rgba(74,111,165,0.15)] overflow-hidden" style={{borderRadius:0}}>
                             <div
-                              className={`h-full rounded-full ${
+                              className={`h-full ${
                                 topic.retentionRatePct >= 80
                                   ? 'bg-emerald-500'
                                   : topic.retentionRatePct >= 60
                                   ? 'bg-amber-500'
-                                  : 'bg-rose-500'
+                                  : 'bg-[#e05033]'
                               }`}
-                              style={{ width: `${topic.retentionRatePct}%` }}
+                              style={{ width: `${topic.retentionRatePct}%`, borderRadius: 0 }}
                             ></div>
                           </div>
 
-                          <p className="text-[11px] text-slate-500 italic">
+                          <p className="text-[11px] text-slate-500 italic font-mono">
                             {topic.decayExplanation}
                           </p>
                         </div>
                       ))
                     ) : (
-                      <div className="col-span-2 p-8 text-center text-slate-400 italic bg-slate-50/50 dark:bg-slate-800/30 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
+                      <div className="col-span-2 p-8 text-center text-slate-400 italic bg-black/5 dark:bg-white/5 border border-dashed border-[rgba(74,111,165,0.3)] font-mono" style={{borderRadius:0}}>
                         No topic retention records found. Practice questions to begin tracking Ebbinghaus memory decay.
                       </div>
                     )}
@@ -408,20 +416,20 @@ export function Phase2IntelligencePanel() {
             {/* TAB 3: MULTI-TOPIC KNOWLEDGE DEPENDENCY GRAPH */}
             {activeTab === 'graph' && graphData && (
               <div className="space-y-6">
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div className="p-4 bg-[#faf7f2] dark:bg-[#0c1220] border border-[rgba(74,111,165,0.25)] flex flex-col md:flex-row items-start md:items-center justify-between gap-4" style={{borderRadius:0}}>
                   <div>
-                    <h4 className="text-sm font-bold text-slate-900">
+                    <h4 className="text-sm font-bold text-slate-900 dark:text-white">
                       {graphData.courseName} ({graphData.courseCode}) Directed Acyclic Graph
                     </h4>
                     <p className="text-xs text-slate-500 mt-0.5">
                       Pedagogical prerequisite dependency tree enforcing mastery continuity before advanced concepts.
                     </p>
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-xs font-bold px-3 py-1 bg-emerald-100 text-emerald-800 rounded-lg">
+                  <div className="flex items-center gap-2 shrink-0 font-mono">
+                    <span className="text-[10px] font-bold px-3 py-1 bg-emerald-100 text-emerald-800" style={{borderRadius:0}}>
                       {graphData.unlockedTopicsCount} Unlocked
                     </span>
-                    <span className="text-xs font-bold px-3 py-1 bg-amber-100 text-amber-800 rounded-lg">
+                    <span className="text-[10px] font-bold px-3 py-1 bg-amber-100 text-amber-800" style={{borderRadius:0}}>
                       {graphData.blockedTopicsCount} Pending Prerequisites
                     </span>
                   </div>
@@ -432,48 +440,50 @@ export function Phase2IntelligencePanel() {
                   {graphData.nodes?.map((node: any) => (
                     <div
                       key={node.id}
-                      className={`p-4 rounded-xl border transition ${
+                      className={`p-4 border transition ${
                         node.status === 'MASTERED'
-                          ? 'bg-emerald-50/50 border-emerald-200'
+                          ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800'
                           : node.status === 'READY_FOR_PRACTICE'
-                          ? 'bg-white border-slate-200'
-                          : 'bg-amber-50/40 border-amber-200'
+                          ? 'bg-[#faf7f2] dark:bg-[#0c1220] border-[rgba(74,111,165,0.25)]'
+                          : 'bg-amber-50/40 dark:bg-amber-950/20 border-amber-300 dark:border-amber-800'
                       }`}
+                      style={{borderRadius:0}}
                     >
                       <div className="flex items-start justify-between mb-2">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase">
+                        <span className="text-[10px] font-mono font-bold text-[#4a6fa5] uppercase">
                           Node
                         </span>
                         <span
-                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                          className={`text-[9px] font-mono font-bold px-2 py-0.5 border ${
                             node.status === 'MASTERED'
                               ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
                               : node.status === 'READY_FOR_PRACTICE'
                               ? 'bg-blue-50 text-blue-700 border-blue-300'
                               : 'bg-amber-50 text-amber-700 border-amber-300'
                           }`}
+                          style={{borderRadius:0}}
                         >
                           {node.status.replace(/_/g, ' ')}
                         </span>
                       </div>
 
-                      <h5 className="text-xs font-bold text-slate-900 mb-2">{node.name}</h5>
+                      <h5 className="text-xs font-bold text-slate-900 dark:text-white mb-2">{node.name}</h5>
 
-                      <div className="flex justify-between items-center text-xs mb-1">
+                      <div className="flex justify-between items-center text-xs mb-1 font-mono">
                         <span className="text-slate-500">Knowledge Mastery</span>
-                        <span className="font-extrabold text-slate-900">{node.rawMastery}%</span>
+                        <span className="font-extrabold text-slate-900 dark:text-white">{node.rawMastery}%</span>
                       </div>
 
-                      <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden mb-3">
+                      <div className="w-full h-1.5 bg-[rgba(74,111,165,0.15)] overflow-hidden mb-3" style={{borderRadius:0}}>
                         <div
-                          className="h-full bg-indigo-600 rounded-full"
-                          style={{ width: `${Math.min(100, Math.max(5, node.rawMastery))}%` }}
+                          className="h-full bg-[#e05033]"
+                          style={{ width: `${Math.min(100, Math.max(5, node.rawMastery))}%`, borderRadius: 0 }}
                         ></div>
                       </div>
 
                       {node.prerequisites && node.prerequisites.length > 0 && (
-                        <div className="text-[10px] text-slate-500 border-t border-slate-100 pt-2">
-                          <span className="font-bold text-slate-600">Requires: </span>
+                        <div className="text-[10px] font-mono text-slate-500 border-t border-[rgba(74,111,165,0.15)] pt-2">
+                          <span className="font-bold text-slate-600 dark:text-slate-400">Requires: </span>
                           <span>{node.prerequisites.join(', ')}</span>
                         </div>
                       )}

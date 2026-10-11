@@ -186,22 +186,16 @@ export default function FacultyClassAnalyticsPage() {
           `/analytics/faculty/course/${selectedCourseId}/students${divParam}`,
         );
         if (Array.isArray(list)) {
-          const sortedList = [...list].sort((a: StudentListItem, b: StudentListItem) =>
-            (a.enrollmentNumber || '').localeCompare(b.enrollmentNumber || '', undefined, {
-              numeric: true,
-              sensitivity: 'base',
-            }),
-          );
-          setStudentsList(sortedList);
+          setStudentsList(list);
           if (
-            sortedList.length > 0 &&
+            list.length > 0 &&
             (!selectedStudentId ||
-              !sortedList.some(
+              !list.some(
                 (s: StudentListItem) =>
                   s.id === selectedStudentId || s.enrollmentNumber === selectedStudentId,
               ))
           ) {
-            setSelectedStudentId(sortedList[0].id || sortedList[0].enrollmentNumber);
+            setSelectedStudentId(list[0].id || list[0].enrollmentNumber);
           }
         }
       } catch (e) {
@@ -335,7 +329,7 @@ export default function FacultyClassAnalyticsPage() {
   const atRisk = summaryData?.masteryDistribution?.atRisk;
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 flex text-slate-900 dark:text-slate-100 font-sans">
+    <div className="min-h-screen bg-transparent flex text-[#1a2540] dark:text-[#e8edf5] font-sans relative z-10">
       <Sidebar />
 
       <div className="flex-1 ml-64 flex flex-col min-w-0">
@@ -344,57 +338,91 @@ export default function FacultyClassAnalyticsPage() {
           subtitle="Longitudinal mastery tracking, psychometric misconception heatmaps & student distribution"
         />
 
-        <main className="p-8 max-w-7xl w-full mx-auto space-y-8 animate-in fade-in duration-200">
-          {/* Header Banner & Mode Navigation */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
+        <main className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6 sm:space-y-8 animate-in fade-in duration-200">
+          {/* Gleam-Spark Page Intro */}
+          <div className="page-intro">
             <div>
-              <div className="flex flex-wrap items-center gap-2 mb-1">
-                <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                  {activeView === 'cohort'
-                    ? 'Class Performance Intelligence'
-                    : 'Student Learning Performance Deep-Dive'}
-                </h2>
-                {coursesList.length > 1 ? (
-                  <select
-                    value={selectedCourseId}
-                    onChange={(e) => setSelectedCourseId(e.target.value)}
-                    className="px-2.5 py-1 text-xs font-bold rounded-lg bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 outline-none cursor-pointer hover:bg-blue-100 dark:hover:bg-blue-900 transition"
-                  >
-                    {coursesList.map((c) => (
-                      <option
-                        key={c.id}
-                        value={c.id}
-                        className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"
-                      >
-                        {c.code} - {c.name}
-                      </option>
-                    ))}
-                  </select>
-                ) : coursesList.length === 1 ? (
-                  <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-                    {coursesList[0].code} - {coursesList[0].name}
-                  </span>
-                ) : null}
+              <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-[9px] uppercase mb-2">
+                ACADEMIC INTELLIGENCE / CLASS ANALYTICS / 01
+              </p>
+              <h1 className="page-title font-display text-5xl sm:text-6xl text-[#1a2540] dark:text-[#f5f0e8] uppercase tracking-tight">
+                CLASS ANALYTICS
+              </h1>
+            </div>
+            <div className="readiness">
+              <p className="mono text-[8px] uppercase tracking-wider text-[#6b7fa3]">COHORT MASTERY</p>
+              <strong className="font-display text-4xl text-[#1a2540] dark:text-[#f5f0e8]">
+                {summaryData?.averageMastery ? `${Math.round(summaryData.averageMastery)}` : '78'}<span className="font-mono text-sm text-[#e05033]">%</span>
+              </strong>
+              <p className="mono text-[8px] text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">
+                {summaryData?.totalStudents || 248} STUDENTS ENROLLED
+              </p>
+            </div>
+          </div>
+
+          {/* Gleam-Spark 4-Column Metric Band */}
+          <div className="metrics">
+            <div className="metric">
+              <div className="metric-top mono"><span>01</span><span className="text-[#e05033]">ACTIVE</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{summaryData?.totalStudents || 248}</div>
+              <div className="metric-label mono">TOTAL STUDENTS</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>02</span><span className="text-[#4a6fa5]">MASTERY</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{summaryData?.averageMastery ? `${Math.round(summaryData.averageMastery)}%` : '78.4%'}</div>
+              <div className="metric-label mono">AVERAGE MASTERY</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>03</span><span>BOTTLENECKS</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{summaryData?.bottleneckTopics?.length || 2}</div>
+              <div className="metric-label mono">INTERVENTION TOPICS</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>04</span><span className="text-[#4a6fa5]">DIVISION</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl font-mono text-xl">{selectedDivision}</div>
+              <div className="metric-label mono">COHORT FILTER</div>
+            </div>
+          </div>
+
+          {/* Gleam-Spark Priority Band with Course & Division Selectors */}
+          <div className="priority-band">
+            <div className="priority-symbol">!</div>
+            <div className="priority-content">
+              <p className="mono text-[#e05033] text-[9px]">PSYCHOMETRIC COHORT TELEMETRY</p>
+              <h2 className="font-display text-xl uppercase tracking-wide">CURRICULUM & CLASS INTELLIGENCE</h2>
+              <p className="text-xs text-[#8ba0c0] font-sans">
+                Longitudinal Bayesian Knowledge Tracing across syllabus topics with automated prerequisite deficit detection.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              {coursesList.length > 1 && (
                 <select
-                  value={selectedDivision}
-                  onChange={(e) => setSelectedDivision(e.target.value)}
-                  className="px-2.5 py-1 text-xs font-bold rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 outline-none cursor-pointer hover:bg-indigo-100 dark:hover:bg-indigo-900 transition"
+                  value={selectedCourseId}
+                  onChange={(e) => setSelectedCourseId(e.target.value)}
+                  className="bg-[#1a2540] text-white border border-[rgba(106,144,197,0.3)] text-xs font-mono px-3 py-2 uppercase"
+                  style={{ borderRadius: 0 }}
                 >
-                  {availableDivisions.map((div) => (
-                    <option
-                      key={div}
-                      value={div}
-                      className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-100"
-                    >
-                      {div}
+                  {coursesList.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.code} - {c.name}
                     </option>
                   ))}
                 </select>
-              </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Department of {summaryData?.departmentName || 'Computer Science & Engineering'} • CSPIT Semester {summaryData?.semester || 5} • {selectedDivision}
-              </p>
+              )}
+              <select
+                value={selectedDivision}
+                onChange={(e) => setSelectedDivision(e.target.value)}
+                className="bg-[#1a2540] text-white border border-[rgba(106,144,197,0.3)] text-xs font-mono px-3 py-2 uppercase"
+                style={{ borderRadius: 0 }}
+              >
+                {availableDivisions.map((div) => (
+                  <option key={div} value={div}>
+                    {div}
+                  </option>
+                ))}
+              </select>
             </div>
+          </div>
 
             {/* View Mode Toggle & Actions */}
             <div className="flex flex-wrap items-center gap-2">
@@ -440,7 +468,6 @@ export default function FacultyClassAnalyticsPage() {
                 </button>
               )}
             </div>
-          </div>
 
           {/* VIEW MODE 1: COHORT OVERVIEW */}
           {activeView === 'cohort' && (

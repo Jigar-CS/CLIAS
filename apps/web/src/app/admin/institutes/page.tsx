@@ -140,7 +140,7 @@ export default function AdminInstitutesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 flex text-slate-900 dark:text-slate-100 font-sans">
+    <div className="min-h-screen bg-transparent text-[#1a2540] dark:text-[#e8edf5] flex font-sans relative z-10">
       <Sidebar />
 
       <div className="flex-1 ml-64 flex flex-col min-w-0">
@@ -149,71 +149,73 @@ export default function AdminInstitutesPage() {
           subtitle="Constituent Institutes, Academic Departments & Degree Program Provisioning"
         />
 
-        <main className="p-8 max-w-7xl w-full mx-auto space-y-8 animate-in fade-in duration-200">
-          {/* Header Action Bar */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
+        <main className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6 sm:space-y-8 animate-in fade-in duration-200">
+          {/* Gleam-Spark Page Intro Banner */}
+          <div className="page-intro">
             <div>
-              <div className="flex items-center gap-2 mb-1">
-                <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                  University Academic Architecture
-                </h2>
-                <span className="px-2.5 py-0.5 text-xs font-bold rounded-full bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
-                  CHARUSAT Governance Matrix
-                </span>
-              </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Manage constituent institutes, departmental boundaries, program accreditations, and appointed leadership.
-              </p>
+              <p className="mono">ADMIN / GOVERNANCE / 03</p>
+              <h1 className="page-title display">
+                ACADEMIC <span className="coral">ARCHITECTURE.</span>
+              </h1>
             </div>
-
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                onClick={() => setShowFacultyModal(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs transition"
-              >
-                <BookOpen className="w-4 h-4" />
-                <span>Assign Faculty Subjects</span>
-              </button>
-              <button
-                onClick={() => setShowAddModal(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Add Department</span>
-              </button>
+            <div className="readiness">
+              <p className="mono">ACADEMIC HIERARCHY</p>
+              <strong>
+                {institutes.length}
+                <span>INST</span>
+              </strong>
+              <p className="mono blue">CHARUSAT GOVERNANCE MATRIX</p>
             </div>
           </div>
 
-          {/* Metric Overview */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <MetricCard
-              title="Constituent Institutes"
-              value={institutes.length}
-              subtitle="CSPIT, DEPSTAR, CMPICA"
-              icon={School}
-              color="indigo"
-            />
-            <MetricCard
-              title="Academic Departments"
-              value={totalDepartments}
-              subtitle="Active Engineering & Tech Units"
-              icon={Building2}
-              color="blue"
-            />
-            <MetricCard
-              title="Enrolled Student Body"
-              value={totalStudents}
-              subtitle="Across All Campuses"
-              icon={Users}
-              color="emerald"
-            />
-            <MetricCard
-              title="Faculty Strength"
-              value={totalFaculty}
-              subtitle="Professors & Instructors"
-              icon={GraduationCap}
-              color="purple"
-            />
+          {/* Gleam-Spark 4-Column Metrics Bar */}
+          <div className="metrics">
+            <div className="metric">
+              <div className="metric-top mono"><span>01</span><span>CAMPUS</span></div>
+              <div className="metric-value">{institutes.length}</div>
+              <div className="metric-label mono">CONSTITUENT INSTITUTES</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>02</span><span className="coral">UNITS</span></div>
+              <div className="metric-value">{totalDepartments}</div>
+              <div className="metric-label mono">ACADEMIC DEPARTMENTS</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>03</span><span>COHORTS</span></div>
+              <div className="metric-value">{totalStudents}</div>
+              <div className="metric-label mono">TOTAL STUDENTS</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>04</span><span className="blue">FACULTY</span></div>
+              <div className="metric-value">{totalFaculty}</div>
+              <div className="metric-label mono">FACULTY STRENGTH</div>
+            </div>
+          </div>
+
+          {/* Gleam-Spark Priority Band Callout */}
+          <div className="priority-band">
+            <div className="priority-symbol">!</div>
+            <div className="priority-content">
+              <p className="mono">INSTITUTIONAL GOVERNANCE / ACTIONS</p>
+              <h2 className="display">DEGREES, DEPARTMENTS &amp; FACULTY ASSIGNMENTS</h2>
+              <p>Manage constituent institutes, departmental boundaries, program accreditations, and appointed leadership.</p>
+            </div>
+            <div className="flex items-center gap-3 shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowFacultyModal(true)}
+                className="action-button bg-transparent border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--accent)]"
+              >
+                <span>ASSIGN SUBJECTS</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowAddModal(true)}
+                className="action-button bg-[#e05033] text-white hover:bg-[#c8432b]"
+              >
+                <span>ADD DEPARTMENT →</span>
+              </button>
+            </div>
           </div>
 
           {/* Institute Selection Tabs */}

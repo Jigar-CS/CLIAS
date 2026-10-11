@@ -104,18 +104,11 @@ export default function CounsellorAlertsPage() {
     }
   };
 
-  const filteredAlerts = alerts
-    .filter((a) => {
-      const matchesStatus = statusFilter === 'ALL' || a.status === statusFilter;
-      const matchesSeverity = severityFilter === 'ALL' || a.severity === severityFilter;
-      return matchesStatus && matchesSeverity;
-    })
-    .sort((a, b) =>
-      (a.enrollmentNumber || '').localeCompare(b.enrollmentNumber || '', undefined, {
-        numeric: true,
-        sensitivity: 'base',
-      }),
-    );
+  const filteredAlerts = alerts.filter((a) => {
+    const matchesStatus = statusFilter === 'ALL' || a.status === statusFilter;
+    const matchesSeverity = severityFilter === 'ALL' || a.severity === severityFilter;
+    return matchesStatus && matchesSeverity;
+  });
 
   const getSeverityBadge = (sev: string) => {
     switch (sev) {
@@ -149,7 +142,7 @@ export default function CounsellorAlertsPage() {
   const resolvedCount = alerts.filter((a) => a.status === 'RESOLVED').length;
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 flex text-slate-900 dark:text-slate-100 font-sans">
+    <div className="min-h-screen bg-transparent text-[#1a2540] dark:text-[#e8edf5] flex font-sans relative z-10">
       <Sidebar />
 
       <div className="flex-1 ml-64 flex flex-col min-w-0">
@@ -158,54 +151,60 @@ export default function CounsellorAlertsPage() {
           subtitle="Real-time detection of student learning disengagement, decay, and persistent misconception traps"
         />
 
-        <main className="p-8 max-w-7xl w-full mx-auto space-y-8 animate-in fade-in duration-200">
-          {/* Top Banner */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
+        <main className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6 sm:space-y-8 animate-in fade-in duration-200">
+          {/* Gleam-Spark Page Intro Banner */}
+          <div className="page-intro">
             <div>
-              <div className="flex items-center gap-2 mb-1">
-                <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                  Academic Intervention Alerts
-                </h2>
-                <span className="px-2.5 py-0.5 text-xs font-bold rounded-full bg-rose-50 dark:bg-rose-950 text-rose-700 dark:text-rose-300 border border-rose-200 dark:border-rose-800">
-                  {pendingCount} Actionable Triggers
-                </span>
-              </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Automated Bayesian Knowledge Tracing flags students when mastery decay occurs or misconception error rate exceeds 50%.
-              </p>
+              <p className="mono">COUNSELLOR / WARNING / 03</p>
+              <h1 className="page-title display">
+                INTERVENTION <span className="coral">ALERTS.</span>
+              </h1>
+            </div>
+            <div className="readiness">
+              <p className="mono">ACTIVE TRIGGERS</p>
+              <strong>
+                {criticalCount + pendingCount}
+                <span>Qs</span>
+              </strong>
+              <p className="mono blue">{criticalCount > 0 ? `${criticalCount} CRITICAL ALERT(S)` : 'STABLE RISK STATUS'}</p>
             </div>
           </div>
 
-          {/* Metric Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <MetricCard
-              title="Critical Priority"
-              value={criticalCount}
-              subtitle="Mastery < 35% or Inactive"
-              icon={ShieldAlert}
-              color="rose"
-            />
-            <MetricCard
-              title="Pending Reviews"
-              value={pendingCount}
-              subtitle="Awaiting Counsellor Action"
-              icon={Clock}
-              color="amber"
-            />
-            <MetricCard
-              title="Active Interventions"
-              value={inProgressCount}
-              subtitle="Remediation in Progress"
-              icon={AlertTriangle}
-              color="blue"
-            />
-            <MetricCard
-              title="Resolved Cases"
-              value={resolvedCount}
-              subtitle="Mastery Restored"
-              icon={CheckCircle2}
-              color="emerald"
-            />
+          {/* Gleam-Spark 4-Column Metrics Bar */}
+          <div className="metrics">
+            <div className="metric">
+              <div className="metric-top mono"><span>01</span><span className="coral">CRITICAL</span></div>
+              <div className="metric-value">{criticalCount}</div>
+              <div className="metric-label mono">CRITICAL PRIORITY</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>02</span><span>PENDING</span></div>
+              <div className="metric-value">{pendingCount}</div>
+              <div className="metric-label mono">AWAITING REVIEW</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>03</span><span>ACTIVE</span></div>
+              <div className="metric-value">{inProgressCount}</div>
+              <div className="metric-label mono">IN PROGRESS</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>04</span><span className="blue">RESTORED</span></div>
+              <div className="metric-value">{resolvedCount}</div>
+              <div className="metric-label mono">CASES RESOLVED</div>
+            </div>
+          </div>
+
+          {/* Gleam-Spark Priority Band Callout */}
+          <div className="priority-band">
+            <div className="priority-symbol">!</div>
+            <div className="priority-content">
+              <p className="mono">BAYESIAN EARLY WARNING / MITIGATION</p>
+              <h2 className="display">AUTOMATED INTERVENTION &amp; DECAY MITIGATION</h2>
+              <p>Automated Bayesian Knowledge Tracing flags students when mastery decay occurs or misconception error rate exceeds 50%.</p>
+            </div>
+            <span className="font-mono text-xs px-3 py-1.5 border border-[var(--primary)] text-[var(--primary)] uppercase tracking-wider shrink-0">
+              {criticalCount} Urgent
+            </span>
           </div>
 
           {/* Filter Bar */}

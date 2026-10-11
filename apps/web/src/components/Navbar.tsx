@@ -135,11 +135,10 @@ function NotificationCardBody({ item }: { item: NotificationItem }) {
             {courseCode ? `${courseCode} • ` : ''}{topicName}
           </span>
           <span
-            className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold flex items-center gap-1 ${
-              isApproved
+            className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold flex items-center gap-1 ${isApproved
                 ? 'bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800'
                 : 'bg-blue-100 dark:bg-blue-950/80 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800'
-            }`}
+              }`}
           >
             {isApproved ? '✓ Dispute Upheld & Credited' : 'ℹ️ Official Answer Upheld'}
           </span>
@@ -156,11 +155,10 @@ function NotificationCardBody({ item }: { item: NotificationItem }) {
         {/* Faculty Feedback Callout */}
         {facultyQuote && (
           <div
-            className={`p-2.5 rounded-xl border-l-[3px] text-[11px] leading-relaxed ${
-              isApproved
+            className={`p-2.5 rounded-xl border-l-[3px] text-[11px] leading-relaxed ${isApproved
                 ? 'border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/30 text-emerald-950 dark:text-emerald-200'
                 : 'border-blue-500 bg-blue-50/70 dark:bg-blue-950/30 text-slate-800 dark:text-slate-200'
-            }`}
+              }`}
           >
             <span className="not-italic font-bold text-[10px] uppercase tracking-wider block mb-1 text-slate-500 dark:text-slate-400">
               💬 Faculty Review Feedback:
@@ -504,12 +502,12 @@ export function Navbar({ title, subtitle, isLocked = false, onLockedClick }: Nav
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
-    <header className="h-16 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-3 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-20 shadow-xs transition-colors duration-200">
+    <header className="h-16 bg-[#faf7f2]/95 dark:bg-[#0c1220]/95 backdrop-blur-md border-b border-[rgba(74,111,165,0.22)] dark:border-[rgba(106,144,197,0.18)] px-3 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-20 shadow-xs transition-colors duration-200">
       <div className="flex items-center gap-2 sm:gap-3 min-w-0">
         {/* Mobile Hamburger Menu Toggle */}
         <button
           onClick={toggleMobile}
-          className="lg:hidden p-2 -ml-1 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition shrink-0"
+          className="lg:hidden p-2 -ml-1 text-[#1a2540] dark:text-[#e8edf5] hover:text-[#e05033] dark:hover:text-[#e8604a] hover:bg-[rgba(224,80,51,0.08)] transition shrink-0"
           title="Toggle Navigation Menu"
           aria-label="Toggle Navigation Menu"
         >
@@ -517,11 +515,11 @@ export function Navbar({ title, subtitle, isLocked = false, onLockedClick }: Nav
         </button>
 
         <div className="truncate">
-          <h1 className="text-sm sm:text-lg md:text-xl font-bold text-slate-900 dark:text-white tracking-tight truncate">
+          <h1 className="text-sm sm:text-base md:text-lg font-display text-[#1a2540] dark:text-[#e8edf5] tracking-tight truncate uppercase">
             {title || `${universityName} Learning Intelligence`}
           </h1>
           {subtitle && (
-            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 font-medium truncate hidden sm:block">
+            <p className="text-[10px] sm:text-[11px] font-mono text-[#4a6fa5] dark:text-[#6a90c5] font-medium truncate hidden sm:block uppercase tracking-widest">
               {subtitle}
             </p>
           )}
@@ -531,34 +529,36 @@ export function Navbar({ title, subtitle, isLocked = false, onLockedClick }: Nav
       <div className="flex items-center gap-3">
         {/* Session In Progress Badge */}
         {isLocked && (
-          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 text-xs font-bold shadow-2xs">
-            <Lock className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-[rgba(224,80,51,0.1)] text-[#e05033] dark:text-[#e8604a] border border-[rgba(224,80,51,0.35)] text-[10px] font-mono font-bold uppercase tracking-wider shadow-xs" style={{ borderRadius: 0 }}>
+            <Lock className="w-3.5 h-3.5" />
             <span>Session in Progress</span>
           </div>
         )}
 
         {/* Search Input */}
         <div className="relative hidden md:block w-64">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[#4a6fa5] dark:text-[#6a90c5]" />
           <input
             type="text"
             disabled={isLocked}
             placeholder={isLocked ? 'Search locked during session' : 'Search topics, courses...'}
-            className={`w-full pl-9 pr-4 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition ${isLocked ? 'opacity-60 cursor-not-allowed' : ''}`}
+            className={`w-full pl-9 pr-4 py-1.5 text-[11px] font-mono bg-[rgba(74,111,165,0.08)] dark:bg-[rgba(106,144,197,0.08)] border border-[rgba(74,111,165,0.25)] dark:border-[rgba(106,144,197,0.2)] text-[#1a2540] dark:text-[#e8edf5] focus:outline-none focus:border-[#e05033] transition uppercase tracking-wider placeholder:normal-case placeholder:tracking-normal ${isLocked ? 'opacity-60 cursor-not-allowed' : ''}`}
+            style={{ borderRadius: 0 }}
           />
         </div>
 
         {/* Theme Toggle Button */}
         <button
           onClick={toggleTheme}
-          className="p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 transition flex items-center gap-1.5"
+          className="p-2 text-[#6b7fa3] dark:text-[#8ba0c0] hover:text-[#1a2540] dark:hover:text-[#e8edf5] hover:bg-[rgba(74,111,165,0.1)] border border-[rgba(74,111,165,0.25)] transition flex items-center gap-1.5"
           title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
           aria-label="Toggle Theme"
+          style={{ borderRadius: 0 }}
         >
           {theme === 'dark' ? (
             <Sun className="w-4 h-4 text-amber-400" />
           ) : (
-            <Moon className="w-4 h-4 text-slate-600" />
+            <Moon className="w-4 h-4 text-[#4a6fa5]" />
           )}
         </button>
 
@@ -566,34 +566,33 @@ export function Navbar({ title, subtitle, isLocked = false, onLockedClick }: Nav
         <div className="relative">
           <button
             onClick={() => setShowNotifications(!showNotifications)}
-            className={`relative p-2 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition ${
-              hasNewArrival ? 'text-blue-600 dark:text-blue-400 ring-2 ring-blue-500/40 bg-blue-50 dark:bg-blue-950/40' : ''
-            }`}
+            className={`relative p-2 text-[#6b7fa3] dark:text-[#8ba0c0] hover:text-[#1a2540] dark:hover:text-[#e8edf5] hover:bg-[rgba(74,111,165,0.1)] transition ${hasNewArrival ? 'text-[#e05033] dark:text-[#e8604a] ring-2 ring-[rgba(224,80,51,0.4)] bg-[rgba(224,80,51,0.08)]' : ''
+              }`}
             title={`Notifications ${unreadCount > 0 ? `(${unreadCount} new)` : ''}`}
             aria-label="Open notifications panel"
           >
-            <Bell className={`w-4 h-4 ${hasNewArrival ? 'animate-bounce text-blue-600 dark:text-blue-400' : ''}`} />
+            <Bell className={`w-4 h-4 ${hasNewArrival ? 'animate-bounce text-[#e05033] dark:text-[#e8604a]' : ''}`} />
             {unreadCount > 0 && (
-              <span className="w-2.5 h-2.5 rounded-full bg-blue-600 absolute top-1.5 right-1.5 ring-2 ring-white dark:ring-slate-900 animate-pulse"></span>
+              <span className="w-2.5 h-2.5 rounded-full bg-[#e05033] absolute top-1.5 right-1.5 ring-2 ring-white dark:ring-slate-900 animate-pulse"></span>
             )}
           </button>
 
           {/* Notifications Dropdown */}
           {showNotifications && (
-            <div className="absolute right-0 mt-2 w-[calc(100vw-1.5rem)] sm:w-[480px] max-w-[480px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl z-50 p-4 space-y-3">
+            <div className="absolute right-0 mt-2 w-[calc(100vw-1.5rem)] sm:w-[480px] max-w-[480px] bg-[#faf7f2] dark:bg-[#121b30] border border-[rgba(74,111,165,0.25)] dark:border-[rgba(106,144,197,0.2)] shadow-2xl z-50 p-4 space-y-3" style={{ borderRadius: 0 }}>
               {/* Header */}
-              <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center justify-between pb-2 border-b border-[rgba(74,111,165,0.22)] dark:border-[rgba(106,144,197,0.18)]">
                 <div className="flex items-center gap-2">
-                  <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-                    <Bell className="w-3.5 h-3.5 text-blue-600" />
+                  <h4 className="text-[10px] font-mono font-bold text-[#1a2540] dark:text-[#e8edf5] uppercase tracking-widest flex items-center gap-1.5">
+                    <Bell className="w-3.5 h-3.5 text-[#e05033]" />
                     <span>Notifications</span>
                   </h4>
                   {unreadCount > 0 ? (
-                    <span className="px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 text-[10px] font-bold">
+                    <span className="px-2 py-0.5 bg-[rgba(224,80,51,0.12)] text-[#e05033] text-[10px] font-mono font-bold border border-[rgba(224,80,51,0.3)]">
                       {unreadCount} new
                     </span>
                   ) : (
-                    <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 text-[10px] font-semibold">
+                    <span className="px-2 py-0.5 bg-[rgba(74,111,165,0.1)] text-[#4a6fa5] dark:text-[#6a90c5] text-[10px] font-mono font-semibold">
                       {notifications.length} total
                     </span>
                   )}
@@ -604,20 +603,19 @@ export function Navbar({ title, subtitle, isLocked = false, onLockedClick }: Nav
                   <button
                     onClick={handleRefresh}
                     disabled={isRefreshing}
-                    className={`p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition ${
-                      isRefreshing ? 'opacity-70 cursor-not-allowed' : ''
-                    }`}
+                    className={`p-1.5 text-[#6b7fa3] dark:text-[#8ba0c0] hover:text-[#1a2540] dark:hover:text-[#e8edf5] hover:bg-[rgba(74,111,165,0.1)] transition ${isRefreshing ? 'opacity-70 cursor-not-allowed' : ''
+                      }`}
                     title="Refresh notifications now"
                     aria-label="Refresh notifications now"
                   >
-                    <RotateCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-blue-600 dark:text-blue-400' : ''}`} />
+                    <RotateCw className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin text-[#e05033]' : ''}`} />
                   </button>
 
                   {/* Mark All Read */}
                   {unreadCount > 0 && (
                     <button
                       onClick={handleMarkAllRead}
-                      className="p-1.5 rounded-lg text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition text-[11px] font-medium"
+                      className="p-1.5 text-[#6b7fa3] dark:text-[#8ba0c0] hover:text-[#e05033] hover:bg-[rgba(74,111,165,0.1)] transition text-[11px] font-medium"
                       title="Mark all as read"
                       aria-label="Mark all as read"
                     >
@@ -629,19 +627,19 @@ export function Navbar({ title, subtitle, isLocked = false, onLockedClick }: Nav
                   {notifications.length > 0 && (
                     <button
                       onClick={handleClearAll}
-                      className="px-2 py-1 rounded-lg text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition text-[11px] font-semibold flex items-center gap-1"
+                      className="px-2 py-1 text-[#6b7fa3] dark:text-[#8ba0c0] hover:text-[#e05033] hover:bg-[rgba(224,80,51,0.08)] transition text-[11px] font-semibold flex items-center gap-1"
                       title="Clear all notifications"
                       aria-label="Clear all notifications"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
-                      <span className="hidden sm:inline text-[10px]">Clear</span>
+                      <span className="hidden sm:inline text-[10px] font-mono">Clear</span>
                     </button>
                   )}
 
                   {/* Close Dropdown */}
                   <button
                     onClick={() => setShowNotifications(false)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                    className="p-1.5 text-[#6b7fa3] hover:text-[#1a2540] dark:hover:text-[#e8edf5] hover:bg-[rgba(74,111,165,0.1)] transition"
                     title="Close notifications"
                     aria-label="Close notifications"
                   >
@@ -651,13 +649,13 @@ export function Navbar({ title, subtitle, isLocked = false, onLockedClick }: Nav
               </div>
 
               {/* Status Bar / Auto-sync Indicator */}
-              <div className="flex items-center justify-between text-[10px] px-2.5 py-1 rounded-lg bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-slate-800">
+              <div className="flex items-center justify-between text-[10px] font-mono px-2.5 py-1 bg-[rgba(74,111,165,0.08)] text-[#4a6fa5] dark:text-[#6a90c5] border border-[rgba(74,111,165,0.18)]">
                 <div className="flex items-center gap-1.5">
                   <span className="relative flex h-2 w-2">
-                    <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isLiveConnected ? 'bg-emerald-400' : 'bg-blue-400'}`}></span>
-                    <span className={`relative inline-flex rounded-full h-2 w-2 ${isLiveConnected ? 'bg-emerald-500' : 'bg-blue-500'}`}></span>
+                    <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${isLiveConnected ? 'bg-emerald-400' : 'bg-[#e05033]'}`}></span>
+                    <span className={`relative inline-flex rounded-full h-2 w-2 ${isLiveConnected ? 'bg-emerald-500' : 'bg-[#e05033]'}`}></span>
                   </span>
-                  <span className="font-medium text-slate-600 dark:text-slate-300">
+                  <span className="font-medium text-[#1a2540] dark:text-[#e8edf5]">
                     {isLiveConnected ? 'Live sync active' : 'Auto-updates every 2m'}
                   </span>
                 </div>
@@ -670,19 +668,19 @@ export function Navbar({ title, subtitle, isLocked = false, onLockedClick }: Nav
               <div className="max-h-[420px] overflow-y-auto space-y-2.5 pr-1">
                 {notifications.length === 0 ? (
                   <div className="text-center py-8 px-4 space-y-2">
-                    <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto text-slate-400">
+                    <div className="w-10 h-10 bg-[rgba(74,111,165,0.1)] flex items-center justify-center mx-auto text-[#4a6fa5]">
                       <BellOff className="w-5 h-5" />
                     </div>
-                    <p className="text-xs font-semibold text-slate-800 dark:text-slate-200">
+                    <p className="text-xs font-mono font-semibold text-[#1a2540] dark:text-[#e8edf5] uppercase tracking-wider">
                       All caught up!
                     </p>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 max-w-xs mx-auto">
+                    <p className="text-[11px] text-[#6b7fa3] dark:text-[#8ba0c0] max-w-xs mx-auto">
                       No notifications pending. New dispute updates, assessments, and alerts will appear automatically.
                     </p>
                     <button
                       onClick={handleRefresh}
                       disabled={isRefreshing}
-                      className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline pt-1"
+                      className="inline-flex items-center gap-1 text-[11px] font-mono font-bold text-[#e05033] hover:underline pt-1"
                     >
                       <RotateCw className={`w-3 h-3 ${isRefreshing ? 'animate-spin' : ''}`} />
                       <span>Refresh</span>
@@ -692,16 +690,16 @@ export function Navbar({ title, subtitle, isLocked = false, onLockedClick }: Nav
                   notifications.map((item) => (
                     <div
                       key={item.id}
-                      className={`group relative p-3.5 rounded-xl border text-xs space-y-2 transition ${
-                        item.read
-                          ? 'bg-slate-50/70 dark:bg-slate-950/60 border-slate-200 dark:border-slate-800/80 text-slate-600 dark:text-slate-400'
-                          : 'bg-blue-50/60 dark:bg-blue-950/30 border-blue-200 dark:border-blue-500/30 text-slate-900 dark:text-white font-medium shadow-2xs'
-                      }`}
+                      className={`group relative p-3.5 border text-xs space-y-2 transition ${item.read
+                          ? 'bg-[rgba(74,111,165,0.04)] dark:bg-[rgba(106,144,197,0.04)] border-[rgba(74,111,165,0.18)] dark:border-[rgba(106,144,197,0.15)] text-[#6b7fa3] dark:text-[#8ba0c0]'
+                          : 'bg-[rgba(224,80,51,0.04)] dark:bg-[rgba(224,80,51,0.08)] border-[rgba(224,80,51,0.25)] dark:border-[rgba(224,80,51,0.3)] text-[#1a2540] dark:text-[#e8edf5] font-medium shadow-2xs'
+                        }`}
+                      style={{ borderRadius: 0 }}
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <span className="font-bold text-xs text-slate-900 dark:text-white flex items-center gap-1.5 leading-snug">
+                        <span className="font-bold text-xs text-[#1a2540] dark:text-[#e8edf5] flex items-center gap-1.5 leading-snug">
                           {!item.read && (
-                            <span className="w-1.5 h-1.5 rounded-full bg-blue-600 shrink-0 inline-block"></span>
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#e05033] shrink-0 inline-block"></span>
                           )}
                           {item.title}
                         </span>
@@ -710,7 +708,7 @@ export function Navbar({ title, subtitle, isLocked = false, onLockedClick }: Nav
                           {!item.read && (
                             <button
                               onClick={() => handleMarkRead(item.id)}
-                              className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5 px-1 py-0.5 rounded"
+                              className="text-[10px] font-mono font-semibold text-[#e05033] hover:underline flex items-center gap-0.5 px-1 py-0.5"
                               title="Mark as read"
                             >
                               <Check className="w-3 h-3" /> Mark read
@@ -719,7 +717,7 @@ export function Navbar({ title, subtitle, isLocked = false, onLockedClick }: Nav
                           {/* Individual Clear / Dismiss Button */}
                           <button
                             onClick={() => handleClearOne(item.id)}
-                            className="p-1 rounded text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                            className="p-1 text-[#6b7fa3] hover:text-[#e05033] hover:bg-[rgba(224,80,51,0.08)] transition"
                             title="Dismiss notification"
                             aria-label="Dismiss notification"
                           >
@@ -730,7 +728,7 @@ export function Navbar({ title, subtitle, isLocked = false, onLockedClick }: Nav
 
                       <NotificationCardBody item={item} />
 
-                      <div className="flex items-center justify-between pt-1 border-t border-slate-200/50 dark:border-slate-800/60 text-[10px] text-slate-400">
+                      <div className="flex items-center justify-between pt-1 border-t border-[rgba(74,111,165,0.15)] text-[10px] font-mono text-[#6b7fa3] dark:text-[#8ba0c0]">
                         <span>
                           {new Date(item.createdAt).toLocaleDateString(undefined, {
                             month: 'short',
@@ -739,7 +737,7 @@ export function Navbar({ title, subtitle, isLocked = false, onLockedClick }: Nav
                             minute: '2-digit',
                           })}
                         </span>
-                        <span className={item.read ? 'text-slate-400' : 'text-blue-600 dark:text-blue-400 font-semibold'}>
+                        <span className={item.read ? 'text-[#6b7fa3]' : 'text-[#e05033] font-semibold'}>
                           {item.read ? 'Read' : 'New'}
                         </span>
                       </div>
@@ -751,7 +749,7 @@ export function Navbar({ title, subtitle, isLocked = false, onLockedClick }: Nav
           )}
         </div>
 
-        <div className="h-5 w-[1px] bg-slate-200 dark:bg-slate-700"></div>
+        <div className="h-5 w-[1px] bg-[rgba(74,111,165,0.25)]"></div>
 
         {/* User Card */}
         {mounted && user && (
@@ -765,17 +763,18 @@ export function Navbar({ title, subtitle, isLocked = false, onLockedClick }: Nav
             }}
             prefetch={false}
             title={isLocked ? 'Profile locked during active session' : 'View & Edit Profile'}
-            className={`flex items-center gap-3 p-1.5 rounded-xl transition group ${isLocked ? 'cursor-not-allowed opacity-70' : 'hover:bg-slate-100 dark:hover:bg-slate-800/80 cursor-pointer'}`}
+            className={`flex items-center gap-3 p-1.5 transition group ${isLocked ? 'cursor-not-allowed opacity-70' : 'hover:bg-[rgba(74,111,165,0.08)] cursor-pointer'}`}
+            style={{ borderRadius: 0 }}
           >
-            <div className="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 font-bold text-xs flex items-center justify-center group-hover:ring-2 group-hover:ring-blue-500 transition">
+            <div className="w-8 h-8 bg-[rgba(224,80,51,0.12)] border border-[rgba(224,80,51,0.3)] text-[#e05033] dark:text-[#e8604a] font-mono font-bold text-xs flex items-center justify-center group-hover:ring-1 group-hover:ring-[#e05033] transition" style={{ borderRadius: 0 }}>
               {user.name ? user.name.slice(0, 2).toUpperCase() : 'US'}
             </div>
             <div className="hidden sm:block text-left">
-              <p className="text-xs font-bold text-slate-900 dark:text-white leading-none group-hover:text-blue-600 dark:group-hover:text-blue-400 transition flex items-center gap-1">
+              <p className="text-xs font-bold text-[#1a2540] dark:text-[#e8edf5] leading-none group-hover:text-[#e05033] dark:group-hover:text-[#e8604a] transition flex items-center gap-1 font-sans">
                 <span>{user.name || user.email}</span>
-                {isLocked && <Lock className="w-3 h-3 text-slate-400 inline" />}
+                {isLocked && <Lock className="w-3 h-3 text-[#4a6fa5] inline" />}
               </p>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">
+              <span className="text-[10px] font-mono text-[#4a6fa5] dark:text-[#6a90c5] font-semibold uppercase tracking-wider">
                 {user.role}
               </span>
             </div>

@@ -84,7 +84,7 @@ export default function StudentAssessmentsPage() {
   const filtered = filterCourse === 'ALL' ? assessments : assessments.filter((a) => a.courseCode === filterCourse);
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex font-sans">
+    <div className="min-h-screen bg-transparent text-[#1a2540] dark:text-[#e8edf5] flex font-sans relative z-10">
       <Sidebar />
 
       <div className="flex-1 ml-64 flex flex-col min-w-0">
@@ -94,26 +94,68 @@ export default function StudentAssessmentsPage() {
         />
 
         <main className="p-4 sm:p-6 lg:p-8 max-w-6xl w-full mx-auto space-y-6">
-          {/* Header filter bar */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-6 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          {/* Gleam-Spark Page Intro */}
+          <div className="page-intro">
             <div>
-              <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                <FileText className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                Scheduled Assessments
-              </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                Official proctored and timed examinations assigned by your course instructors.
+              <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-[9px] uppercase mb-2">
+                LEARNING INTELLIGENCE / ASSESSMENTS / 01
+              </p>
+              <h1 className="page-title font-display text-5xl sm:text-6xl text-[#1a2540] dark:text-[#f5f0e8] uppercase tracking-tight">
+                ASSESSMENT ARENA
+              </h1>
+            </div>
+            <div className="readiness">
+              <p className="mono text-[8px] uppercase tracking-wider text-[#6b7fa3]">EXAM READINESS</p>
+              <strong className="font-display text-4xl text-[#1a2540] dark:text-[#f5f0e8]">
+                88<span className="font-mono text-sm text-[#e05033]">%</span>
+              </strong>
+              <p className="mono text-[8px] text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">PROCTORED EVALUATION</p>
+            </div>
+          </div>
+
+          {/* Gleam-Spark 4-Column Metric Band */}
+          <div className="metrics">
+            <div className="metric">
+              <div className="metric-top mono"><span>01</span><span className="text-[#e05033]">ACTIVE</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{assessments.length}</div>
+              <div className="metric-label mono">TOTAL ASSIGNED</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>02</span><span className="text-[#4a6fa5]">COURSES</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{courses.length}</div>
+              <div className="metric-label mono">SUBJECT DOMAINS</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>03</span><span>TIMED</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">SECURE</div>
+              <div className="metric-label mono">INTEGRITY MONITORED</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>04</span><span className="text-[#4a6fa5]">CHARUSAT</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">OFFICIAL</div>
+              <div className="metric-label mono">SEMESTER EXAMS</div>
+            </div>
+          </div>
+
+          {/* Gleam-Spark Priority Band with Course Filter */}
+          <div className="priority-band">
+            <div className="priority-symbol">!</div>
+            <div className="priority-content">
+              <p className="mono text-[#e05033] text-[9px]">INSTRUCTOR-SCHEDULED EVALUATION</p>
+              <h2 className="font-display text-xl uppercase tracking-wide">DEPARTMENT TIMED ASSESSMENTS</h2>
+              <p className="text-xs text-[#8ba0c0] font-sans">
+                Official assessments assigned by course faculty. Ensure stable connection before beginning your timed attempt.
               </p>
             </div>
-
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">Filter Course:</span>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-[9px] font-mono uppercase tracking-wider text-[#e8edf5]">Filter:</span>
               <select
                 value={filterCourse}
                 onChange={(e) => setFilterCourse(e.target.value)}
-                className="p-2 text-xs font-medium bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-800 dark:text-slate-200"
+                className="bg-[#1a2540] text-white border border-[rgba(106,144,197,0.3)] text-xs font-mono px-3 py-2 uppercase"
+                style={{ borderRadius: 0 }}
               >
-                <option value="ALL">All Courses</option>
+                <option value="ALL">ALL COURSES</option>
                 {courses.map((c) => (
                   <option key={c} value={c}>
                     {c}
@@ -125,14 +167,14 @@ export default function StudentAssessmentsPage() {
 
           {/* Assessment Cards Grid */}
           {loading ? (
-            <div className="p-12 text-center text-xs font-semibold text-slate-400">
+            <div className="p-12 text-center text-xs font-mono font-semibold text-slate-400">
               Loading assessments...
             </div>
           ) : filtered.length === 0 ? (
-            <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-12 text-center text-slate-500 dark:text-slate-400">
+            <div className="border border-[rgba(74,111,165,0.25)] dark:border-[rgba(106,144,197,0.2)] bg-[#faf7f2] dark:bg-[#121b30] p-12 text-center text-slate-500 dark:text-slate-400" style={{ borderRadius: 0 }}>
               <BookOpen className="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-              <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">No Assessments Assigned</p>
-              <p className="text-xs text-slate-400 mt-1">You currently have no pending tests for this filter.</p>
+              <p className="font-display text-xl text-[#1a2540] dark:text-[#f5f0e8] uppercase">No Assessments Assigned</p>
+              <p className="text-xs font-mono text-[#4a6fa5] mt-1">You currently have no pending tests for this filter.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
@@ -142,7 +184,8 @@ export default function StudentAssessmentsPage() {
                 return (
                   <div
                     key={item.id}
-                    className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 sm:p-6 shadow-xs hover:shadow-md transition flex flex-col justify-between"
+                    className="bg-[#faf7f2] dark:bg-[#121b30] border border-[rgba(74,111,165,0.25)] dark:border-[rgba(106,144,197,0.2)] p-4 sm:p-6 shadow-xs flex flex-col justify-between"
+                    style={{ borderRadius: 0 }}
                   >
                     <div>
                       <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
@@ -239,32 +282,35 @@ export default function StudentAssessmentsPage() {
                           onClick={() =>
                             setSelectedLeaderboardAssessment({ id: item.id, title: item.title })
                           }
-                          className="inline-flex items-center gap-1.5 px-3 py-2 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 text-xs font-bold rounded-xl transition shadow-2xs"
+                          className="inline-flex items-center gap-1.5 px-3 py-2 bg-[rgba(74,111,165,0.12)] hover:bg-[rgba(74,111,165,0.2)] text-[#4a6fa5] dark:text-[#6a90c5] border border-[rgba(74,111,165,0.3)] text-[10px] font-mono font-bold uppercase tracking-wider transition"
+                          style={{ borderRadius: 0 }}
                           title="View dynamic live leaderboard for this assessment"
                         >
-                          <Trophy className="w-3.5 h-3.5 text-amber-500" />
+                          <Trophy className="w-3.5 h-3.5 text-[#e05033]" />
                           <span>Leaderboard</span>
                         </button>
 
                         {item.isExpired ? (
                           <span
-                            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 text-xs font-bold rounded-xl cursor-not-allowed select-none"
+                            className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 text-[10px] font-mono font-bold uppercase cursor-not-allowed select-none"
+                            style={{ borderRadius: 0 }}
                             title="The scheduled duration for this test has ended and submissions are closed."
                           >
-                            <Clock className="w-3.5 h-3.5 text-rose-500" />
+                            <Clock className="w-3.5 h-3.5 text-[#e05033]" />
                             <span>Test Ended</span>
                           </span>
                         ) : canAttempt ? (
                           <button
                             type="button"
                             onClick={() => router.push(`/student/assessments/${item.id}/take`)}
-                            className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md shadow-indigo-600/20 transition"
+                            className="inline-flex items-center gap-2 px-4 py-2 bg-[#e05033] hover:bg-[#c8432b] text-white text-[10px] font-mono font-bold uppercase tracking-wider transition"
+                            style={{ borderRadius: 0 }}
                           >
                             <Play className="w-3.5 h-3.5 fill-current" />
                             <span>{item.activeSubmissionId ? 'Resume Exam' : 'Start Exam'}</span>
                           </button>
                         ) : (
-                          <span className="text-xs font-semibold text-slate-400 px-2 py-1">
+                          <span className="text-[10px] font-mono font-semibold text-slate-400 px-2 py-1 uppercase">
                             Completed
                           </span>
                         )}

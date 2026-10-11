@@ -542,7 +542,7 @@ export default function PracticePage() {
   const selectedCourse = courses.find((c) => c.id === selectedCourseId);
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex font-sans">
+    <div className="min-h-screen bg-transparent text-[#1a2540] dark:text-[#e8edf5] flex font-sans relative z-10">
       <Sidebar isLocked={isSessionActive} onLockedClick={() => setShowExitConfirmModal(true)} />
 
       <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${isPinned ? 'lg:pl-64' : 'lg:pl-[72px]'} pl-0`}>
@@ -554,47 +554,79 @@ export default function PracticePage() {
         />
 
         <main className="p-4 sm:p-6 lg:p-8 max-w-5xl w-full mx-auto space-y-6">
-          {/* Header Banner */}
-          <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-indigo-500/20 p-6 sm:p-8 shadow-xs dark:shadow-2xl">
-            <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30 flex items-center gap-1.5">
-                    <BrainCircuit className="w-3.5 h-3.5" />
-                    IRT & Bayesian Knowledge Tracing
-                  </span>
-                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30">
-                    Live Dynamic Difficulty
-                  </span>
-                </div>
-                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                  Adaptive Practice Arena
-                </h1>
-                <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm mt-1 max-w-2xl leading-relaxed">
-                  Personalized conceptual drills calibrated to your real-time mastery. Questions adapt difficulty after every attempt.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setSpacedDrawerOpen(true)}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-purple-50 hover:bg-purple-100 dark:bg-purple-500/20 dark:hover:bg-purple-500/30 text-purple-700 dark:text-purple-200 border border-purple-200 dark:border-purple-500/40 text-xs font-bold shadow-xs transition self-start md:self-center shrink-0"
-              >
-                <RotateCcw className="w-4 h-4 text-purple-600 dark:text-purple-300" />
-                <span>Spaced Review Queue</span>
-              </button>
+          {/* Gleam-Spark Page Intro */}
+          <div className="page-intro">
+            <div>
+              <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-[9px] uppercase mb-2">
+                LEARNING INTELLIGENCE / PRACTICE ARENA / 01
+              </p>
+              <h1 className="page-title font-display text-5xl sm:text-6xl text-[#1a2540] dark:text-[#f5f0e8] uppercase tracking-tight">
+                ADAPTIVE PRACTICE
+              </h1>
             </div>
+            <div className="readiness">
+              <p className="mono text-[8px] uppercase tracking-wider text-[#6b7fa3]">ADAPTIVE ENGINE</p>
+              <strong className="font-display text-4xl text-[#1a2540] dark:text-[#f5f0e8]">
+                IRT<span className="font-mono text-sm text-[#e05033]">+BKT</span>
+              </strong>
+              <p className="mono text-[8px] text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">REAL-TIME CALIBRATION</p>
+            </div>
+          </div>
+
+          {/* Gleam-Spark 4-Column Metric Band */}
+          <div className="metrics">
+            <div className="metric">
+              <div className="metric-top mono"><span>01</span><span className="text-[#e05033]">ACTIVE</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{targetQuestionCount} Qs</div>
+              <div className="metric-label mono">SESSION BUDGET</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>02</span><span className="text-[#e05033]">{adaptiveMode ? 'AUTO' : 'MANUAL'}</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{selectedDifficulty}</div>
+              <div className="metric-label mono">DIFFICULTY TIER</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>03</span><span>BAYESIAN</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{courses.length}</div>
+              <div className="metric-label mono">COURSES ENROLLED</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>04</span><span className="text-[#4a6fa5]">CHARUSAT</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">SYLLABUS</div>
+              <div className="metric-label mono">CURRICULUM ALIGNED</div>
+            </div>
+          </div>
+
+          {/* Gleam-Spark Priority Band */}
+          <div className="priority-band">
+            <div className="priority-symbol">!</div>
+            <div className="priority-content">
+              <p className="mono text-[#e05033] text-[9px]">RECOMMENDED PRACTICE FOCUS / ADAPTIVE</p>
+              <h2 className="font-display text-xl uppercase tracking-wide">REINFORCE TARGETED WEAK CONCEPTS</h2>
+              <p className="text-xs text-[#8ba0c0] font-sans">
+                Personalized conceptual drills dynamically calibrate difficulty after every attempt using Item Response Theory.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setSpacedDrawerOpen(true)}
+              className="action-button bg-[#e05033] hover:bg-[#c93f24] text-white shrink-0"
+              style={{ borderRadius: 0 }}
+            >
+              <RotateCcw className="w-3.5 h-3.5 mr-2" />
+              <span>SPACED QUEUE</span>
+              <ArrowRight className="w-3.5 h-3.5 ml-2" />
+            </button>
           </div>
 
           {/* Practice Setup Header / Config Bar */}
           {!activeSession ? (
-            <div className="bg-white dark:bg-slate-900/90 rounded-2xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-xs space-y-6">
+            <div className="panel p-6 sm:p-8 space-y-6">
               {/* Back to Learning Path Shortcut */}
-              <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
                 <Link
                   href={`/student/learning-path?courseCode=${selectedCourse?.code || 'CS301'}`}
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 transition"
+                  className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-[#4a6fa5] dark:text-[#6a90c5] hover:text-[#e05033] transition"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
                   <span>Return to Learning Path</span>
@@ -746,11 +778,14 @@ export default function PracticePage() {
               )}
 
               <div>
-                <h2 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                  <BrainCircuit className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-                  Configure Practice Session
+                <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-[9px] uppercase mb-1">
+                  CONFIGURATION / ENGINE MATRIX
+                </p>
+                <h2 className="font-display text-2xl uppercase tracking-wide text-[#1a2540] dark:text-white flex items-center gap-2">
+                  <BrainCircuit className="w-5 h-5 text-[#e05033]" />
+                  CONFIGURE PRACTICE SESSION
                 </h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                <p className="text-xs text-[#6b7fa3] font-sans mt-1">
                   Select your target curriculum area and difficulty level. Questions dynamically calibrate to your real-time mastery.
                 </p>
               </div>
@@ -768,7 +803,7 @@ export default function PracticePage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Course Selector */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
+                  <label className="block font-mono text-[9px] text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider mb-2">
                     Select Course
                   </label>
                   <select
@@ -782,10 +817,10 @@ export default function PracticePage() {
                         setSelectedTopicId('');
                       }
                     }}
-                    className="w-full p-3 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 font-semibold text-slate-900 dark:text-slate-100"
+                    className="w-full p-3 font-mono text-xs bg-[var(--background)] border border-[var(--border)] focus:outline-none focus:border-[#e05033] text-[#1a2540] dark:text-[#e8edf5]"
                   >
                     {courses.map((course) => (
-                      <option key={course.id} value={course.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+                      <option key={course.id} value={course.id} className="bg-[var(--background)] text-[#1a2540] dark:text-[#e8edf5]">
                         {course.code} — {course.name}
                       </option>
                     ))}
@@ -795,13 +830,13 @@ export default function PracticePage() {
                 {/* Topic Selector - Clean, ONLY Topic Name + Custom Topic Mode */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                    <label className="block font-mono text-[9px] text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">
                       Target Topic
                     </label>
                     <button
                       type="button"
                       onClick={() => setIsCustomTopicMode(!isCustomTopicMode)}
-                      className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
+                      className="font-mono text-[9px] text-[#e05033] hover:underline flex items-center gap-1 uppercase"
                     >
                       <Sparkles className="w-2.5 h-2.5" />
                       {isCustomTopicMode ? 'Curriculum List' : 'Custom Topic'}
@@ -813,17 +848,17 @@ export default function PracticePage() {
                       placeholder="e.g. Red-Black Trees, Dynamic Programming..."
                       value={customTopicInput}
                       onChange={(e) => setCustomTopicInput(e.target.value)}
-                      className="w-full p-3 text-xs bg-slate-50 dark:bg-slate-950 border border-indigo-300 dark:border-indigo-600 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-500/30 font-semibold text-slate-900 dark:text-slate-100"
+                      className="w-full p-3 font-mono text-xs bg-[var(--background)] border border-[var(--border)] focus:outline-none focus:border-[#e05033] text-[#1a2540] dark:text-[#e8edf5]"
                     />
                   ) : (
                     <select
                       value={selectedTopicId}
                       onChange={(e) => setSelectedTopicId(e.target.value)}
-                      className="w-full p-3 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 font-semibold text-slate-900 dark:text-slate-100"
+                      className="w-full p-3 font-mono text-xs bg-[var(--background)] border border-[var(--border)] focus:outline-none focus:border-[#e05033] text-[#1a2540] dark:text-[#e8edf5]"
                     >
-                      <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">All Topics (Curriculum-wide)</option>
+                      <option value="" className="bg-[var(--background)] text-[#1a2540] dark:text-[#e8edf5]">All Topics (Curriculum-wide)</option>
                       {selectedCourse?.topics?.map((topic: any) => (
-                        <option key={topic.id} value={topic.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+                        <option key={topic.id} value={topic.id} className="bg-[var(--background)] text-[#1a2540] dark:text-[#e8edf5]">
                           {topic.name}
                         </option>
                       ))}
@@ -833,33 +868,33 @@ export default function PracticePage() {
 
                 {/* Question Count Selector */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-2">
+                  <label className="block font-mono text-[9px] text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider mb-2">
                     Questions To Practice
                   </label>
                   <select
                     value={targetQuestionCount}
                     onChange={(e) => setTargetQuestionCount(Number(e.target.value))}
-                    className="w-full p-3 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 font-semibold text-slate-900 dark:text-slate-100"
+                    className="w-full p-3 font-mono text-xs bg-[var(--background)] border border-[var(--border)] focus:outline-none focus:border-[#e05033] text-[#1a2540] dark:text-[#e8edf5]"
                   >
-                    <option value={5} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">5 Questions (Sprint Drill)</option>
-                    <option value={10} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">10 Questions (Standard Practice)</option>
-                    <option value={15} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">15 Questions (Deep Drill)</option>
-                    <option value={20} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">20 Questions (Intensive Review)</option>
+                    <option value={5} className="bg-[var(--background)] text-[#1a2540] dark:text-[#e8edf5]">5 Questions (Sprint Drill)</option>
+                    <option value={10} className="bg-[var(--background)] text-[#1a2540] dark:text-[#e8edf5]">10 Questions (Standard Practice)</option>
+                    <option value={15} className="bg-[var(--background)] text-[#1a2540] dark:text-[#e8edf5]">15 Questions (Deep Drill)</option>
+                    <option value={20} className="bg-[var(--background)] text-[#1a2540] dark:text-[#e8edf5]">20 Questions (Intensive Review)</option>
                   </select>
                 </div>
 
                 {/* Difficulty Selector with Manual Calibration Option */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                    <label className="block font-mono text-[9px] text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">
                       Difficulty Level
                     </label>
                     <button
                       type="button"
                       onClick={() => setAdaptiveMode(!adaptiveMode)}
-                      className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+                      className="font-mono text-[9px] text-[#e05033] hover:underline uppercase"
                     >
-                      {adaptiveMode ? 'Set Manual Tier' : 'Enable Auto-IRT'}
+                      {adaptiveMode ? 'Manual Tier' : 'Auto-IRT'}
                     </button>
                   </div>
                   <select
@@ -868,43 +903,43 @@ export default function PracticePage() {
                       setSelectedDifficulty(e.target.value);
                       setAdaptiveMode(false);
                     }}
-                    className="w-full p-3 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 font-semibold text-slate-900 dark:text-slate-100"
+                    className="w-full p-3 font-mono text-xs bg-[var(--background)] border border-[var(--border)] focus:outline-none focus:border-[#e05033] text-[#1a2540] dark:text-[#e8edf5]"
                   >
-                    <option value="EASY" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">Easy (Level 1: Scaffolding)</option>
-                    <option value="MEDIUM" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">Medium (Level 2: Analytical)</option>
-                    <option value="HARD" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">Hard (Level 3: Edge-Case Synthesis)</option>
+                    <option value="EASY" className="bg-[var(--background)] text-[#1a2540] dark:text-[#e8edf5]">Easy (Level 1: Scaffolding)</option>
+                    <option value="MEDIUM" className="bg-[var(--background)] text-[#1a2540] dark:text-[#e8edf5]">Medium (Level 2: Analytical)</option>
+                    <option value="HARD" className="bg-[var(--background)] text-[#1a2540] dark:text-[#e8edf5]">Hard (Level 3: Edge-Case Synthesis)</option>
                   </select>
                   {!adaptiveMode ? (
-                    <span className="text-[10px] text-amber-600 dark:text-amber-400 font-semibold block mt-1">
-                      Manual Challenge: Questions will strictly target {selectedDifficulty} tier
+                    <span className="font-mono text-[9px] text-amber-600 dark:text-amber-400 font-semibold block mt-1 uppercase">
+                      Manual: Strictly targeting {selectedDifficulty} tier
                     </span>
                   ) : (
-                    <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-semibold block mt-1">
+                    <span className="font-mono text-[9px] text-[#4a6fa5] dark:text-[#6a90c5] font-semibold block mt-1 uppercase">
                       Adaptive Calibration: Calibrated live to your mastery
                     </span>
                   )}
                 </div>
               </div>
 
-              <div className="pt-2 flex flex-wrap items-center justify-end gap-3">
+              <div className="pt-4 border-t border-[var(--border)] flex flex-wrap items-center justify-end gap-3">
                 <button
                   type="button"
                   onClick={handleGenerateAiQuestion}
                   disabled={loadingQuestion || isGeneratingAi}
-                  className="inline-flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-500 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-purple-600/30 transition transform hover:-translate-y-0.5 disabled:opacity-50"
+                  className="action-button bg-transparent border border-[var(--strong-border)] text-[#1a2540] dark:text-white hover:bg-[var(--accent)] transition disabled:opacity-50"
                 >
-                  {isGeneratingAi ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                  <span>Generate On-Demand AI Question</span>
+                  {isGeneratingAi ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> : <Sparkles className="w-3.5 h-3.5 text-[#e05033] mr-2" />}
+                  <span>Generate AI Question</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleStartSession()}
                   disabled={loadingQuestion || isGeneratingAi}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-slate-900 hover:bg-slate-800 dark:bg-indigo-600 dark:hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-slate-900/20 dark:shadow-indigo-600/30 transition transform hover:-translate-y-0.5 disabled:opacity-50"
+                  className="action-button bg-[#e05033] text-white hover:bg-[#c93f24] transition disabled:opacity-50"
                 >
-                  {loadingQuestion && !isGeneratingAi ? <Loader2 className="w-4 h-4 animate-spin" /> : <BrainCircuit className="w-4 h-4" />}
-                  <span>Begin Standard Session</span>
+                  {loadingQuestion && !isGeneratingAi ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> : <BrainCircuit className="w-3.5 h-3.5 mr-2" />}
+                  <span>START PRACTICE →</span>
                 </button>
               </div>
             </div>
@@ -920,13 +955,12 @@ export default function PracticePage() {
                   <span className="text-xs text-slate-600 dark:text-slate-300 font-medium">
                     Difficulty:{' '}
                     <span
-                      className={`font-bold px-2 py-0.5 rounded-md text-[11px] border ${
-                        (currentQuestion?.difficulty || selectedDifficulty) === 'EASY'
+                      className={`font-bold px-2 py-0.5 rounded-md text-[11px] border ${(currentQuestion?.difficulty || selectedDifficulty) === 'EASY'
                           ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30'
                           : (currentQuestion?.difficulty || selectedDifficulty) === 'MEDIUM'
-                          ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30'
-                          : 'bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/30'
-                      }`}
+                            ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30'
+                            : 'bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/30'
+                        }`}
                     >
                       {currentQuestion?.difficulty || selectedDifficulty}
                     </span>
@@ -1047,11 +1081,10 @@ export default function PracticePage() {
                         <button
                           type="button"
                           onClick={() => setSummaryFilter('WRONG')}
-                          className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 ${
-                            summaryFilter === 'WRONG'
+                          className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 ${summaryFilter === 'WRONG'
                               ? 'bg-rose-500 text-white shadow-xs'
                               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                          }`}
+                            }`}
                         >
                           <XCircle className="w-3.5 h-3.5" />
                           <span>Wrong Answers ({sessionAttemptSummaries.filter((a) => !a.isCorrect).length})</span>
@@ -1059,11 +1092,10 @@ export default function PracticePage() {
                         <button
                           type="button"
                           onClick={() => setSummaryFilter('ALL')}
-                          className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 ${
-                            summaryFilter === 'ALL'
+                          className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 ${summaryFilter === 'ALL'
                               ? 'bg-indigo-600 text-white shadow-xs'
                               : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                          }`}
+                            }`}
                         >
                           <span>All Questions ({sessionAttemptSummaries.length})</span>
                         </button>
@@ -1092,33 +1124,30 @@ export default function PracticePage() {
                         ).map((attempt) => (
                           <div
                             key={attempt.questionId + '-' + attempt.questionNumber}
-                            className={`p-5 rounded-2xl border transition ${
-                              attempt.isCorrect
+                            className={`p-5 rounded-2xl border transition ${attempt.isCorrect
                                 ? 'bg-slate-50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800'
                                 : 'bg-rose-50/40 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900/40'
-                            }`}
+                              }`}
                           >
                             {/* Card Header */}
                             <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
                               <div className="flex items-center gap-2">
-                                <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold ${
-                                  attempt.isCorrect
+                                <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold ${attempt.isCorrect
                                     ? 'bg-emerald-500 text-white'
                                     : 'bg-rose-500 text-white'
-                                }`}>
+                                  }`}>
                                   Q{attempt.questionNumber}
                                 </span>
                                 <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
                                   {attempt.topicName}
                                 </span>
                                 <span
-                                  className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${
-                                    attempt.difficulty === 'EASY'
+                                  className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${attempt.difficulty === 'EASY'
                                       ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30'
                                       : attempt.difficulty === 'MEDIUM'
-                                      ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30'
-                                      : 'bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/30'
-                                  }`}
+                                        ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30'
+                                        : 'bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/30'
+                                    }`}
                                 >
                                   {attempt.difficulty}
                                 </span>
@@ -1129,11 +1158,10 @@ export default function PracticePage() {
                                   <Clock className="w-3 h-3" /> {attempt.timeTakenSeconds}s
                                 </span>
                                 <span
-                                  className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase ${
-                                    attempt.isCorrect
+                                  className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase ${attempt.isCorrect
                                       ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300'
                                       : 'bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300'
-                                  }`}
+                                    }`}
                                 >
                                   {attempt.isCorrect ? 'Correct' : 'Incorrect'}
                                 </span>
@@ -1149,11 +1177,10 @@ export default function PracticePage() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4 text-xs">
                               {/* Student's answer */}
                               <div
-                                className={`p-3 rounded-xl border flex items-start gap-2.5 ${
-                                  attempt.isCorrect
+                                className={`p-3 rounded-xl border flex items-start gap-2.5 ${attempt.isCorrect
                                     ? 'bg-emerald-50/60 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800/40 text-emerald-950 dark:text-emerald-200'
                                     : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800/50 text-rose-950 dark:text-rose-200'
-                                }`}
+                                  }`}
                               >
                                 {attempt.isCorrect ? (
                                   <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
@@ -1291,11 +1318,10 @@ export default function PracticePage() {
                     /* Explanation & Mastery Impact Box */
                     <div className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800">
                       <div
-                        className={`p-5 rounded-2xl border ${
-                          attemptResult.isCorrect
+                        className={`p-5 rounded-2xl border ${attemptResult.isCorrect
                             ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-500/30 text-emerald-900 dark:text-emerald-200'
                             : 'bg-rose-50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-500/30 text-rose-900 dark:text-rose-200'
-                        }`}
+                          }`}
                       >
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">

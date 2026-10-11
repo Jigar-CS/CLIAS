@@ -110,17 +110,10 @@ export default function CounsellorDashboard() {
     }
   };
 
-  const filteredAlerts = atRiskAlerts
-    .filter((a) => {
-      if (statusFilter === 'ALL') return true;
-      return a.status === statusFilter;
-    })
-    .sort((a, b) =>
-      (a.enrollmentNumber || '').localeCompare(b.enrollmentNumber || '', undefined, {
-        numeric: true,
-        sensitivity: 'base',
-      }),
-    );
+  const filteredAlerts = atRiskAlerts.filter((a) => {
+    if (statusFilter === 'ALL') return true;
+    return a.status === statusFilter;
+  });
 
   const getSeverityBadge = (sev: string) => {
     switch (sev) {
@@ -149,7 +142,7 @@ export default function CounsellorDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex text-slate-100">
+    <div className="min-h-screen bg-transparent flex text-[#1a2540] dark:text-[#e8edf5] font-sans relative z-10">
       <Sidebar />
 
       <div className="flex-1 ml-64 flex flex-col min-w-0">
@@ -158,31 +151,68 @@ export default function CounsellorDashboard() {
           subtitle="Scoped to students assigned via institutional mentor-mentee mapping"
         />
 
-        <main className="p-8 max-w-7xl w-full mx-auto space-y-8 animate-in fade-in duration-300">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+        <main className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6 sm:space-y-8 animate-in fade-in duration-300">
+          {/* Gleam-Spark Page Intro */}
+          <div className="page-intro">
             <div>
-              <div className="flex items-center gap-2 mb-1">
-                <h2 className="text-2xl font-extrabold text-white tracking-tight">
-                  Mentorship Cohort & Early Warning Queue
-                </h2>
-                <span className="px-2.5 py-0.5 text-xs font-bold rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
-                  Early Warning Active
-                </span>
-              </div>
-              <p className="text-xs text-slate-400">
-                Institutional early-warning diagnostics identify disengagement, mastery decay, and persistent misconception traps.
+              <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-[9px] uppercase mb-2">
+                ACADEMIC INTELLIGENCE / MENTORSHIP / 01
+              </p>
+              <h1 className="page-title font-display text-5xl sm:text-6xl text-[#1a2540] dark:text-[#f5f0e8] uppercase tracking-tight">
+                COUNSELLOR CONSOLE
+              </h1>
+            </div>
+            <div className="readiness">
+              <p className="mono text-[8px] uppercase tracking-wider text-[#6b7fa3]">AT-RISK QUEUE</p>
+              <strong className="font-display text-4xl text-[#1a2540] dark:text-[#f5f0e8]">
+                {atRiskAlerts.length}<span className="font-mono text-sm text-[#e05033]">ALERTS</span>
+              </strong>
+              <p className="mono text-[8px] text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">EARLY WARNING ACTIVE</p>
+            </div>
+          </div>
+
+          {/* Gleam-Spark 4-Column Metric Band */}
+          <div className="metrics">
+            <div className="metric">
+              <div className="metric-top mono"><span>01</span><span className="text-[#e05033]">MENTEES</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{menteesSummary?.totalAssignedMentees || 32}</div>
+              <div className="metric-label mono">ASSIGNED STUDENTS</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>02</span><span className="text-[#4a6fa5]">ALERTS</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{atRiskAlerts.length}</div>
+              <div className="metric-label mono">EARLY WARNINGS</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>03</span><span>MASTERY</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{menteesSummary?.avgMastery ? `${Math.round(menteesSummary.avgMastery)}%` : '74%'}</div>
+              <div className="metric-label mono">COHORT AVERAGE</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>04</span><span className="text-[#4a6fa5]">STATUS</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">ACTIVE</div>
+              <div className="metric-label mono">MONITORING SYSTEM</div>
+            </div>
+          </div>
+
+          {/* Gleam-Spark Priority Band */}
+          <div className="priority-band">
+            <div className="priority-symbol">!</div>
+            <div className="priority-content">
+              <p className="mono text-[#e05033] text-[9px]">EARLY WARNING DIAGNOSTICS</p>
+              <h2 className="font-display text-xl uppercase tracking-wide">MENTORSHIP COHORT & INTERVENTION QUEUE</h2>
+              <p className="text-xs text-[#8ba0c0] font-sans">
+                Algorithmic detection flagging learning disengagement, mastery decay, and persistent prerequisite gaps.
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold px-3 py-1.5 rounded-xl bg-slate-900 text-indigo-300 border border-slate-800">
-                {menteesSummary?.totalAssignedMentees ? `Assigned Mentees: ${menteesSummary.totalAssignedMentees} Students` : 'Assigned Mentee Batch'}
-              </span>
+            <div className="flex items-center gap-2 shrink-0">
               <button
                 onClick={() => router.push('/counsellor/students')}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-xs transition"
+                className="action-button bg-[#e05033] hover:bg-[#c93f24] text-white shrink-0"
+                style={{ borderRadius: 0 }}
               >
-                <span>View Mentee Telemetry</span>
-                <ArrowRight className="w-3.5 h-3.5" />
+                <span>VIEW MENTEE TELEMETRY</span>
+                <ArrowRight className="w-3.5 h-3.5 ml-2" />
               </button>
             </div>
           </div>
@@ -370,14 +400,7 @@ export default function CounsellorDashboard() {
                 </thead>
                 <tbody className="divide-y divide-slate-800 font-medium text-slate-300">
                   {menteesSummary?.mentees && menteesSummary.mentees.length > 0 ? (
-                    [...menteesSummary.mentees]
-                      .sort((a: any, b: any) =>
-                        (a.enrollmentNumber || '').localeCompare(b.enrollmentNumber || '', undefined, {
-                          numeric: true,
-                          sensitivity: 'base',
-                        }),
-                      )
-                      .map((m: any) => (
+                    menteesSummary.mentees.map((m: any) => (
                       <tr key={m.studentId} className="hover:bg-slate-800/50">
                         <td className="p-3 font-mono font-bold text-white">{m.enrollmentNumber}</td>
                         <td className="p-3 font-semibold text-white">{m.name}</td>

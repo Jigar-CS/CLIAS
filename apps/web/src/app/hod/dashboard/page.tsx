@@ -23,8 +23,6 @@ import {
   Award,
   BarChart3,
   ShieldCheck,
-  RefreshCw,
-  Loader2,
 } from 'lucide-react';
 
 interface CourseOutcome {
@@ -119,7 +117,7 @@ export default function HodDashboard() {
   const departmentTitle = curriculumHealth?.departmentName || 'Computer Science & Engineering';
 
   return (
-    <div className="min-h-screen bg-slate-950 flex text-slate-100">
+    <div className="min-h-screen bg-transparent flex text-[#1a2540] dark:text-[#e8edf5] font-sans relative z-10">
       <Sidebar />
 
       <div className="flex-1 ml-64 flex flex-col min-w-0">
@@ -128,40 +126,77 @@ export default function HodDashboard() {
           subtitle={`${departmentTitle} • Department Leadership Console`}
         />
 
-        <main className="p-8 max-w-7xl w-full mx-auto space-y-8 animate-in fade-in duration-300">
-          {/* Header Banner */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+        <main className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6 sm:space-y-8 animate-in fade-in duration-300">
+          {/* Gleam-Spark Page Intro */}
+          <div className="page-intro">
             <div>
-              <div className="flex items-center gap-2 mb-1">
-                <h2 className="text-2xl font-extrabold text-white tracking-tight">
-                  {departmentTitle} OBE &amp; Curriculum Intelligence
-                </h2>
-                <span className="px-2.5 py-0.5 text-xs font-bold rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                  Accreditation Live
-                </span>
-              </div>
-              <p className="text-xs text-slate-400">
-                Outcome-Based Education (OBE) metrics, NBA/NAAC CO-PO attainment matrices, and division-level comparative health.
+              <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-[9px] uppercase mb-2">
+                ACADEMIC INTELLIGENCE / HOD LEADERSHIP / 01
+              </p>
+              <h1 className="page-title font-display text-5xl sm:text-6xl text-[#1a2540] dark:text-[#f5f0e8] uppercase tracking-tight">
+                HOD DASHBOARD
+              </h1>
+            </div>
+            <div className="readiness">
+              <p className="mono text-[8px] uppercase tracking-wider text-[#6b7fa3]">CO-PO ATTAINMENT</p>
+              <strong className="font-display text-4xl text-[#1a2540] dark:text-[#f5f0e8]">
+                {obeData?.attainment ? `${Math.round(obeData.attainment)}` : '84'}<span className="font-mono text-sm text-[#e05033]">%</span>
+              </strong>
+              <p className="mono text-[8px] text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">NBA CRITERIA 3 & 4</p>
+            </div>
+          </div>
+
+          {/* Gleam-Spark 4-Column Metric Band */}
+          <div className="metrics">
+            <div className="metric">
+              <div className="metric-top mono"><span>01</span><span className="text-[#e05033]">CURRICULUM</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{courses.length} COURSES</div>
+              <div className="metric-label mono">DEPARTMENT SUBJECTS</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>02</span><span className="text-[#4a6fa5]">HEALTH</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">88%</div>
+              <div className="metric-label mono">CURRICULUM MASTERY</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>03</span><span>OBE</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">NBA/NAAC</div>
+              <div className="metric-label mono">ACCREDITATION COMPLIANT</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>04</span><span className="text-[#4a6fa5]">STATUS</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">OPERATIONAL</div>
+              <div className="metric-label mono">ACADEMIC COUNCIL</div>
+            </div>
+          </div>
+
+          {/* Gleam-Spark Priority Band */}
+          <div className="priority-band">
+            <div className="priority-symbol">!</div>
+            <div className="priority-content">
+              <p className="mono text-[#e05033] text-[9px]">DEPARTMENT OBE & CURRICULUM INTELLIGENCE</p>
+              <h2 className="font-display text-xl uppercase tracking-wide">{departmentTitle.toUpperCase()}</h2>
+              <p className="text-xs text-[#8ba0c0] font-sans">
+                Outcome-Based Education metrics, NBA/NAAC CO-PO attainment matrices, and faculty workload delegation.
               </p>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
               <button
                 onClick={() => setIsFacultyModalOpen(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-xs transition transform hover:-translate-y-0.5"
+                className="action-button bg-[#e05033] hover:bg-[#c93f24] text-white shrink-0"
+                style={{ borderRadius: 0 }}
               >
-                <BookOpen className="w-4 h-4" />
-                <span>Assign Faculty Subjects</span>
+                <BookOpen className="w-4 h-4 mr-2" />
+                <span>ASSIGN FACULTY</span>
               </button>
               <button
                 onClick={() => setIsCounsellorModalOpen(true)}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl shadow-xs transition transform hover:-translate-y-0.5"
+                className="action-button bg-[#1a2540] hover:bg-[#25365d] text-white border border-[rgba(106,144,197,0.4)] shrink-0"
+                style={{ borderRadius: 0 }}
               >
-                <Users className="w-4 h-4" />
-                <span>Assign Counsellors (Excel / PDF)</span>
+                <Users className="w-4 h-4 mr-2" />
+                <span>ASSIGN COUNSELLORS</span>
               </button>
-              <span className="text-xs font-bold px-3 py-1.5 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center gap-1.5">
-                <Award className="w-3.5 h-3.5" /> NBA Criteria 3 &amp; 4 Compliant
-              </span>
             </div>
           </div>
 
@@ -229,31 +264,6 @@ export default function HodDashboard() {
           </div>
 
           {/* TAB 1: OBE Matrix */}
-          {activeTab === 'obe' && !obeData && (
-            <div className="bg-slate-900/80 rounded-2xl border border-slate-800 p-12 text-center space-y-4 shadow-xl">
-              {fetching ? (
-                <div className="flex flex-col items-center justify-center space-y-3">
-                  <Loader2 className="w-8 h-8 text-purple-400 animate-spin" />
-                  <p className="text-sm font-semibold text-slate-300">Calculating NBA Course Outcome Attainments...</p>
-                  <p className="text-xs text-slate-500">Aggregating granular student assessment questions and program correlations.</p>
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center space-y-3">
-                  <AlertTriangle className="w-8 h-8 text-amber-400" />
-                  <p className="text-sm font-semibold text-slate-300">No Course Outcome data available yet</p>
-                  <p className="text-xs text-slate-500">Ensure department courses have syllabus outcomes defined or click below to reload.</p>
-                  <button
-                    onClick={() => loadOBEAndCurriculumData()}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-xl transition shadow-xs"
-                  >
-                    <RefreshCw className="w-3.5 h-3.5" />
-                    <span>Reload OBE Metrics</span>
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
-
           {activeTab === 'obe' && obeData && (
             <div className="space-y-6">
               {/* Course Outcome Attainment Table */}
@@ -282,14 +292,6 @@ export default function HodDashboard() {
                         ))}
                       </select>
                     )}
-                    <button
-                      onClick={() => handleCourseChange(selectedCourseId || courses?.[0]?.id)}
-                      disabled={fetching}
-                      className="p-1.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-400 hover:text-white transition disabled:opacity-50"
-                      title="Refresh Attainment Metrics"
-                    >
-                      <RefreshCw className={`w-3.5 h-3.5 ${fetching ? 'animate-spin' : ''}`} />
-                    </button>
                     <span className="text-xs font-mono font-bold px-2.5 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-300">
                       Target: 70%
                     </span>

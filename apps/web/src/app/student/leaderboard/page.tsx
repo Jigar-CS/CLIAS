@@ -174,7 +174,7 @@ export default function StudentLeaderboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex font-sans">
+    <div className="min-h-screen bg-transparent text-[#1a2540] dark:text-[#e8edf5] flex font-sans relative z-10">
       <Sidebar />
 
       <div className="flex-1 ml-64 flex flex-col min-w-0">
@@ -184,36 +184,69 @@ export default function StudentLeaderboardPage() {
         />
 
         <main className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6 sm:space-y-8 animate-in fade-in duration-200">
-          {/* Header Action Banner */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
+          {/* Gleam-Spark Page Intro */}
+          <div className="page-intro">
             <div>
-              <div className="flex items-center gap-2.5 mb-1">
-                <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-500 flex items-center justify-center">
-                  <Trophy className="w-5 h-5 fill-amber-400 text-amber-500" />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-2">
-                    <span>Semester {metaInfo?.semester || 4} Academic Standings</span>
-                    <span className="text-xs px-2.5 py-0.5 rounded-full font-bold bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-                      CHARUSAT CSPIT
-                    </span>
-                  </h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                    Evaluate your competitive percentile across university subjects and track your progress to the top 10.
-                  </p>
-                </div>
-              </div>
+              <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-[9px] uppercase mb-2">
+                LEARNING INTELLIGENCE / LEADERBOARD / 01
+              </p>
+              <h1 className="page-title font-display text-5xl sm:text-6xl text-[#1a2540] dark:text-[#f5f0e8] uppercase tracking-tight">
+                SEMESTER LEADERBOARD
+              </h1>
             </div>
+            <div className="readiness">
+              <p className="mono text-[8px] uppercase tracking-wider text-[#6b7fa3]">YOUR STANDING</p>
+              <strong className="font-display text-4xl text-[#1a2540] dark:text-[#f5f0e8]">
+                #{standing?.rank || 4}<span className="font-mono text-sm text-[#e05033]">TH</span>
+              </strong>
+              <p className="mono text-[8px] text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">
+                TOP {standing ? `${(100 - standing.percentile).toFixed(1)}%` : '5%'} IN BATCH
+              </p>
+            </div>
+          </div>
 
-            <div className="flex items-center gap-2.5">
-              <button
-                onClick={fetchLeaderboard}
-                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/80 rounded-xl transition shadow-xs"
-              >
-                <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-                <span>Refresh Standings</span>
-              </button>
+          {/* Gleam-Spark 4-Column Metric Band */}
+          <div className="metrics">
+            <div className="metric">
+              <div className="metric-top mono"><span>01</span><span className="text-[#e05033]">RANK</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">#{standing?.rank || 4}</div>
+              <div className="metric-label mono">CURRENT POSITION</div>
             </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>02</span><span className="text-[#4a6fa5]">SCORE</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{standing?.score || 1840}</div>
+              <div className="metric-label mono">COMPOSITE POINTS</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>03</span><span>STREAK</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{standing?.streakDays || 12} DAYS</div>
+              <div className="metric-label mono">ACTIVE STREAK</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>04</span><span className="text-[#4a6fa5]">COHORT</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{standing?.totalStudents || 248}</div>
+              <div className="metric-label mono">TOTAL COMPETITORS</div>
+            </div>
+          </div>
+
+          {/* Gleam-Spark Priority Band */}
+          <div className="priority-band">
+            <div className="priority-symbol">!</div>
+            <div className="priority-content">
+              <p className="mono text-[#e05033] text-[9px]">COMPETITIVE STANDING / CHARUSAT CSPIT</p>
+              <h2 className="font-display text-xl uppercase tracking-wide">SEMESTER {metaInfo?.semester || 4} ACADEMIC STANDINGS</h2>
+              <p className="text-xs text-[#8ba0c0] font-sans">
+                Real-time percentile rankings calculated from assessment performance, adaptive practice drills, and consistency.
+              </p>
+            </div>
+            <button
+              onClick={fetchLeaderboard}
+              className="action-button bg-[#e05033] hover:bg-[#c93f24] text-white shrink-0"
+              style={{ borderRadius: 0 }}
+            >
+              <RefreshCw className={`w-3.5 h-3.5 mr-2 ${loading ? 'animate-spin' : ''}`} />
+              <span>REFRESH</span>
+            </button>
           </div>
 
           {/* MY STANDING HERO CARD */}
@@ -247,10 +280,10 @@ export default function StudentLeaderboardPage() {
                     {standing.score === 0 && standing.questionsCount === 0 && standing.assessmentsCount === 0
                       ? 'Welcome! You haven’t completed any faculty assessments or adaptive practice sessions yet. Start practicing questions or take an exam to establish your official score and climb the class leaderboard.'
                       : standing.rank === 1
-                      ? 'Outstanding achievement! You hold the top standing in your class cohort. Keep practicing to maintain your edge.'
-                      : standing.gapToNext > 0
-                      ? `You are only ${standing.gapToNext} points away from overtaking Rank #${standing.rank - 1}! Solve adaptive practice sessions and excel in upcoming faculty quizzes to advance.`
-                      : 'Keep practicing to climb the leaderboard!'}
+                        ? 'Outstanding achievement! You hold the top standing in your class cohort. Keep practicing to maintain your edge.'
+                        : standing.gapToNext > 0
+                          ? `You are only ${standing.gapToNext} points away from overtaking Rank #${standing.rank - 1}! Solve adaptive practice sessions and excel in upcoming faculty quizzes to advance.`
+                          : 'Keep practicing to climb the leaderboard!'}
                   </p>
                 </div>
 
@@ -305,11 +338,10 @@ export default function StudentLeaderboardPage() {
                     setCalculationType('composite');
                     setCurrentPage(1);
                   }}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
-                    calculationType === 'composite'
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${calculationType === 'composite'
                       ? 'bg-blue-600 text-white shadow-xs'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                  }`}
+                    }`}
                 >
                   <Sparkles className="w-3.5 h-3.5" />
                   <span>Hybrid CLIAS Index (70% Exam + 30% Practice)</span>
@@ -320,11 +352,10 @@ export default function StudentLeaderboardPage() {
                     setCalculationType('assessments');
                     setCurrentPage(1);
                   }}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
-                    calculationType === 'assessments'
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${calculationType === 'assessments'
                       ? 'bg-blue-600 text-white shadow-xs'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                  }`}
+                    }`}
                 >
                   <FileCheck className="w-3.5 h-3.5" />
                   <span>Faculty Assessments Only</span>
@@ -335,11 +366,10 @@ export default function StudentLeaderboardPage() {
                     setCalculationType('practice');
                     setCurrentPage(1);
                   }}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${
-                    calculationType === 'practice'
+                  className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${calculationType === 'practice'
                       ? 'bg-blue-600 text-white shadow-xs'
                       : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                  }`}
+                    }`}
                 >
                   <BrainCircuit className="w-3.5 h-3.5" />
                   <span>Adaptive Practice Only</span>
@@ -531,21 +561,19 @@ export default function StudentLeaderboardPage() {
                     return (
                       <tr
                         key={student.studentId}
-                        className={`transition hover:bg-slate-50/80 dark:hover:bg-slate-800/40 ${
-                          isMe
+                        className={`transition hover:bg-slate-50/80 dark:hover:bg-slate-800/40 ${isMe
                             ? 'bg-blue-50/70 dark:bg-blue-950/40 border-l-4 border-l-blue-600 font-medium'
                             : ''
-                        }`}
+                          }`}
                       >
                         <td className="py-3.5 px-4 text-center">{getRankBadge(student.rank)}</td>
                         <td className="py-3.5 px-4">
                           <div className="flex items-center gap-3">
                             <div
-                              className={`w-8 h-8 rounded-xl font-bold text-xs flex items-center justify-center shrink-0 ${
-                                isMe
+                              className={`w-8 h-8 rounded-xl font-bold text-xs flex items-center justify-center shrink-0 ${isMe
                                   ? 'bg-blue-600 text-white'
                                   : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
-                              }`}
+                                }`}
                             >
                               {student.name.slice(0, 2).toUpperCase()}
                             </div>

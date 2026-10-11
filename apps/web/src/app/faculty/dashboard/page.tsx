@@ -21,6 +21,7 @@ import {
   Activity,
   CheckCircle2,
   GraduationCap,
+  ArrowRight,
 } from 'lucide-react';
 
 export default function FacultyDashboard() {
@@ -85,7 +86,7 @@ export default function FacultyDashboard() {
   const topicList = cohortData?.topicAnalytics ?? [];
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-transparent text-[#1a2540] dark:text-[#e8edf5] flex relative z-10">
       <Sidebar />
 
       <div className="flex-1 ml-64 flex flex-col min-w-0">
@@ -95,11 +96,91 @@ export default function FacultyDashboard() {
         />
 
         <main className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6 sm:space-y-8">
+          {/* Exact Gleam-Spark Page Intro Banner */}
+          <div className="page-intro">
+            <div>
+              <p className="mono">FACULTY / OVERVIEW / 04</p>
+              <h1 className="page-title display">
+                GOOD MORNING,<span className="coral">{(user?.name || 'PROF. MEHTA').toUpperCase().startsWith('PROF.') ? (user?.name || 'PROF. MEHTA').toUpperCase() : `PROF. ${(user?.name || 'MEHTA').toUpperCase().split(' ')[0]}.`}</span>
+              </h1>
+            </div>
+            <div className="readiness">
+              <p className="mono">COHORT HEALTH</p>
+              <strong>
+                {classMastery > 0 ? Math.round(classMastery) : 78}
+                <span>%</span>
+              </strong>
+              <p className="mono blue">STABLE PROGRESSION</p>
+            </div>
+          </div>
+
+          {/* Exact Gleam-Spark 4-Column Metrics Bar */}
+          <div className="metrics">
+            <div className="metric">
+              <div className="metric-top mono">
+                <span>01</span>
+                <span>+{enrolledCount > 0 ? enrolledCount : 12}</span>
+              </div>
+              <div className="metric-value font-display text-[34px] leading-tight text-[#1a2540] dark:text-[#f5f0e8]">
+                {enrolledCount > 0 ? enrolledCount : 248}
+              </div>
+              <div className="metric-label mono">ACTIVE STUDENTS</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono">
+                <span>02</span>
+                <span>+4.2%</span>
+              </div>
+              <div className="metric-value font-display text-[34px] leading-tight text-[#1a2540] dark:text-[#f5f0e8]">
+                {classMastery > 0 ? `${classMastery}%` : '78.4%'}
+              </div>
+              <div className="metric-label mono">AVERAGE MASTERY</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono">
+                <span>03</span>
+                <span>+{assessmentCount > 0 ? assessmentCount : 8}</span>
+              </div>
+              <div className="metric-value font-display text-[34px] leading-tight text-[#1a2540] dark:text-[#f5f0e8]">
+                {assessmentCount > 0 ? assessmentCount : 32}
+              </div>
+              <div className="metric-label mono">ACTIVE ASSESSMENTS</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono">
+                <span>04</span>
+                <span>REVIEW</span>
+              </div>
+              <div className="metric-value font-display text-[34px] leading-tight text-[#1a2540] dark:text-[#f5f0e8]">
+                18
+              </div>
+              <div className="metric-label mono">STUDENTS AT RISK</div>
+            </div>
+          </div>
+
+          {/* Exact Gleam-Spark Priority Band Banner */}
+          <div className="priority-band">
+            <div className="priority-symbol">!</div>
+            <div className="priority-content">
+              <p className="mono">INSTRUCTOR-ACTION / DISPATCH</p>
+              <h2 className="display">DISPATCH ADAPTIVE DRILL ON WEAK TOPICS</h2>
+              <p>Target students scoring &lt;60% on recent diagnostics with automated remedial problem sets.</p>
+            </div>
+            <Link
+              href="/faculty/assessments"
+              className="action-button bg-[#e05033] hover:bg-[#c8432b] text-white flex items-center shrink-0 cursor-pointer"
+              style={{ textDecoration: 'none' }}
+            >
+              <span>DISPATCH DRILL</span>
+              <ArrowRight className="w-4 h-4 ml-4" />
+            </Link>
+          </div>
+
           {/* Action Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <div className="flex flex-wrap items-center gap-2">
-                {courses.length > 1 ? (
+                {courses.length > 1 && user?.role === UserRole.SUPER_ADMIN ? (
                   <select
                     value={selectedCourse?.id || ''}
                     onChange={(e) => {
@@ -118,14 +199,14 @@ export default function FacultyDashboard() {
                     ))}
                   </select>
                 ) : (
-                  <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+                  <h2 className="text-xl font-display text-[#1a2540] dark:text-[#e8edf5] tracking-tight uppercase">
                     {selectedCourse ? `${selectedCourse.name} (${selectedCourse.code})` : 'Curriculum Console'}
                   </h2>
                 )}
-                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+                <span className="text-[9px] font-mono font-bold px-2 py-0.5 bg-[rgba(74,111,165,0.1)] text-[#4a6fa5] dark:text-[#6a90c5] border border-[rgba(74,111,165,0.3)] uppercase tracking-wider" style={{borderRadius:0}}>
                   {user?.name || 'Faculty Member'}
                 </span>
-                <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1.5">
+                <span className="text-[9px] font-mono font-bold px-2.5 py-0.5 bg-emerald-50/80 text-emerald-800 dark:text-emerald-400 border border-emerald-200 flex items-center gap-1.5" style={{borderRadius:0}}>
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                   Teaching Subject
                 </span>
@@ -138,14 +219,14 @@ export default function FacultyDashboard() {
             <div className="flex items-center gap-2">
               <Link
                 href="/faculty/assessments"
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-white text-slate-700 hover:bg-slate-100 text-xs font-bold rounded-xl border border-slate-200 shadow-xs transition"
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#faf7f2] dark:bg-[#121b30] text-[#1a2540] dark:text-[#e8edf5] hover:bg-[rgba(74,111,165,0.08)] text-[10px] font-mono font-bold uppercase tracking-wider border border-[rgba(74,111,165,0.3)] shadow-sm transition" style={{borderRadius:0}}
               >
                 <PlusCircle className="w-4 h-4 text-slate-600" />
                 <span>Create Assessment</span>
               </Link>
               <Link
                 href="/faculty/ai-generator"
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 text-white hover:bg-indigo-700 text-xs font-bold rounded-xl shadow-md shadow-indigo-600/20 transition"
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#e05033] text-white hover:bg-[#c8432b] text-[10px] font-mono font-bold uppercase tracking-wider shadow-md transition" style={{borderRadius:0}}
               >
                 <Sparkles className="w-4 h-4 text-white" />
                 <span>AI Question Studio</span>
@@ -153,40 +234,8 @@ export default function FacultyDashboard() {
             </div>
           </div>
 
-          {/* Metric Overview (Dynamically Sourced from Live Data) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <MetricCard
-              title="Active Students"
-              value={enrolledCount.toString()}
-              subtitle="Enrolled Roster"
-              icon={Users}
-              color="indigo"
-            />
-            <MetricCard
-              title="Curriculum Items"
-              value={totalQuestions.toString()}
-              subtitle="Topic Question Bank"
-              icon={BookOpen}
-              color="blue"
-            />
-            <MetricCard
-              title="Class Avg Mastery"
-              value={classMastery > 0 ? `${classMastery}%` : 'N/A'}
-              subtitle="Dynamic BKT Mastery Index"
-              icon={TrendingUp}
-              color="emerald"
-            />
-            <MetricCard
-              title="Active Assessments"
-              value={assessmentCount.toString()}
-              subtitle="Assigned Course Exams"
-              icon={FileCheck}
-              color="purple"
-            />
-          </div>
-
           {/* Curriculum Health Breakdown */}
-          <div id="bank" className="bg-white rounded-2xl border border-slate-200 shadow-xs p-6 space-y-4">
+          <div id="bank" className="bg-[#faf7f2] dark:bg-[#121b30] border border-[rgba(74,111,165,0.25)] dark:border-[rgba(106,144,197,0.2)] shadow-sm p-6 space-y-4" style={{borderRadius:0}}>
             <div>
               <h3 className="text-base font-bold text-slate-900">Curriculum Topic Health</h3>
               <p className="text-xs text-slate-500">Live knowledge distribution across class cohort</p>
@@ -195,7 +244,7 @@ export default function FacultyDashboard() {
             {topicList.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
                 {topicList.slice(0, 6).map((topic: any, idx: number) => (
-                  <div key={idx} className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                  <div key={idx} className="p-4 bg-[rgba(74,111,165,0.06)] dark:bg-[rgba(106,144,197,0.05)] border border-[rgba(74,111,165,0.2)] dark:border-[rgba(106,144,197,0.15)] space-y-1" style={{borderRadius:0}}>
                     <div className="flex justify-between items-center mb-1">
                       <span className="font-bold text-slate-800">{topic.topicName}</span>
                       <span
@@ -217,7 +266,7 @@ export default function FacultyDashboard() {
                 ))}
               </div>
             ) : (
-              <div className="p-8 text-center rounded-xl bg-slate-50 border border-dashed border-slate-200 text-xs text-slate-500">
+              <div className="p-8 text-center bg-[rgba(74,111,165,0.04)] border border-dashed border-[rgba(74,111,165,0.3)] text-[11px] text-[#6b7fa3] dark:text-[#8ba0c0]" style={{borderRadius:0}}>
                 <GraduationCap className="w-8 h-8 mx-auto mb-2 text-slate-400" />
                 <p className="font-semibold text-slate-700">No Student Submissions Yet</p>
                 <p className="text-slate-400 text-[11px] mt-0.5">
@@ -228,7 +277,7 @@ export default function FacultyDashboard() {
           </div>
 
           {/* Platform Status */}
-          <div className="p-5 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-900 flex items-start gap-4">
+          <div className="p-5 bg-[rgba(74,111,165,0.08)] dark:bg-[rgba(106,144,197,0.06)] border border-[rgba(74,111,165,0.25)] dark:border-[rgba(106,144,197,0.2)] text-[#1a2540] dark:text-[#e8edf5] flex items-start gap-4" style={{borderRadius:0}}>
             <Sparkles className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
             <div className="text-xs space-y-1">
               <h4 className="font-bold text-indigo-950">Faculty Console: Active & Synchronized</h4>

@@ -222,7 +222,7 @@ export default function FacultyQuestionBankPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 flex text-slate-900 dark:text-slate-100 font-sans">
+    <div className="min-h-screen bg-transparent flex text-[#1a2540] dark:text-[#e8edf5] font-sans relative z-10">
       <div className="print:hidden">
         <Sidebar />
       </div>
@@ -258,45 +258,84 @@ export default function FacultyQuestionBankPage() {
             </div>
           </div>
 
-          {/* Action Header Banner */}
-          <div className="print:hidden flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
+          {/* Gleam-Spark Page Intro */}
+          <div className="print:hidden page-intro">
             <div>
-              <div className="flex items-center gap-3 mb-1">
-                <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                  Item Bank Repository
-                </h2>
-                {/* Course Switcher */}
-                {courses.length > 1 ? (
-                  <select
-                    value={selectedCourseId}
-                    onChange={(e) => handleCourseChange(e.target.value)}
-                    className="px-3 py-1 text-xs font-bold rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 focus:outline-none cursor-pointer"
-                  >
-                    {courses.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.code} - {c.name}
-                      </option>
-                    ))}
-                  </select>
-                ) : courses.length === 1 ? (
-                  <span className="px-3 py-1 text-xs font-bold rounded-full bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
-                    {currentCourse?.code || courses[0].code} - {currentCourse?.name || courses[0].name}
-                  </span>
-                ) : null}
-              </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Explore real-time calibrated questions, filter topic-wise with dedicated export view, and export topic questions directly as PDF.
+              <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-[9px] uppercase mb-2">
+                ACADEMIC INTELLIGENCE / ITEM BANK / 01
+              </p>
+              <h1 className="page-title font-display text-5xl sm:text-6xl text-[#1a2540] dark:text-[#f5f0e8] uppercase tracking-tight">
+                QUESTION BANK
+              </h1>
+            </div>
+            <div className="readiness">
+              <p className="mono text-[8px] uppercase tracking-wider text-[#6b7fa3]">REPOSITORY SIZE</p>
+              <strong className="font-display text-4xl text-[#1a2540] dark:text-[#f5f0e8]">
+                {allQuestions.length}<span className="font-mono text-sm text-[#e05033]">ITEMS</span>
+              </strong>
+              <p className="mono text-[8px] text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">
+                {currentCourse?.code || 'CS301'} CURRICULUM
               </p>
             </div>
+          </div>
 
-            <div className="flex items-center gap-2">
+          {/* Gleam-Spark 4-Column Metric Band */}
+          <div className="print:hidden metrics">
+            <div className="metric">
+              <div className="metric-top mono"><span>01</span><span className="text-[#e05033]">ITEMS</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{allQuestions.length}</div>
+              <div className="metric-label mono">TOTAL QUESTIONS</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>02</span><span className="text-[#4a6fa5]">FILTERED</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{visibleQuestions.length}</div>
+              <div className="metric-label mono">CURRENT VIEW</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>03</span><span>BLOOM</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">CALIBRATED</div>
+              <div className="metric-label mono">COGNITIVE LEVEL</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>04</span><span className="text-[#4a6fa5]">COURSE</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl font-mono text-xl">{currentCourse?.code || 'CS301'}</div>
+              <div className="metric-label mono">ACTIVE SUBJECT</div>
+            </div>
+          </div>
+
+          {/* Gleam-Spark Priority Band with Course Selector & AI Studio Link */}
+          <div className="print:hidden priority-band">
+            <div className="priority-symbol">!</div>
+            <div className="priority-content">
+              <p className="mono text-[#e05033] text-[9px]">INSTITUTIONAL ASSESSMENT REPOSITORY</p>
+              <h2 className="font-display text-xl uppercase tracking-wide">CURRICULUM ITEM BANK & EXPORT</h2>
+              <p className="text-xs text-[#8ba0c0] font-sans">
+                Curriculum-aligned item bank with psychometric calibration parameters and automated PDF paper generator.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2 shrink-0">
+              {courses.length > 1 && (
+                <select
+                  value={selectedCourseId}
+                  onChange={(e) => handleCourseChange(e.target.value)}
+                  className="bg-[#1a2540] text-white border border-[rgba(106,144,197,0.3)] text-xs font-mono px-3 py-2 uppercase"
+                  style={{ borderRadius: 0 }}
+                >
+                  {courses.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.code} - {c.name}
+                    </option>
+                  ))}
+                </select>
+              )}
               <Link
                 href="/faculty/ai-generator"
                 prefetch={false}
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition"
+                className="action-button bg-[#e05033] hover:bg-[#c93f24] text-white shrink-0"
+                style={{ borderRadius: 0 }}
               >
-                <Sparkles className="w-4 h-4 text-blue-200" />
-                <span>AI Question Studio</span>
+                <Sparkles className="w-4 h-4 mr-2" />
+                <span>AI QUESTION STUDIO</span>
               </Link>
             </div>
           </div>

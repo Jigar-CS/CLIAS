@@ -150,7 +150,7 @@ export default function AdminSettingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 flex text-slate-900 dark:text-slate-100 font-sans">
+    <div className="min-h-screen bg-transparent text-[#1a2540] dark:text-[#e8edf5] flex font-sans relative z-10">
       <Sidebar />
 
       <div className="flex-1 ml-64 flex flex-col min-w-0">
@@ -160,19 +160,60 @@ export default function AdminSettingsPage() {
         />
 
         <main className="p-8 max-w-7xl w-full mx-auto space-y-8 animate-in fade-in duration-200">
+          {/* Gleam-Spark Banner Intro */}
+          <div className="page-intro">
+            <div>
+              <div className="page-title">SYSTEM SETTINGS.</div>
+              <div className="page-subtitle">
+                INSTITUTIONAL GOVERNANCE • IDENTITY LIFECYCLE • AI INTEGRATION ENDPOINTS
+              </div>
+            </div>
+            <div className="readiness">
+              <div className="readiness-score">100%</div>
+              <div className="readiness-label">CLUSTER STATUS</div>
+            </div>
+          </div>
+
+          {/* 4-Column Metrics Bar */}
+          <div className="metrics">
+            <div className="metric">
+              <div className="metric-val">STRICT</div>
+              <div className="metric-lbl">ROLE ISOLATION (RULE 5 & 23)</div>
+            </div>
+            <div className="metric">
+              <div className="metric-val">{jwtExpiry.toUpperCase()}</div>
+              <div className="metric-lbl">SESSION TOKEN LIFESPAN</div>
+            </div>
+            <div className="metric">
+              <div className="metric-val">{otpExpiryMinutes} MIN</div>
+              <div className="metric-lbl">OTP CODE VALIDITY</div>
+            </div>
+            <div className="metric">
+              <div className="metric-val">CONNECTED</div>
+              <div className="metric-lbl">AI ENGINE ENDPOINT</div>
+            </div>
+          </div>
+
+          {/* Priority Status Band */}
+          <div className="priority-band">
+            <span>● POLICY ENGINE READY</span>
+            <span>DOMAINS VALIDATED</span>
+            <span>ENCRYPTED PARAMETERS</span>
+          </div>
+
           {/* Header Action Bar */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--grid-line)] pb-5">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                  System Settings &amp; Configuration
+                <h2 className="text-xl font-bold font-mono uppercase tracking-wider text-inherit">
+                  CLUSTER CONFIGURATION PARAMETERS
                 </h2>
-                <span className="px-2.5 py-0.5 text-xs font-bold rounded-full bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-                  Global Policy Engine
+                <span className="px-2.5 py-0.5 text-xs font-mono font-bold border border-[var(--grid-line)] bg-[var(--secondary)]/10 text-[var(--primary)]">
+                  ACTIVE SPECIFICATION
                 </span>
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Configure institutional identity parameters, authentication security lifecycles, and microservice integration endpoints.
+              <p className="font-mono text-xs text-[var(--muted)]">
+                CONFIGURE INSTITUTIONAL IDENTITY, AUTHENTICATION TIMEOUTS, AND MICROSERVICE PIPELINE ENDPOINTS.
               </p>
             </div>
 
@@ -180,37 +221,37 @@ export default function AdminSettingsPage() {
               <button
                 type="button"
                 onClick={handleResetDefaults}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-800 transition shadow-xs"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 font-mono text-xs uppercase tracking-wider border border-[var(--grid-line)] hover:bg-[var(--secondary)]/10 transition"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reset Defaults</span>
+                <span>RESET DEFAULTS</span>
               </button>
               <button
                 form="settings-form"
                 type="submit"
-                className="inline-flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition"
+                className="inline-flex items-center gap-2 px-5 py-2 bg-[var(--primary)] hover:opacity-90 text-white font-mono text-xs uppercase tracking-wider transition border border-[var(--primary)]"
               >
                 <Save className="w-4 h-4" />
-                <span>Save Configuration</span>
+                <span>SAVE CONFIGURATION →</span>
               </button>
             </div>
           </div>
 
           {savedNotification && (
-            <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 text-xs font-bold flex items-center gap-2 animate-in fade-in duration-200">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-              <span>System configuration successfully validated and updated across the active cluster.</span>
+            <div className="p-4 panel border-emerald-500/40 text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold flex items-center gap-2 animate-in fade-in duration-200">
+              <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+              <span>SYSTEM CONFIGURATION SUCCESSFULLY VALIDATED AND DEPLOYED ACROSS THE ACTIVE CLUSTER.</span>
             </div>
           )}
 
           <form id="settings-form" onSubmit={handleSaveSettings} className="space-y-6">
             {/* Section 1: Institutional Identity */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
-              <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
-                <Building className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <div className="panel p-6 space-y-4">
+              <div className="flex items-center gap-2.5 border-b border-[var(--grid-line)] pb-3">
+                <Building className="w-5 h-5 text-[var(--primary)]" />
                 <div>
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white">Institutional Identity &amp; Domain</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Controls email validation domains and university branding</p>
+                  <h3 className="text-base font-bold font-mono uppercase tracking-wider text-inherit">INSTITUTIONAL IDENTITY &amp; DOMAIN</h3>
+                  <p className="font-mono text-xs text-[var(--muted)]">CONTROLS EMAIL VALIDATION DOMAINS AND UNIVERSITY BRANDING</p>
                 </div>
               </div>
 
@@ -274,35 +315,35 @@ export default function AdminSettingsPage() {
             </div>
 
             {/* Section 2: Security & Authentication */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
-              <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
-                <Lock className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+            <div className="panel p-6 space-y-4">
+              <div className="flex items-center gap-2.5 border-b border-[var(--grid-line)] pb-3">
+                <Lock className="w-5 h-5 text-[var(--primary)]" />
                 <div>
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white">Security &amp; Access Governance</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">JWT token durations, OTP verification limits, and strict role isolation</p>
+                  <h3 className="text-base font-bold font-mono uppercase tracking-wider text-inherit">SECURITY &amp; ACCESS GOVERNANCE</h3>
+                  <p className="font-mono text-xs text-[var(--muted)]">JWT TOKEN DURATIONS, OTP VERIFICATION LIMITS, AND STRICT ROLE ISOLATION</p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-mono">
                 <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    JWT Session Token Lifespan
+                  <label className="block font-bold mb-1">
+                    JWT SESSION TOKEN LIFESPAN
                   </label>
                   <select
                     value={jwtExpiry}
                     onChange={(e) => setJwtExpiry(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-600 text-slate-900 dark:text-white font-medium"
+                    className="w-full px-3.5 py-2.5 bg-transparent border border-[var(--grid-line)] focus:outline-none focus:border-[var(--primary)] text-inherit"
                   >
-                    <option value="1d">1 Day</option>
-                    <option value="7d">7 Days (Default)</option>
-                    <option value="14d">14 Days</option>
-                    <option value="30d">30 Days</option>
+                    <option value="1d" className="bg-slate-900 text-slate-100">1 Day</option>
+                    <option value="7d" className="bg-slate-900 text-slate-100">7 Days (Default)</option>
+                    <option value="14d" className="bg-slate-900 text-slate-100">14 Days</option>
+                    <option value="30d" className="bg-slate-900 text-slate-100">30 Days</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    OTP Code Validity (Minutes)
+                  <label className="block font-bold mb-1">
+                    OTP CODE VALIDITY (MINUTES)
                   </label>
                   <input
                     type="number"
@@ -310,13 +351,13 @@ export default function AdminSettingsPage() {
                     max={30}
                     value={otpExpiryMinutes}
                     onChange={(e) => setOtpExpiryMinutes(parseInt(e.target.value, 10))}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-600 text-slate-900 dark:text-white font-medium"
+                    className="w-full px-3.5 py-2.5 bg-transparent border border-[var(--grid-line)] focus:outline-none focus:border-[var(--primary)] text-inherit"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Max Consecutive Login Attempts
+                  <label className="block font-bold mb-1">
+                    MAX CONSECUTIVE LOGIN ATTEMPTS
                   </label>
                   <input
                     type="number"
@@ -324,7 +365,7 @@ export default function AdminSettingsPage() {
                     max={10}
                     value={maxLoginAttempts}
                     onChange={(e) => setMaxLoginAttempts(parseInt(e.target.value, 10))}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-600 text-slate-900 dark:text-white font-medium"
+                    className="w-full px-3.5 py-2.5 bg-transparent border border-[var(--grid-line)] focus:outline-none focus:border-[var(--primary)] text-inherit"
                   />
                 </div>
               </div>
@@ -335,13 +376,13 @@ export default function AdminSettingsPage() {
                     type="checkbox"
                     checked={enforceStrictIsolation}
                     onChange={(e) => setEnforceStrictIsolation(e.target.checked)}
-                    className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300"
+                    className="w-4 h-4 text-[var(--primary)] border-[var(--grid-line)]"
                   />
                   <div>
-                    <span className="text-xs font-bold text-slate-900 dark:text-white block">
-                      Enforce Strict Role Isolation Matrix (Rule 5 &amp; 23)
+                    <span className="font-mono text-xs font-bold block uppercase tracking-wider">
+                      ENFORCE STRICT ROLE ISOLATION MATRIX (RULE 5 &amp; 23)
                     </span>
-                    <span className="text-[11px] text-slate-500 dark:text-slate-400 block">
+                    <span className="font-mono text-[11px] text-[var(--muted)] block">
                       Guarantees counsellors view only assigned mentees, faculty access only designated courses, and unassigned records are strictly quarantined.
                     </span>
                   </div>
@@ -350,32 +391,32 @@ export default function AdminSettingsPage() {
             </div>
 
             {/* Section 3: AI Intelligence Engine & RAG */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
-              <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
-                <Cpu className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
+            <div className="panel p-6 space-y-4">
+              <div className="flex items-center gap-2.5 border-b border-[var(--grid-line)] pb-3">
+                <Cpu className="w-5 h-5 text-cyan-500" />
                 <div>
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white">AI Microservice &amp; Semantic RAG Settings</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Endpoints and hyperparameters for Socratic tutoring and grounded quiz generation</p>
+                  <h3 className="text-base font-bold font-mono uppercase tracking-wider text-inherit">AI MICROSERVICE &amp; SEMANTIC RAG SETTINGS</h3>
+                  <p className="font-mono text-xs text-[var(--muted)]">ENDPOINTS AND HYPERPARAMETERS FOR SOCRATIC TUTORING AND GROUNDED GENERATION</p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-mono">
                 <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    AI Microservice URL
+                  <label className="block font-bold mb-1">
+                    AI MICROSERVICE URL
                   </label>
                   <input
                     type="text"
                     required
                     value={aiServiceUrl}
                     onChange={(e) => setAiServiceUrl(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-600 text-slate-900 dark:text-white font-mono"
+                    className="w-full px-3.5 py-2.5 bg-transparent border border-[var(--grid-line)] focus:outline-none focus:border-[var(--primary)] text-inherit"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    RAG Cosine Similarity Threshold
+                  <label className="block font-bold mb-1">
+                    RAG COSINE SIMILARITY THRESHOLD
                   </label>
                   <input
                     type="number"
@@ -384,13 +425,13 @@ export default function AdminSettingsPage() {
                     max="0.95"
                     value={ragSimilarityThreshold}
                     onChange={(e) => setRagSimilarityThreshold(parseFloat(e.target.value))}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-600 text-slate-900 dark:text-white font-mono"
+                    className="w-full px-3.5 py-2.5 bg-transparent border border-[var(--grid-line)] focus:outline-none focus:border-[var(--primary)] text-inherit"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Max Socratic Chat Dialogue Turns
+                  <label className="block font-bold mb-1">
+                    MAX SOCRATIC CHAT DIALOGUE TURNS
                   </label>
                   <input
                     type="number"
@@ -398,47 +439,47 @@ export default function AdminSettingsPage() {
                     max={25}
                     value={socraticMaxTurns}
                     onChange={(e) => setSocraticMaxTurns(parseInt(e.target.value, 10))}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-600 text-slate-900 dark:text-white font-mono"
+                    className="w-full px-3.5 py-2.5 bg-transparent border border-[var(--grid-line)] focus:outline-none focus:border-[var(--primary)] text-inherit"
                   />
                 </div>
               </div>
             </div>
 
             {/* Section 4: Email Relay */}
-            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
-              <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
-                <Mail className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+            <div className="panel p-6 space-y-4">
+              <div className="flex items-center gap-2.5 border-b border-[var(--grid-line)] pb-3">
+                <Mail className="w-5 h-5 text-purple-500" />
                 <div>
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white">Email &amp; Notification Relay</h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Driver configuration for OTP delivery and proctoring violation alerts</p>
+                  <h3 className="text-base font-bold font-mono uppercase tracking-wider text-inherit">EMAIL &amp; NOTIFICATION RELAY</h3>
+                  <p className="font-mono text-xs text-[var(--muted)]">DRIVER CONFIGURATION FOR OTP DELIVERY AND PROCTORING VIOLATION ALERTS</p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-mono">
                 <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Email Service Driver
+                  <label className="block font-bold mb-1">
+                    EMAIL SERVICE DRIVER
                   </label>
                   <select
                     value={emailDriver}
                     onChange={(e) => setEmailDriver(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-600 text-slate-900 dark:text-white font-medium"
+                    className="w-full px-3.5 py-2.5 bg-transparent border border-[var(--grid-line)] focus:outline-none focus:border-[var(--primary)] text-inherit"
                   >
-                    <option value="development">Development Mock (Console Logged)</option>
-                    <option value="smtp">Production SMTP Relay</option>
+                    <option value="development" className="bg-slate-900 text-slate-100">Development Mock (Console Logged)</option>
+                    <option value="smtp" className="bg-slate-900 text-slate-100">Production SMTP Relay</option>
                   </select>
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Sender "From" Address
+                  <label className="block font-bold mb-1">
+                    SENDER "FROM" ADDRESS
                   </label>
                   <input
                     type="email"
                     required
                     value={senderEmail}
                     onChange={(e) => setSenderEmail(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:border-blue-600 text-slate-900 dark:text-white font-mono"
+                    className="w-full px-3.5 py-2.5 bg-transparent border border-[var(--grid-line)] focus:outline-none focus:border-[var(--primary)] text-inherit"
                   />
                 </div>
               </div>

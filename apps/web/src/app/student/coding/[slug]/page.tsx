@@ -259,7 +259,7 @@ export default function ProblemEditorPage() {
   });
 
   return (
-    <div className="flex bg-slate-950 min-h-screen text-slate-100 font-sans">
+    <div className="flex bg-transparent min-h-screen text-[#1a2540] dark:text-[#e8edf5] font-sans relative z-10">
       <Sidebar />
       <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${isPinned ? 'pl-64' : 'pl-[72px]'}`}>
         <Navbar />
@@ -269,53 +269,53 @@ export default function ProblemEditorPage() {
           <div className="flex items-center justify-between">
             <Link
               href="/student/coding"
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400 hover:text-white transition-colors"
+              className="inline-flex items-center gap-1.5 font-mono text-xs uppercase tracking-wider text-[var(--muted)] hover:text-[var(--primary)] transition-colors"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              Back to Coding Library
+              ← BACK TO CODING ARENA
             </Link>
 
             <div className="flex items-center gap-3">
               {submissions.some((s) => s.status === 'ACCEPTED') && (
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                  Solved
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 font-mono text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                  SOLVED
                 </span>
               )}
               <span
-                className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${problem?.difficulty === 'EASY'
-                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                className={`px-2.5 py-0.5 font-mono text-xs font-bold border ${problem?.difficulty === 'EASY'
+                    ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
                     : problem?.difficulty === 'MEDIUM'
-                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
-                      : 'bg-rose-500/20 text-rose-300 border-rose-500/30'
+                      ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                      : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30'
                   }`}
               >
                 {problem?.difficulty || 'MEDIUM'}
               </span>
-              <span className="text-xs text-slate-400">Problem #{problem?.slug}</span>
+              <span className="font-mono text-xs text-[var(--muted)]">PROBLEM #{problem?.slug}</span>
             </div>
           </div>
 
           {loading || !problem ? (
-            <div className="p-16 text-center text-slate-400 text-sm">
-              Loading code execution environment...
+            <div className="panel p-16 text-center font-mono text-xs uppercase tracking-wider text-[var(--muted)]">
+              INITIALIZING CODE COMPILER SANDBOX...
             </div>
           ) : (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
               {/* Left Pane: Problem Description & Submissions (5 Cols) */}
-              <div className="lg:col-span-5 bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6 max-h-[820px] overflow-y-auto">
+              <div className="lg:col-span-5 panel p-6 space-y-6 max-h-[820px] overflow-y-auto">
                 {/* Left Pane Navigation Tabs */}
-                <div className="flex items-center gap-2 border-b border-slate-800 pb-3">
+                <div className="flex items-center gap-2 border-b border-[var(--grid-line)] pb-3">
                   <button
                     onClick={() => setLeftTab('problem')}
-                    className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+                    className={`font-mono text-xs uppercase tracking-wider px-3 py-1.5 border transition-all flex items-center gap-1.5 ${
                       leftTab === 'problem'
-                        ? 'bg-blue-600 text-white shadow-xs'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                        ? 'bg-[var(--primary)] text-white border-[var(--primary)]'
+                        : 'border-[var(--grid-line)] text-[var(--muted)] hover:text-inherit'
                     }`}
                   >
                     <BookOpen className="w-3.5 h-3.5" />
-                    Problem
+                    PROBLEM
                   </button>
                   <button
                     onClick={() => {
@@ -564,28 +564,28 @@ export default function ProblemEditorPage() {
               {/* Right Pane: Code Editor & Live Console (7 Cols) */}
               <div className="lg:col-span-7 space-y-4">
                 {/* Editor Header */}
-                <div className="bg-slate-900/90 border border-slate-800 rounded-t-2xl p-4 flex flex-wrap items-center justify-between gap-3 shadow-lg">
+                <div className="panel p-4 flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <FileCode className="w-4 h-4 text-blue-400" />
-                    <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-                      Language:
+                    <FileCode className="w-4 h-4 text-[var(--primary)]" />
+                    <span className="font-mono text-xs uppercase tracking-wider text-[var(--muted)]">
+                      COMPILER:
                     </span>
                     <select
                       value={selectedLanguage}
                       onChange={(e) => handleLanguageChange(e.target.value)}
-                      className="bg-slate-950 border border-slate-800 text-xs font-semibold text-white rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-blue-500"
+                      className="bg-transparent border border-[var(--grid-line)] font-mono text-xs uppercase tracking-wider px-2.5 py-1.5 focus:outline-none focus:border-[var(--primary)] text-inherit"
                     >
-                      <option value="PYTHON">Python 3.11</option>
-                      <option value="JAVASCRIPT">JavaScript (Node.js)</option>
-                      <option value="CPP">C++20 (GCC 13)</option>
-                      <option value="JAVA">Java 21 (OpenJDK)</option>
+                      <option value="PYTHON" className="bg-slate-900 text-slate-100">Python 3.11</option>
+                      <option value="JAVASCRIPT" className="bg-slate-900 text-slate-100">JavaScript (Node.js)</option>
+                      <option value="CPP" className="bg-slate-900 text-slate-100">C++20 (GCC 13)</option>
+                      <option value="JAVA" className="bg-slate-900 text-slate-100">Java 21 (OpenJDK)</option>
                     </select>
                   </div>
 
                   <div className="flex items-center gap-2">
                     <button
                       onClick={handleReset}
-                      className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+                      className="p-1.5 border border-[var(--grid-line)] text-[var(--muted)] hover:text-inherit hover:bg-[var(--secondary)]/10 transition-colors"
                       title="Reset Starter Code"
                     >
                       <RotateCcw className="w-4 h-4" />
@@ -594,42 +594,42 @@ export default function ProblemEditorPage() {
                     <button
                       onClick={handleRunCode}
                       disabled={executing}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-all"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 font-mono text-xs uppercase tracking-wider border border-[var(--grid-line)] hover:bg-[var(--secondary)]/10 transition-all"
                     >
-                      <Play className="w-3.5 h-3.5 text-blue-400" />
-                      Run Code
+                      <Play className="w-3.5 h-3.5 text-blue-500" />
+                      RUN TESTCASES
                     </button>
 
                     <button
                       onClick={handleSubmitCode}
                       disabled={executing}
-                      className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-md shadow-emerald-600/30 transition-all disabled:opacity-50"
+                      className="inline-flex items-center gap-1.5 px-4 py-1.5 font-mono text-xs uppercase tracking-wider bg-[var(--primary)] text-white border border-[var(--primary)] hover:opacity-90 transition-all disabled:opacity-50"
                     >
                       <Send className="w-3.5 h-3.5" />
-                      Submit
+                      SUBMIT SOLUTION →
                     </button>
                   </div>
                 </div>
 
                 {/* Code Textarea Editor */}
-                <div className="bg-slate-950 border border-slate-800 border-t-0 p-4 font-mono text-xs leading-relaxed text-slate-200">
+                <div className="panel p-4 font-mono text-xs leading-relaxed">
                   <textarea
                     value={sourceCode}
                     onChange={(e) => setSourceCode(e.target.value)}
                     rows={17}
                     spellCheck={false}
-                    className="w-full bg-transparent resize-y outline-none font-mono text-xs leading-relaxed text-blue-200"
+                    className="w-full bg-transparent resize-y outline-none font-mono text-xs leading-relaxed text-inherit"
                     placeholder="// Write your algorithmic solution here..."
                   />
                 </div>
 
                 {/* Live Judge Output / Verdict Console */}
-                <div className="bg-slate-900/90 border border-slate-800 rounded-b-2xl p-5 shadow-xl space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div className="panel p-5 space-y-4">
+                  <div className="flex items-center justify-between border-b border-[var(--grid-line)] pb-3">
                     <div className="flex items-center gap-2">
-                      <Terminal className="w-4 h-4 text-emerald-400" />
-                      <span className="text-xs font-bold text-white uppercase tracking-wider">
-                        Judge Execution Console
+                      <Terminal className="w-4 h-4 text-emerald-500" />
+                      <span className="font-mono text-xs uppercase tracking-wider">
+                        JUDGE EXECUTION CONSOLE
                       </span>
                     </div>
 
@@ -699,26 +699,26 @@ export default function ProblemEditorPage() {
 
                       {/* Selected Test Case Details */}
                       {testList[selectedTestTab] && (
-                        <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 text-xs font-mono space-y-2">
+                        <div className="p-3.5 panel text-xs font-mono space-y-2">
                           <div>
-                            <span className="text-slate-400">Input: </span>
-                            <span className="text-slate-200">
+                            <span className="text-[var(--muted)]">INPUT: </span>
+                            <span className="text-inherit">
                               {testList[selectedTestTab].input}
                             </span>
                           </div>
                           <div>
-                            <span className="text-slate-400">Expected Output: </span>
-                            <span className="text-emerald-300">
+                            <span className="text-[var(--muted)]">EXPECTED OUTPUT: </span>
+                            <span className="text-emerald-500 font-bold">
                               {testList[selectedTestTab].expectedOutput ?? testList[selectedTestTab].expected ?? '(none)'}
                             </span>
                           </div>
                           <div>
-                            <span className="text-slate-400">Actual Output: </span>
+                            <span className="text-[var(--muted)]">ACTUAL OUTPUT: </span>
                             <span
                               className={
                                 testList[selectedTestTab].status === 'PASSED'
-                                  ? 'text-emerald-300'
-                                  : 'text-rose-300'
+                                  ? 'text-emerald-500 font-bold'
+                                  : 'text-rose-500 font-bold'
                               }
                             >
                               {(() => {
@@ -732,9 +732,9 @@ export default function ProblemEditorPage() {
                             </span>
                           </div>
                           {testList[selectedTestTab].consoleOutput && (
-                            <div className="pt-2 border-t border-slate-800/80">
-                              <span className="text-slate-400">Stdout / Console: </span>
-                              <pre className="text-amber-300 text-[11px] mt-1 whitespace-pre-wrap font-mono">
+                            <div className="pt-2 border-t border-[var(--grid-line)]">
+                              <span className="text-[var(--muted)]">STDOUT / CONSOLE: </span>
+                              <pre className="text-amber-500 text-[11px] mt-1 whitespace-pre-wrap font-mono">
                                 {testList[selectedTestTab].consoleOutput}
                               </pre>
                             </div>
@@ -743,11 +743,11 @@ export default function ProblemEditorPage() {
                       )}
 
                       {verdict.outputMessage && (
-                        <div className={`text-xs p-3 rounded-lg border font-mono whitespace-pre-wrap ${verdict.status === 'ACCEPTED'
-                            ? 'bg-emerald-950/20 text-emerald-300 border-emerald-800/40'
+                        <div className={`text-xs p-3 border font-mono whitespace-pre-wrap ${verdict.status === 'ACCEPTED'
+                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
                             : verdict.status === 'COMPILATION_ERROR'
-                              ? 'bg-amber-950/30 text-amber-200 border-amber-800/40'
-                              : 'bg-rose-950/30 text-rose-200 border-rose-800/40'
+                              ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                              : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30'
                           }`}>
                           {verdict.outputMessage}
                         </div>
@@ -761,53 +761,53 @@ export default function ProblemEditorPage() {
 
           {/* Read-Only Historical Submission Code Modal */}
           {inspectedSubmission && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs">
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden space-y-4 p-6 animate-in fade-in duration-200">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs">
+              <div className="panel w-full max-w-2xl shadow-2xl overflow-hidden space-y-4 p-6 animate-in fade-in duration-200">
+                <div className="flex items-center justify-between border-b border-[var(--grid-line)] pb-4">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2.5">
-                      <FileCode className="w-4 h-4 text-blue-400" />
-                      <h3 className="text-sm font-bold text-white">
+                      <FileCode className="w-4 h-4 text-[var(--primary)]" />
+                      <h3 className="text-sm font-bold font-mono uppercase tracking-wider text-inherit">
                         {inspectedSubmission.problem?.title || 'Historical Submission Code'}
                       </h3>
                       <span
-                        className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                        className={`px-2 py-0.5 text-[10px] font-mono font-bold border ${
                           inspectedSubmission.status === 'ACCEPTED'
-                            ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                            ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
                             : inspectedSubmission.status === 'COMPILATION_ERROR'
-                            ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
-                            : 'bg-rose-500/20 text-rose-400 border-rose-500/30'
+                            ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                            : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30'
                         }`}
                       >
                         {inspectedSubmission.status.replace(/_/g, ' ')}
                       </span>
-                      <span className="text-xs font-bold text-blue-400">
-                        Score: {inspectedSubmission.score ?? 0}%
+                      <span className="font-mono text-xs font-bold text-[var(--primary)]">
+                        SCORE: {inspectedSubmission.score ?? 0}%
                       </span>
                     </div>
-                    <p className="text-[11px] text-slate-400">
+                    <p className="font-mono text-[11px] text-[var(--muted)]">
                       Submitted on {new Date(inspectedSubmission.createdAt).toLocaleString()} • {inspectedSubmission.language} • {inspectedSubmission.testCasesPassed ?? 0}/{inspectedSubmission.totalTestCases ?? 0} test cases passed ({inspectedSubmission.executionTimeMs}ms)
                     </p>
                   </div>
                   <button
                     onClick={() => setInspectedSubmission(null)}
-                    className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+                    className="p-1.5 border border-[var(--grid-line)] text-[var(--muted)] hover:text-inherit hover:bg-[var(--secondary)]/10 transition-colors"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
 
-                <div className="p-2.5 rounded-lg bg-blue-950/20 border border-blue-500/20 text-[11px] text-blue-300">
-                  Read-only view. Closing this modal preserves your current working draft in the editor.
+                <div className="p-2.5 border border-[var(--grid-line)] bg-[var(--secondary)]/10 font-mono text-[11px] text-[var(--muted)]">
+                  READ-ONLY VIEW. Closing this modal preserves your current working draft in the editor.
                 </div>
 
-                <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 font-mono text-xs leading-relaxed text-blue-200 max-h-[380px] overflow-y-auto">
-                  <pre className="whitespace-pre-wrap select-text font-mono text-xs">
+                <div className="panel p-4 font-mono text-xs leading-relaxed max-h-[380px] overflow-y-auto">
+                  <pre className="whitespace-pre-wrap select-text font-mono text-xs text-inherit">
                     {inspectedSubmission.sourceCode || '// No source code recorded'}
                   </pre>
                 </div>
 
-                <div className="flex items-center justify-between pt-2 border-t border-slate-800">
+                <div className="flex items-center justify-between pt-2 border-t border-[var(--grid-line)]">
                   <button
                     onClick={() => {
                       if (inspectedSubmission.sourceCode) {
@@ -816,17 +816,17 @@ export default function ProblemEditorPage() {
                         setTimeout(() => setCodeCopied(false), 2000);
                       }
                     }}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-all"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 font-mono text-xs uppercase tracking-wider border border-[var(--grid-line)] hover:bg-[var(--secondary)]/10 transition-all"
                   >
-                    {codeCopied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                    {codeCopied ? 'Copied to Clipboard' : 'Copy Code'}
+                    {codeCopied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                    {codeCopied ? 'COPIED TO CLIPBOARD' : 'COPY CODE'}
                   </button>
 
                   <button
                     onClick={() => setInspectedSubmission(null)}
-                    className="px-4 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold transition-all"
+                    className="px-4 py-1.5 font-mono text-xs uppercase tracking-wider bg-[var(--primary)] text-white border border-[var(--primary)] hover:opacity-90 transition-all"
                   >
-                    Close
+                    CLOSE
                   </button>
                 </div>
               </div>

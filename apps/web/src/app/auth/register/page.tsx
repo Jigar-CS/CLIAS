@@ -209,41 +209,58 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden">
-      <div className="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none"></div>
+    <div className="min-h-screen bg-transparent grid-paper flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden text-[#1a2540] dark:text-[#e8edf5] z-10">
+      {/* Background accents */}
+      <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#e05033]/10 rounded-full blur-3xl pointer-events-none" />
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10 text-center">
-        <Link href="/" className="inline-flex items-center gap-3 mb-3">
-          <div className="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-xl shadow-indigo-500/30">
-            <BrainCircuit className="w-7 h-7" />
+        <Link href="/" className="inline-flex items-center gap-3 mb-4 group">
+          <div className="w-12 h-12 bg-[#e05033] flex items-center justify-center text-white shadow-sm" style={{ borderRadius: 0 }}>
+            <BrainCircuit className="w-6 h-6" />
+          </div>
+          <div className="text-left">
+            <span className="font-display font-black text-2xl tracking-wider text-[#1a2540] dark:text-white block leading-none">
+              CLIAS
+            </span>
+            <span className="font-mono text-[9px] uppercase tracking-widest text-[#4a6fa5] dark:text-slate-400">
+              Intelligence System
+            </span>
           </div>
         </Link>
-        <h2 className="text-2xl font-extrabold text-white tracking-tight">Institutional Account Registration</h2>
-        <p className="text-xs text-slate-400 mt-1">
+        <h1 className="text-2xl font-bold tracking-tight text-[#141c2e] dark:text-white">
+          Institutional Registration
+        </h1>
+        <p className="text-xs text-[#141c2e]/70 dark:text-slate-400 mt-1.5 font-sans">
           Verify institutional credentials & activate your {universityName} profile
         </p>
 
         {/* Step Indicator */}
-        <div className="flex items-center justify-center gap-2 mt-4">
+        <div className="flex items-center justify-center gap-3 mt-5 font-mono">
           <div
-            className={`w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center ${
-              step >= 1 ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-500'
+            className={`w-7 h-7 rounded-lg text-xs font-bold flex items-center justify-center border transition ${
+              step >= 1
+                ? 'bg-[#dc2626] text-white border-[#dc2626] shadow-sm'
+                : 'bg-white/60 dark:bg-slate-800 text-[#141c2e]/50 dark:text-slate-400 border-[#141c2e]/10 dark:border-slate-700'
             }`}
           >
             1
           </div>
-          <div className={`w-8 h-0.5 ${step >= 2 ? 'bg-indigo-600' : 'bg-slate-800'}`}></div>
+          <div className={`w-8 h-0.5 ${step >= 2 ? 'bg-[#dc2626]' : 'bg-[#141c2e]/10 dark:bg-slate-700'}`} />
           <div
-            className={`w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center ${
-              step >= 2 ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-500'
+            className={`w-7 h-7 rounded-lg text-xs font-bold flex items-center justify-center border transition ${
+              step >= 2
+                ? 'bg-[#dc2626] text-white border-[#dc2626] shadow-sm'
+                : 'bg-white/60 dark:bg-slate-800 text-[#141c2e]/50 dark:text-slate-400 border-[#141c2e]/10 dark:border-slate-700'
             }`}
           >
             2
           </div>
-          <div className={`w-8 h-0.5 ${step >= 3 ? 'bg-indigo-600' : 'bg-slate-800'}`}></div>
+          <div className={`w-8 h-0.5 ${step >= 3 ? 'bg-[#dc2626]' : 'bg-[#141c2e]/10 dark:bg-slate-700'}`} />
           <div
-            className={`w-7 h-7 rounded-full text-xs font-bold flex items-center justify-center ${
-              step >= 3 ? 'bg-indigo-600 text-white' : 'bg-slate-800 text-slate-500'
+            className={`w-7 h-7 rounded-lg text-xs font-bold flex items-center justify-center border transition ${
+              step >= 3
+                ? 'bg-[#dc2626] text-white border-[#dc2626] shadow-sm'
+                : 'bg-white/60 dark:bg-slate-800 text-[#141c2e]/50 dark:text-slate-400 border-[#141c2e]/10 dark:border-slate-700'
             }`}
           >
             3
@@ -252,17 +269,17 @@ export default function RegisterPage() {
       </div>
 
       <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-md relative z-10">
-        <div className="bg-slate-950/80 backdrop-blur-xl py-8 px-6 shadow-2xl border border-slate-800 sm:rounded-2xl sm:px-10">
+        <div className="bg-[#faf8f5] dark:bg-[#0f172a] py-8 px-6 shadow-xl border border-[#141c2e]/14 dark:border-white/10 sm:rounded-2xl sm:px-10 backdrop-blur-sm">
           {error && (
-            <div className="mb-5 p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-xs flex items-start gap-2.5">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-400" />
+            <div className="mb-5 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-300 text-xs flex items-start gap-2.5">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-600 dark:text-red-400" />
               <span>{error}</span>
             </div>
           )}
 
           {infoMsg && (
-            <div className="mb-5 p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs flex items-start gap-2.5">
-              <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-indigo-400" />
+            <div className="mb-5 p-3 rounded-xl bg-teal-500/10 border border-teal-500/20 text-teal-800 dark:text-teal-300 text-xs flex items-start gap-2.5">
+              <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5 text-teal-600 dark:text-teal-400" />
               <span>{infoMsg}</span>
             </div>
           )}
@@ -271,7 +288,7 @@ export default function RegisterPage() {
           {step === 1 && (
             <form onSubmit={handleRequestOtp} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                <label className="block text-xs font-mono font-medium text-[#141c2e]/80 dark:text-slate-300 mb-1.5 uppercase tracking-wider">
                   Registering As:
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -282,10 +299,10 @@ export default function RegisterPage() {
                       setIdentifier('');
                       setError(null);
                     }}
-                    className={`p-2.5 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition ${
+                    className={`p-2.5 rounded-xl border text-xs font-medium flex items-center justify-center gap-2 transition ${
                       selectedRole === UserRole.STUDENT
-                        ? 'bg-indigo-600 text-white border-indigo-500 shadow-md shadow-indigo-600/30'
-                        : 'bg-slate-900 text-slate-400 border-slate-800 hover:bg-slate-850'
+                        ? 'bg-[#dc2626] text-white border-[#dc2626] shadow-md shadow-red-600/20'
+                        : 'bg-white/60 dark:bg-slate-900/60 text-[#141c2e]/70 dark:text-slate-400 border-[#141c2e]/12 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-900'
                     }`}
                   >
                     <GraduationCap className="w-4 h-4" />
@@ -298,10 +315,10 @@ export default function RegisterPage() {
                       setIdentifier('');
                       setError(null);
                     }}
-                    className={`p-2.5 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition ${
+                    className={`p-2.5 rounded-xl border text-xs font-medium flex items-center justify-center gap-2 transition ${
                       selectedRole === UserRole.FACULTY
-                        ? 'bg-emerald-600 text-white border-emerald-500 shadow-md shadow-emerald-600/30'
-                        : 'bg-slate-900 text-slate-400 border-slate-800 hover:bg-slate-850'
+                        ? 'bg-[#0d9488] text-white border-[#0d9488] shadow-md shadow-teal-600/20'
+                        : 'bg-white/60 dark:bg-slate-900/60 text-[#141c2e]/70 dark:text-slate-400 border-[#141c2e]/12 dark:border-slate-800 hover:bg-white dark:hover:bg-slate-900'
                     }`}
                   >
                     <Briefcase className="w-4 h-4" />
@@ -312,37 +329,37 @@ export default function RegisterPage() {
 
               {/* Strict Institutional Policy Banner */}
               {isFacultyOrStaff ? (
-                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[11px] space-y-1">
-                  <div className="flex items-center gap-1.5 font-bold">
-                    <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Fixed Faculty Domain: @charusat.ac.in</span>
+                <div className="p-3 rounded-xl bg-teal-500/10 border border-teal-500/20 text-teal-900 dark:text-teal-200 text-[11px] space-y-1">
+                  <div className="flex items-center gap-1.5 font-bold font-mono">
+                    <ShieldAlert className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+                    <span>Fixed Domain: @charusat.ac.in</span>
                   </div>
-                  <p className="text-amber-300/80">
-                    Faculty & staff only need to enter their official ID or name prefix. Verification OTP will be automatically dispatched to <strong>[name/id]@charusat.ac.in</strong>.
+                  <p className="text-teal-950/80 dark:text-teal-300/80 font-sans">
+                    Faculty & staff only need to enter their official ID prefix. Verification code will be dispatched to <strong>[prefix]@charusat.ac.in</strong>.
                   </p>
                 </div>
               ) : (
-                <div className="p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-300 text-[11px] space-y-1">
-                  <div className="flex items-center gap-1.5 font-bold">
-                    <ShieldAlert className="w-3.5 h-3.5 text-blue-400" />
-                    <span>Fixed Student Domain: @charusat.edu.in</span>
+                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-900 dark:text-amber-200 text-[11px] space-y-1">
+                  <div className="flex items-center gap-1.5 font-bold font-mono">
+                    <ShieldAlert className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                    <span>Fixed Domain: @charusat.edu.in</span>
                   </div>
-                  <p className="text-blue-300/80">
-                    Students only need to enter their Student ID (e.g. 24CS093). Verification OTP will be automatically dispatched to <strong>[student_id]@charusat.edu.in</strong>.
+                  <p className="text-amber-950/80 dark:text-amber-300/80 font-sans">
+                    Students only need to enter their Student ID (e.g. 24CS093). Verification code will be dispatched to <strong>[student_id]@charusat.edu.in</strong>.
                   </p>
                 </div>
               )}
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-medium text-[#141c2e]/80 dark:text-slate-300 mb-1">
                   {isFacultyOrStaff ? 'Faculty ID or Official Name' : 'Student ID / Enrollment Number'}
                 </label>
-                <div className="flex rounded-xl overflow-hidden border border-slate-700 bg-slate-900 focus-within:ring-2 focus-within:ring-indigo-500/40 focus-within:border-indigo-500 transition shadow-inner">
-                  <div className="pl-3.5 pr-1 flex items-center text-slate-500">
+                <div className="flex rounded-xl overflow-hidden border border-[#141c2e]/20 dark:border-slate-700 bg-white dark:bg-slate-900 focus-within:ring-2 focus-within:ring-red-500/30 focus-within:border-[#dc2626] transition shadow-inner">
+                  <div className="pl-3.5 pr-1 flex items-center text-[#141c2e]/50 dark:text-slate-500">
                     {isFacultyOrStaff ? (
-                      <Briefcase className="w-4 h-4 text-emerald-400" />
+                      <Briefcase className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                     ) : (
-                      <GraduationCap className="w-4 h-4 text-indigo-400" />
+                      <GraduationCap className="w-4 h-4 text-[#dc2626]" />
                     )}
                   </div>
                   <input
@@ -355,25 +372,27 @@ export default function RegisterPage() {
                         ? 'e.g. dharasolanki.cse or john.doe'
                         : 'e.g. 24CS093'
                     }
-                    className="w-full py-2.5 px-2.5 text-xs bg-transparent text-white font-mono placeholder:text-slate-500 focus:outline-none"
+                    className="w-full py-2.5 px-2.5 text-xs bg-transparent text-[#141c2e] dark:text-white font-mono placeholder:text-slate-400 focus:outline-none"
                   />
                   <div
-                    className={`px-3 py-2.5 border-l border-slate-700 text-xs font-mono font-bold flex items-center select-none ${
-                      isFacultyOrStaff ? 'bg-emerald-950/40 text-emerald-300' : 'bg-indigo-950/40 text-indigo-300'
+                    className={`px-3 py-2.5 border-l border-[#141c2e]/10 dark:border-slate-700 text-xs font-mono font-bold flex items-center select-none ${
+                      isFacultyOrStaff
+                        ? 'bg-teal-50 dark:bg-teal-950/40 text-teal-800 dark:text-teal-300'
+                        : 'bg-red-50 dark:bg-red-950/40 text-red-800 dark:text-red-300'
                     }`}
                   >
                     @{targetDomain}
                   </div>
                 </div>
 
-                <div className="mt-1.5 flex items-center justify-between text-[11px] text-slate-400">
-                  <span className="truncate mr-2">
+                <div className="mt-1.5 flex items-center justify-between text-[11px] text-[#141c2e]/60 dark:text-slate-400">
+                  <span className="truncate mr-2 font-sans">
                     Mail will be sent to:{' '}
-                    <strong className="text-white font-mono">
+                    <strong className="text-[#141c2e] dark:text-white font-mono font-semibold">
                       {cleanIdentifier ? `${cleanIdentifier}@${targetDomain}` : `[id]@${targetDomain}`}
                     </strong>
                   </span>
-                  <span className="text-[10px] font-semibold text-emerald-400 shrink-0 flex items-center gap-1">
+                  <span className="text-[10px] font-mono font-semibold text-teal-600 dark:text-teal-400 shrink-0 flex items-center gap-1">
                     <CheckCircle2 className="w-3 h-3" /> Locked
                   </span>
                 </div>
@@ -382,7 +401,7 @@ export default function RegisterPage() {
               <button
                 type="submit"
                 disabled={loading || !cleanIdentifier}
-                className="w-full py-3 px-4 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl shadow-lg shadow-indigo-600/30 transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full py-2.5 px-4 text-xs font-semibold text-white bg-[#dc2626] hover:bg-[#b91c1c] rounded-xl shadow-md shadow-red-600/20 transition flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                 <span>{loading ? 'Sending verification code...' : 'Send Verification OTP'}</span>
@@ -393,31 +412,31 @@ export default function RegisterPage() {
           {/* STEP 2: Verify OTP */}
           {step === 2 && (
             <form onSubmit={handleVerifyOtp} className="space-y-4">
-              <div className="p-3.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-300">
-                <div className="flex justify-between items-center mb-1.5">
-                  <span className="text-slate-500 text-[11px]">Verification Email Dispatched:</span>
+              <div className="p-3.5 rounded-xl bg-white dark:bg-slate-900 border border-[#141c2e]/10 dark:border-slate-800 text-xs text-[#141c2e]/80 dark:text-slate-300">
+                <div className="flex justify-between items-center mb-1.5 font-mono">
+                  <span className="text-[#141c2e]/60 dark:text-slate-400 text-[11px]">Verification Email Dispatched:</span>
                   <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
                       selectedRole === UserRole.STUDENT
-                        ? 'bg-indigo-500/20 text-indigo-300'
-                        : 'bg-emerald-500/20 text-emerald-300'
+                        ? 'bg-red-500/10 text-red-700 dark:text-red-300 border-red-500/20'
+                        : 'bg-teal-500/10 text-teal-700 dark:text-teal-300 border-teal-500/20'
                     }`}
                   >
                     {selectedRole}
                   </span>
                 </div>
-                <p className="font-bold text-white font-mono text-sm">{email}</p>
-                <p className="text-[11px] text-indigo-400 mt-2">
+                <p className="font-bold text-[#141c2e] dark:text-white font-mono text-sm">{email}</p>
+                <p className="text-[11px] text-teal-700 dark:text-teal-400 mt-2 font-sans">
                   💡 A 6-digit verification code has been dispatched to your email address.
                 </p>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-mono font-medium text-[#141c2e]/80 dark:text-slate-300 mb-1 uppercase tracking-wider">
                   Enter 6-Digit Verification Code
                 </label>
                 <div className="relative">
-                  <KeyRound className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <KeyRound className="w-4 h-4 text-[#141c2e]/40 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     required
@@ -425,18 +444,18 @@ export default function RegisterPage() {
                     value={otp}
                     onChange={(e) => setOtp(e.target.value)}
                     placeholder="123456"
-                    className="w-full pl-10 pr-4 py-2.5 text-center font-mono tracking-widest text-sm bg-slate-900 border border-slate-700 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition"
+                    className="w-full pl-10 pr-4 py-2.5 text-center font-mono tracking-widest text-sm bg-white dark:bg-slate-900 border border-[#141c2e]/20 dark:border-slate-700 text-[#141c2e] dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-[#dc2626] transition"
                   />
                 </div>
               </div>
 
               <div className="flex items-center justify-between text-xs px-0.5">
-                <span className="text-slate-400 text-[11px]">Didn&apos;t receive code?</span>
+                <span className="text-[#141c2e]/60 dark:text-slate-400 text-[11px]">Didn&apos;t receive code?</span>
                 <button
                   type="button"
                   onClick={handleResendOtp}
                   disabled={loading || resendCountdown > 0}
-                  className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 disabled:text-slate-600 disabled:cursor-not-allowed transition flex items-center gap-1"
+                  className="text-xs font-mono font-semibold text-[#dc2626] hover:text-[#b91c1c] disabled:text-slate-400 disabled:cursor-not-allowed transition flex items-center gap-1"
                 >
                   <RotateCcw className="w-3 h-3" />
                   <span>{resendCountdown > 0 ? `Resend in ${resendCountdown}s` : 'Resend Code'}</span>
@@ -450,14 +469,14 @@ export default function RegisterPage() {
                     setStep(1);
                     setError(null);
                   }}
-                  className="w-1/3 py-2.5 px-3 text-xs font-semibold text-slate-400 bg-slate-900 hover:bg-slate-800 rounded-xl border border-slate-800 transition"
+                  className="w-1/3 py-2.5 px-3 text-xs font-medium text-[#141c2e]/70 dark:text-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl border border-[#141c2e]/12 dark:border-slate-800 transition"
                 >
                   Back
                 </button>
                 <button
                   type="submit"
                   disabled={loading || otp.length < 6}
-                  className="w-2/3 py-2.5 px-4 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl shadow-lg shadow-indigo-600/30 transition flex items-center justify-center gap-2 disabled:opacity-50"
+                  className="w-2/3 py-2.5 px-4 text-xs font-semibold text-white bg-[#dc2626] hover:bg-[#b91c1c] rounded-xl shadow-md shadow-red-600/20 transition flex items-center justify-center gap-2 disabled:opacity-50"
                 >
                   {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                   <span>Verify OTP</span>
@@ -469,30 +488,30 @@ export default function RegisterPage() {
           {/* STEP 3: Confirm Profile & Set Password */}
           {step === 3 && (
             <form onSubmit={handleFinalizeRegistration} className="space-y-4">
-              <div className="p-4 rounded-xl bg-indigo-950/40 border border-indigo-500/30 space-y-2">
-                <div className="flex items-center justify-between border-b border-indigo-500/20 pb-2">
-                  <span className="text-[10px] uppercase font-bold text-indigo-400 tracking-wider">
+              <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-[#141c2e]/12 dark:border-slate-800 space-y-2">
+                <div className="flex items-center justify-between border-b border-[#141c2e]/10 dark:border-slate-800 pb-2">
+                  <span className="text-[10px] font-mono uppercase font-bold text-[#dc2626] tracking-wider">
                     {selectedRole === UserRole.STUDENT ? 'Verified Student Record' : 'Verified Faculty Profile'}
                   </span>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-teal-500/15 text-teal-700 dark:text-teal-300 border border-teal-500/30">
                     Verified @{targetDomain}
                   </span>
                 </div>
 
                 <div className="text-xs space-y-1">
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Email:</span>
-                    <span className="font-bold text-white">{email}</span>
+                    <span className="text-[#141c2e]/60 dark:text-slate-400">Email:</span>
+                    <span className="font-mono font-bold text-[#141c2e] dark:text-white">{email}</span>
                   </div>
                   {studentDetails && (
                     <>
                       <div className="flex justify-between">
-                        <span className="text-slate-400">Name:</span>
-                        <span className="font-bold text-white">{studentDetails.name}</span>
+                        <span className="text-[#141c2e]/60 dark:text-slate-400">Name:</span>
+                        <span className="font-bold text-[#141c2e] dark:text-white">{studentDetails.name}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-slate-400">Enrollment:</span>
-                        <span className="font-bold font-mono text-indigo-300">
+                        <span className="text-[#141c2e]/60 dark:text-slate-400">Enrollment:</span>
+                        <span className="font-bold font-mono text-[#dc2626]">
                           {studentDetails.enrollmentNumber}
                         </span>
                       </div>
@@ -500,8 +519,8 @@ export default function RegisterPage() {
                   )}
                   {staffDetails && (
                     <div className="flex justify-between">
-                      <span className="text-slate-400">Role:</span>
-                      <span className="font-bold text-emerald-400">{selectedRole}</span>
+                      <span className="text-[#141c2e]/60 dark:text-slate-400">Role:</span>
+                      <span className="font-bold text-teal-700 dark:text-teal-400">{selectedRole}</span>
                     </div>
                   )}
                 </div>
@@ -509,23 +528,23 @@ export default function RegisterPage() {
 
               {/* Faculty Subject Allocation */}
               {selectedRole === UserRole.FACULTY && (
-                <div className="p-4 rounded-xl bg-slate-900 border border-emerald-500/30 space-y-3">
-                  <div className="flex items-center gap-2 text-emerald-400 font-bold text-xs">
-                    <BookOpen className="w-4 h-4 text-emerald-400 shrink-0" />
-                    <span>Designated Teaching Subject (Fixed Allocation)</span>
+                <div className="p-4 rounded-xl bg-teal-50/50 dark:bg-teal-950/20 border border-teal-500/30 space-y-3">
+                  <div className="flex items-center gap-2 text-teal-800 dark:text-teal-400 font-bold text-xs font-mono">
+                    <BookOpen className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0" />
+                    <span>Designated Teaching Subject</span>
                   </div>
-                  <div className="text-[11px] text-slate-300 bg-emerald-950/30 p-2.5 rounded-lg border border-emerald-500/20 leading-relaxed">
-                    ⚠️ <strong>Permanent Assignment:</strong> You will be registered exclusively for this subject. All your assessments, question banks, AI question generators, and class analytics will be restricted strictly to this subject.
+                  <div className="text-[11px] text-[#141c2e]/80 dark:text-slate-300 bg-white/70 dark:bg-slate-900/60 p-2.5 rounded-lg border border-teal-500/20 leading-relaxed font-sans">
+                    ⚠️ <strong>Permanent Assignment:</strong> You will be registered exclusively for this subject. Assessments and analytics will align with this subject.
                   </div>
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                    <label className="block text-[11px] font-semibold text-[#141c2e]/80 dark:text-slate-300 mb-1">
                       Which subject are you teaching?
                     </label>
                     <select
                       value={selectedCourseId}
                       onChange={(e) => setSelectedCourseId(e.target.value)}
                       required
-                      className="w-full px-3 py-2.5 text-xs bg-slate-950 border border-slate-700 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:border-emerald-500 transition cursor-pointer"
+                      className="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-[#141c2e]/20 dark:border-slate-700 text-[#141c2e] dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500/40 focus:border-teal-500 transition cursor-pointer"
                     >
                       <option value="" disabled>-- Select Your Teaching Subject --</option>
                       {courses.map((c) => (
@@ -536,17 +555,17 @@ export default function RegisterPage() {
                     </select>
                   </div>
                   {courses.find((c) => c.id === selectedCourseId) && (
-                    <div className="p-2.5 rounded-lg bg-slate-950 border border-slate-800 text-[11px] flex justify-between items-center">
+                    <div className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-[#141c2e]/10 dark:border-slate-800 text-[11px] flex justify-between items-center">
                       <div>
-                        <div className="font-bold text-white">
+                        <div className="font-bold text-[#141c2e] dark:text-white font-mono">
                           {courses.find((c) => c.id === selectedCourseId)?.code} - {courses.find((c) => c.id === selectedCourseId)?.name}
                         </div>
-                        <div className="text-[10px] text-slate-400">
-                          Semester {courses.find((c) => c.id === selectedCourseId)?.semester} &bull; Department of Computer Engineering
+                        <div className="text-[10px] text-[#141c2e]/60 dark:text-slate-400">
+                          Semester {courses.find((c) => c.id === selectedCourseId)?.semester} &bull; Computer Engineering
                         </div>
                       </div>
-                      <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold text-[10px] shrink-0 border border-emerald-500/30">
-                        Assigned Subject
+                      <span className="px-2 py-0.5 rounded bg-teal-500/15 text-teal-700 dark:text-teal-300 font-mono font-bold text-[10px] shrink-0 border border-teal-500/30">
+                        Assigned
                       </span>
                     </div>
                   )}
@@ -554,11 +573,11 @@ export default function RegisterPage() {
               )}
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-medium text-[#141c2e]/80 dark:text-slate-300 mb-1">
                   Create Password
                 </label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <Lock className="w-4 h-4 text-[#141c2e]/40 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="password"
                     required
@@ -566,17 +585,17 @@ export default function RegisterPage() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="At least 6 characters"
-                    className="w-full pl-10 pr-4 py-2.5 text-xs bg-slate-900 border border-slate-700 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition"
+                    className="w-full pl-10 pr-4 py-2.5 text-xs bg-white dark:bg-slate-900 border border-[#141c2e]/20 dark:border-slate-700 text-[#141c2e] dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-[#dc2626] transition"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">
+                <label className="block text-xs font-medium text-[#141c2e]/80 dark:text-slate-300 mb-1">
                   Confirm Password
                 </label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <Lock className="w-4 h-4 text-[#141c2e]/40 dark:text-slate-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="password"
                     required
@@ -584,7 +603,7 @@ export default function RegisterPage() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Repeat password"
-                    className="w-full pl-10 pr-4 py-2.5 text-xs bg-slate-900 border border-slate-700 text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 transition"
+                    className="w-full pl-10 pr-4 py-2.5 text-xs bg-white dark:bg-slate-900 border border-[#141c2e]/20 dark:border-slate-700 text-[#141c2e] dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-[#dc2626] transition"
                   />
                 </div>
               </div>
@@ -592,7 +611,7 @@ export default function RegisterPage() {
               <button
                 type="submit"
                 disabled={loading || password.length < 6}
-                className="w-full py-3 px-4 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 rounded-xl shadow-lg shadow-indigo-600/30 transition transform hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full py-2.5 px-4 text-xs font-semibold text-white bg-[#dc2626] hover:bg-[#b91c1c] rounded-xl shadow-md shadow-red-600/20 transition flex items-center justify-center gap-2 disabled:opacity-50"
               >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                 <span>Activate Account & Proceed</span>
@@ -600,9 +619,9 @@ export default function RegisterPage() {
             </form>
           )}
 
-          <div className="mt-5 text-center text-xs text-slate-400">
+          <div className="mt-5 text-center text-xs text-[#141c2e]/60 dark:text-slate-400">
             <span>Already registered? </span>
-            <Link href="/auth/login" className="font-bold text-indigo-400 hover:underline">
+            <Link href="/auth/login" className="font-semibold text-[#dc2626] hover:underline">
               Sign In
             </Link>
           </div>

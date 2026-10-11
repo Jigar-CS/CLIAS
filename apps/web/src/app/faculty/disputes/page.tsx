@@ -131,7 +131,7 @@ export default function FacultyDisputesPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex font-sans">
+    <div className="min-h-screen bg-transparent text-[#1a2540] dark:text-[#e8edf5] flex font-sans relative z-10">
       <Sidebar />
 
       <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${isPinned ? 'pl-64' : 'pl-[72px]'}`}>
@@ -140,57 +140,60 @@ export default function FacultyDisputesPage() {
           subtitle="Human-in-the-loop review of AI & curriculum questions challenged by students"
         />
 
-        <main className="p-6 md:p-8 max-w-7xl w-full mx-auto space-y-6">
-          {/* Header Banner */}
-          <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-amber-500/20 p-6 sm:p-8 shadow-xs dark:shadow-2xl">
-            <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="relative z-10">
-              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30 inline-flex items-center gap-1.5 mb-2">
-                <ShieldAlert className="w-3.5 h-3.5" />
-                Human-in-the-Loop Quality Assurance
-              </span>
-              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                Student Question Disputes & Review
+        <main className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6 sm:space-y-8 animate-in fade-in duration-200">
+          {/* Gleam-Spark Page Intro Banner */}
+          <div className="page-intro">
+            <div>
+              <p className="mono">FACULTY / MODERATION / 03</p>
+              <h1 className="page-title display">
+                QUESTION <span className="coral">DISPUTES.</span>
               </h1>
-              <p className="text-slate-600 dark:text-slate-400 text-xs sm:text-sm mt-1 max-w-2xl leading-relaxed">
-                When students dispute a question&apos;s answer or AI reasoning, review their claims here. Approving a dispute retroactively adjusts their topic mastery score and notifies them in real time.
-              </p>
+            </div>
+            <div className="readiness">
+              <p className="mono">PENDING QUEUE</p>
+              <strong>
+                {pendingCount}
+                <span>ITEMS</span>
+              </strong>
+              <p className="mono blue">{pendingCount > 0 ? 'HUMAN REVIEW REQUIRED' : 'ALL DISPUTES RESOLVED'}</p>
             </div>
           </div>
 
-          {/* Metrics Overview */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <MetricCard
-              title="Pending Review"
-              value={pendingCount}
-              subtitle="Requires faculty decision"
-              trend={pendingCount > 0 ? { value: 'Needs Action', isPositive: false } : { value: 'All Clear', isPositive: true }}
-              color="amber"
-              icon={Clock}
-            />
-            <MetricCard
-              title="Disputes Upheld"
-              value={approvedCount}
-              subtitle="Student answer verified"
-              trend={{ value: 'Mastery Credited', isPositive: true }}
-              color="emerald"
-              icon={CheckCircle2}
-            />
-            <MetricCard
-              title="Disputes Dismissed"
-              value={rejectedCount}
-              subtitle="AI / Original verified"
-              trend={{ value: 'Feedback Delivered', isPositive: true }}
-              color="rose"
-              icon={XCircle}
-            />
-            <MetricCard
-              title="Total Moderated"
-              value={disputes.length}
-              subtitle="All historical reports"
-              color="indigo"
-              icon={BookOpen}
-            />
+          {/* Gleam-Spark 4-Column Metrics Bar */}
+          <div className="metrics">
+            <div className="metric">
+              <div className="metric-top mono"><span>01</span><span className="coral">PENDING</span></div>
+              <div className="metric-value">{pendingCount}</div>
+              <div className="metric-label mono">AWAITING REVIEW</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>02</span><span>UPHELD</span></div>
+              <div className="metric-value">{approvedCount}</div>
+              <div className="metric-label mono">STUDENT VERIFIED</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>03</span><span>DISMISSED</span></div>
+              <div className="metric-value">{rejectedCount}</div>
+              <div className="metric-label mono">ORIGINAL UPHELD</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>04</span><span className="blue">TOTAL</span></div>
+              <div className="metric-value">{disputes.length}</div>
+              <div className="metric-label mono">ALL MODERATED</div>
+            </div>
+          </div>
+
+          {/* Gleam-Spark Priority Band Callout */}
+          <div className="priority-band">
+            <div className="priority-symbol">!</div>
+            <div className="priority-content">
+              <p className="mono">HUMAN-IN-THE-LOOP / QUALITY ASSURANCE</p>
+              <h2 className="display">CURRICULUM ITEM DISPUTE MODERATION</h2>
+              <p>When students dispute a question or AI reasoning, review their claims here. Approving a dispute retroactively adjusts their topic mastery score.</p>
+            </div>
+            <span className="font-mono text-xs px-3 py-1.5 border border-[var(--primary)] text-[var(--primary)] uppercase tracking-wider shrink-0">
+              {pendingCount} Needs Review
+            </span>
           </div>
 
           {/* Filter Bar */}

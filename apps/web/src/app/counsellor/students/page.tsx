@@ -206,13 +206,6 @@ export default function CounsellorAssignedStudentsPage() {
           alerts: m.alerts || [],
         }));
 
-        mapped.sort((a, b) =>
-          (a.enrollmentNumber || '').localeCompare(b.enrollmentNumber || '', undefined, {
-            numeric: true,
-            sensitivity: 'base',
-          }),
-        );
-
         setStudents(mapped);
       } else {
         setStudents([]);
@@ -224,23 +217,16 @@ export default function CounsellorAssignedStudentsPage() {
     }
   };
 
-  const filteredStudents = students
-    .filter((s) => {
-      const term = searchTerm.toLowerCase();
-      const matchesSearch =
-        s.name.toLowerCase().includes(term) ||
-        s.enrollmentNumber.toLowerCase().includes(term) ||
-        s.email.toLowerCase().includes(term);
-      const matchesDivision = divisionFilter === 'ALL' || s.division === divisionFilter;
-      const matchesStatus = statusFilter === 'ALL' || s.status === statusFilter;
-      return matchesSearch && matchesDivision && matchesStatus;
-    })
-    .sort((a, b) =>
-      (a.enrollmentNumber || '').localeCompare(b.enrollmentNumber || '', undefined, {
-        numeric: true,
-        sensitivity: 'base',
-      }),
-    );
+  const filteredStudents = students.filter((s) => {
+    const term = searchTerm.toLowerCase();
+    const matchesSearch =
+      s.name.toLowerCase().includes(term) ||
+      s.enrollmentNumber.toLowerCase().includes(term) ||
+      s.email.toLowerCase().includes(term);
+    const matchesDivision = divisionFilter === 'ALL' || s.division === divisionFilter;
+    const matchesStatus = statusFilter === 'ALL' || s.status === statusFilter;
+    return matchesSearch && matchesDivision && matchesStatus;
+  });
 
   const getStatusBadge = (st: string) => {
     switch (st) {
@@ -300,7 +286,7 @@ export default function CounsellorAssignedStudentsPage() {
       : 100;
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 flex text-slate-900 dark:text-slate-100 font-sans">
+    <div className="min-h-screen bg-transparent text-[#1a2540] dark:text-[#e8edf5] flex font-sans relative z-10">
       <Sidebar />
 
       <div className="flex-1 ml-64 flex flex-col min-w-0">
@@ -309,59 +295,60 @@ export default function CounsellorAssignedStudentsPage() {
           subtitle="Direct mentorship cohort strictly assigned to you via institutional roster"
         />
 
-        <main className="p-8 max-w-7xl w-full mx-auto space-y-8 animate-in fade-in duration-200">
-          {/* Top Info Banner */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
+        <main className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6 sm:space-y-8 animate-in fade-in duration-200">
+          {/* Gleam-Spark Page Intro Banner */}
+          <div className="page-intro">
             <div>
-              <div className="flex items-center gap-2 mb-1">
-                <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                  Assigned Student Roster
-                </h2>
-                <span className="px-2.5 py-0.5 text-xs font-bold rounded-full bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-                  {students.length > 0 ? `Active Mentee Cohort (${students.length})` : 'Mentee Cohort'}
-                </span>
-              </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Continuous academic progress telemetry, live practice tracking, and AI proctoring integrity auditing strictly for your assigned students.
-              </p>
+              <p className="mono">COUNSELLOR / MENTEES / 02</p>
+              <h1 className="page-title display">
+                ASSIGNED <span className="coral">MENTEES.</span>
+              </h1>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 text-indigo-700 dark:text-indigo-300 border border-slate-200 dark:border-slate-800 shadow-xs">
-                Total Assigned: {students.length} Mentees
-              </span>
+            <div className="readiness">
+              <p className="mono">COHORT TRUST</p>
+              <strong>
+                {avgTrust}
+                <span>%</span>
+              </strong>
+              <p className="mono blue">{totalAtRisk > 0 ? `${totalAtRisk} AT-RISK STUDENTS` : 'ALL MENTEES ON TRACK'}</p>
             </div>
           </div>
 
-          {/* Metric Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <MetricCard
-              title="Assigned Students"
-              value={totalAssigned}
-              subtitle="Direct Mentorship Allocation"
-              icon={Users}
-              color="indigo"
-            />
-            <MetricCard
-              title="Practice Questions Solved"
-              value={totalPracticeQuestions}
-              subtitle="Mentee Practice Activity"
-              icon={Activity}
-              color="blue"
-            />
-            <MetricCard
-              title="Proctoring Trust Average"
-              value={`${avgTrust}%`}
-              subtitle={totalCohortViolations > 0 ? `${totalCohortViolations} Integrity Flags Recorded` : 'Clean Audit History'}
-              icon={ShieldCheck}
-              color={avgTrust >= 80 ? 'emerald' : 'amber'}
-            />
-            <MetricCard
-              title="Intervention Required"
-              value={totalAtRisk}
-              subtitle="At-Risk Alerts Active"
-              icon={AlertTriangle}
-              color="rose"
-            />
+          {/* Gleam-Spark 4-Column Metrics Bar */}
+          <div className="metrics">
+            <div className="metric">
+              <div className="metric-top mono"><span>01</span><span>ALLOCATED</span></div>
+              <div className="metric-value">{totalAssigned}</div>
+              <div className="metric-label mono">ASSIGNED MENTEES</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>02</span><span className="coral">PRACTICE</span></div>
+              <div className="metric-value">{totalPracticeQuestions}</div>
+              <div className="metric-label mono">QUESTIONS SOLVED</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>03</span><span>AUDIT</span></div>
+              <div className="metric-value">{avgTrust}%</div>
+              <div className="metric-label mono">PROCTORING TRUST AVG</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>04</span><span className="coral">ACTION</span></div>
+              <div className="metric-value">{totalAtRisk}</div>
+              <div className="metric-label mono">INTERVENTION REQUIRED</div>
+            </div>
+          </div>
+
+          {/* Gleam-Spark Priority Band Callout */}
+          <div className="priority-band">
+            <div className="priority-symbol">!</div>
+            <div className="priority-content">
+              <p className="mono">ACADEMIC TELEMETRY / MENTORSHIP</p>
+              <h2 className="display">DIRECT MENTEE COHORT MONITORING</h2>
+              <p>Continuous academic progress telemetry, live practice tracking, and AI proctoring integrity auditing strictly for your assigned students.</p>
+            </div>
+            <span className="font-mono text-xs px-3 py-1.5 border border-[var(--primary)] text-[var(--primary)] uppercase tracking-wider shrink-0">
+              {students.length} Mentees Active
+            </span>
           </div>
 
           {/* Search & Filter Toolbar */}

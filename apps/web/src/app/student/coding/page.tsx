@@ -190,48 +190,69 @@ export default function CodingProblemsPage() {
   });
 
   return (
-    <div className="flex bg-slate-50 dark:bg-slate-950 min-h-screen text-slate-800 dark:text-slate-100 font-sans">
+    <div className="flex bg-transparent min-h-screen text-[#1a2540] dark:text-[#e8edf5] font-sans relative z-10">
       <Sidebar />
       <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${isPinned ? 'lg:pl-64' : 'lg:pl-[72px]'} pl-0`}>
         <Navbar />
 
-        <main className="p-3 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6">
-          {/* Header Banner */}
-          <div className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xs relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-96 h-96 bg-blue-500/10 dark:bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
+        <main className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6 sm:space-y-8">
+          {/* Gleam-Spark Page Intro */}
+          <div className="page-intro">
+            <div>
+              <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-[9px] uppercase mb-2">
+                LEARNING INTELLIGENCE / CODING ARENA / 01
+              </p>
+              <h1 className="page-title font-display text-5xl sm:text-6xl text-[#1a2540] dark:text-[#f5f0e8] uppercase tracking-tight">
+                CODING ARENA
+              </h1>
+            </div>
+            <div className="readiness">
+              <p className="mono text-[8px] uppercase tracking-wider text-[#6b7fa3]">ACCEPTED SOLUTIONS</p>
+              <strong className="font-display text-4xl text-[#1a2540] dark:text-[#f5f0e8]">
+                {submissions.filter((s) => s.status === 'ACCEPTED').length}<span className="font-mono text-sm text-[#e05033]">/{problems.length}</span>
+              </strong>
+              <p className="mono text-[8px] text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">SANDBOXED RUNTIME</p>
+            </div>
+          </div>
 
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 relative z-10">
-              <div className="space-y-2">
-                <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300">
-                  <Terminal className="w-3.5 h-3.5" />
-                  <span>Real Sandboxed Code Execution</span>
-                </div>
-                <h1 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight flex items-center gap-2.5">
-                  <Terminal className="w-7 h-7 text-blue-600 dark:text-blue-400" />
-                  Coding Arena
-                </h1>
-                <p className="text-xs text-slate-600 dark:text-slate-400 max-w-2xl leading-relaxed">
-                  Solve curated algorithmic problems with real-time automated test-case evaluation, hidden edge-case assertions, persistent submission history, and instant scoring.
-                </p>
-              </div>
+          {/* Gleam-Spark 4-Column Metric Band */}
+          <div className="metrics">
+            <div className="metric">
+              <div className="metric-top mono"><span>01</span><span className="text-[#e05033]">ACCEPTED</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{submissions.filter((s) => s.status === 'ACCEPTED').length}</div>
+              <div className="metric-label mono">SOLVED CHALLENGES</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>02</span><span className="text-[#4a6fa5]">PROBLEMS</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{problems.length}</div>
+              <div className="metric-label mono">CURRICULUM POOL</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>03</span><span>SUBMISSIONS</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{submissions.length}</div>
+              <div className="metric-label mono">TOTAL ATTEMPTS</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>04</span><span className="text-[#4a6fa5]">RUNTIME</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">SANDBOX</div>
+              <div className="metric-label mono">EDGE-CASE ASSERTIONS</div>
+            </div>
+          </div>
 
-              {/* Quick Summary Stats */}
-              <div className="flex items-center gap-4 bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800/80 p-3.5 rounded-xl">
-                <div className="text-center px-3 border-r border-slate-200 dark:border-slate-800">
-                  <span className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-400">
-                    {submissions.filter((s) => s.status === 'ACCEPTED').length}
-                  </span>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-semibold mt-0.5">Accepted</p>
-                </div>
-                <div className="text-center px-3 border-r border-slate-200 dark:border-slate-800">
-                  <span className="text-2xl font-extrabold text-blue-600 dark:text-blue-400">{problems.length}</span>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-semibold mt-0.5">Problems</p>
-                </div>
-                <div className="text-center px-3">
-                  <span className="text-2xl font-extrabold text-purple-600 dark:text-purple-400">{submissions.length}</span>
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-semibold mt-0.5">Submissions</p>
-                </div>
-              </div>
+          {/* Gleam-Spark Priority Band */}
+          <div className="priority-band">
+            <div className="priority-symbol">!</div>
+            <div className="priority-content">
+              <p className="mono text-[#e05033] text-[9px]">DSA SPRINT / REAL SANDBOX EXECUTION</p>
+              <h2 className="font-display text-xl uppercase tracking-wide">ALGORITHMIC TEST EVALUATION</h2>
+              <p className="text-xs text-[#8ba0c0] font-sans">
+                Curated algorithmic problems evaluated against hidden boundary cases, time complexity limits, and memory constraints.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="px-3 py-1.5 bg-[#1a2540] text-[#e8edf5] border border-[rgba(106,144,197,0.3)] text-xs font-mono uppercase tracking-wider">
+                COMPUTE ONLINE
+              </span>
             </div>
           </div>
 

@@ -360,9 +360,6 @@ export default function FacultyAssessmentsPage() {
     setQuestionSearch('');
     setQuestionSourceWorkflow('BANK');
     setNewStatus('DRAFT');
-    const activeCourseCode = courses.find((c: any) => c.id === selectedCourseId)?.code || 'ASM';
-    setNewCode(`${activeCourseCode}-${Date.now().toString().slice(-4)}`);
-    setNewTitle(`${activeCourseCode} Continuous Evaluation Assessment`);
     setRagFile(null);
     setRagExtractError(null);
     setRagExtractProgress(null);
@@ -932,19 +929,15 @@ export default function FacultyAssessmentsPage() {
 
     setCreating(true);
     try {
-      const activeCourseCode = courses.find((c: any) => c.id === selectedCourseId)?.code || 'ASM';
-      const cleanCode = (newCode || '').trim() || `${activeCourseCode}-${Date.now().toString().slice(-4)}`;
-      const cleanTitle = (newTitle || '').trim() || `${activeCourseCode} Assessment`;
-
       await api.post('/assessments', {
-        title: cleanTitle,
-        code: cleanCode,
+        title: newTitle,
+        code: newCode || `ASM-${Date.now().toString().slice(-4)}`,
         courseId: selectedCourseId,
         type: newType,
         division: newDivision,
-        durationMinutes: Number(newDuration) > 0 ? Number(newDuration) : 30,
-        totalMarks: Number(newTotalMarks) > 0 ? Number(newTotalMarks) : 100,
-        passingMarks: Number(newPassingMarks) > 0 ? Number(newPassingMarks) : 40,
+        durationMinutes: Number(newDuration),
+        totalMarks: Number(newTotalMarks),
+        passingMarks: Number(newPassingMarks),
         examMode,
         status: newStatus,
         questionIds: examMode === 'CODING' ? [] : selectedQuestionIds,
@@ -967,7 +960,7 @@ export default function FacultyAssessmentsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0B0F19] text-slate-100 flex">
+    <div className="min-h-screen bg-transparent text-[#1a2540] dark:text-[#e8edf5] flex relative z-10">
       <Sidebar />
 
       <div className="flex-1 ml-64 flex flex-col min-w-0">
@@ -977,27 +970,69 @@ export default function FacultyAssessmentsPage() {
         />
 
         <main className="p-4 sm:p-6 lg:p-8 max-w-6xl w-full mx-auto space-y-6">
-          {/* Header Action Bar */}
-          <div className="bg-[#111827] rounded-2xl p-6 border border-slate-800 shadow-lg flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          {/* Gleam-Spark Page Intro */}
+          <div className="page-intro">
             <div>
-              <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
-                <FileText className="w-5 h-5 text-indigo-400" />
-                Department Assessment Authoring
-              </h2>
-              <p className="text-xs text-slate-400 mt-1">
-                Configure timed assessments, select curriculum questions, and allocate to specific divisions.
+              <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-[9px] uppercase mb-2">
+                ACADEMIC INTELLIGENCE / EXAM STUDIO / 01
+              </p>
+              <h1 className="page-title font-display text-5xl sm:text-6xl text-[#1a2540] dark:text-[#f5f0e8] uppercase tracking-tight">
+                ASSESSMENT STUDIO
+              </h1>
+            </div>
+            <div className="readiness">
+              <p className="mono text-[8px] uppercase tracking-wider text-[#6b7fa3]">EXAM ENGINE</p>
+              <strong className="font-display text-4xl text-[#1a2540] dark:text-[#f5f0e8]">
+                {assessments.filter((a) => a.status === 'PUBLISHED').length}<span className="font-mono text-sm text-[#e05033]">/{assessments.length}</span>
+              </strong>
+              <p className="mono text-[8px] text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">PUBLISHED ASSESSMENTS</p>
+            </div>
+          </div>
+
+          {/* Gleam-Spark 4-Column Metric Band */}
+          <div className="metrics">
+            <div className="metric">
+              <div className="metric-top mono"><span>01</span><span className="text-[#e05033]">ACTIVE</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{assessments.length}</div>
+              <div className="metric-label mono">TOTAL ASSESSMENTS</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>02</span><span className="text-[#4a6fa5]">COURSES</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{courses.length}</div>
+              <div className="metric-label mono">ALLOCATED COURSES</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>03</span><span>SECURITY</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">SECURE</div>
+              <div className="metric-label mono">PROCTORED EVALUATION</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>04</span><span className="text-[#4a6fa5]">STATUS</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">ONLINE</div>
+              <div className="metric-label mono">ACADEMIC NETWORK</div>
+            </div>
+          </div>
+
+          {/* Gleam-Spark Priority Band with Create Button and Course Selector */}
+          <div className="priority-band">
+            <div className="priority-symbol">!</div>
+            <div className="priority-content">
+              <p className="mono text-[#e05033] text-[9px]">DEPARTMENT ASSESSMENT AUTHORING</p>
+              <h2 className="font-display text-xl uppercase tracking-wide">CONFIGURE & DISPATCH ASSESSMENTS</h2>
+              <p className="text-xs text-[#8ba0c0] font-sans">
+                Author formal quizzes, scheduled mid-terms, and evaluate class performance with automated proctoring.
               </p>
             </div>
-
-            <div className="flex items-center gap-3">
-              {courses.length > 1 ? (
+            <div className="flex items-center gap-3 shrink-0">
+              {courses.length > 1 && (
                 <select
                   value={selectedCourseId}
                   onChange={(e) => {
                     setSelectedCourseId(e.target.value);
                     loadCourseAssessments(e.target.value);
                   }}
-                  className="p-2.5 text-xs font-semibold bg-[#1E293B] border border-slate-700 rounded-xl text-white focus:outline-none focus:border-indigo-500 cursor-pointer"
+                  className="bg-[#1a2540] text-white border border-[rgba(106,144,197,0.3)] text-xs font-mono px-3 py-2 uppercase"
+                  style={{ borderRadius: 0 }}
                 >
                   {courses.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -1005,36 +1040,28 @@ export default function FacultyAssessmentsPage() {
                     </option>
                   ))}
                 </select>
-              ) : courses.length === 1 ? (
-                <div className="px-3.5 py-2 bg-emerald-950/60 border border-emerald-500/30 rounded-xl text-emerald-200 text-xs font-bold flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-                  <span>
-                    Subject: {courses[0].code} - {courses[0].name}
-                  </span>
-                  <span className="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 ml-1">Fixed</span>
-                </div>
-              ) : null}
-
+              )}
               <button
                 type="button"
                 onClick={openCreateModal}
-                className="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold rounded-xl shadow-lg shadow-indigo-600/30 transition transform hover:-translate-y-0.5"
+                className="action-button bg-[#e05033] hover:bg-[#c93f24] text-white shrink-0"
+                style={{ borderRadius: 0 }}
               >
-                <Plus className="w-4 h-4" />
-                <span>Create Assessment</span>
+                <Plus className="w-4 h-4 mr-2" />
+                <span>CREATE ASSESSMENT</span>
               </button>
             </div>
           </div>
 
           {/* Assessment Cards */}
           {loading ? (
-            <div className="p-16 text-center text-xs font-semibold text-slate-400 flex items-center justify-center gap-2">
-              <Loader2 className="w-5 h-5 animate-spin text-indigo-400" />
+            <div className="p-16 text-center text-xs font-mono font-semibold text-slate-400 flex items-center justify-center gap-2">
+              <Loader2 className="w-5 h-5 animate-spin text-[#e05033]" />
               <span>Loading assessments...</span>
             </div>
           ) : assessments.length === 0 ? (
-            <div className="rounded-2xl border border-slate-800 bg-[#111827] p-12 text-center text-slate-400">
-              <FileText className="w-12 h-12 text-slate-600 mx-auto mb-3" />
+            <div className="border border-[rgba(74,111,165,0.25)] dark:border-[rgba(106,144,197,0.2)] bg-[#faf7f2] dark:bg-[#121b30] p-12 text-center text-slate-400" style={{ borderRadius: 0 }}>
+              <FileText className="w-12 h-12 text-[#4a6fa5] mx-auto mb-3" />
               <p className="text-base font-bold text-white">No Assessments Created</p>
               <p className="text-xs text-slate-400 mt-1">Click Create Assessment to launch your first exam.</p>
             </div>
@@ -3067,12 +3094,6 @@ export default function FacultyAssessmentsPage() {
                                 (s.email || '').toLowerCase().includes(searchStudent.toLowerCase());
                               return matchDiv && matchSearch;
                             })
-                            .sort((a: any, b: any) =>
-                              (a.enrollmentNumber || '').localeCompare(b.enrollmentNumber || '', undefined, {
-                                numeric: true,
-                                sensitivity: 'base',
-                              }),
-                            )
                             .map((sub: any) => (
                               <tr key={sub.submissionId || sub.id} className="hover:bg-slate-800/40 transition">
                                 <td className="px-4 py-3.5">

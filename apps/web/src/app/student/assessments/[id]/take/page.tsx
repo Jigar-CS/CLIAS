@@ -1326,33 +1326,33 @@ export default function TakeAssessmentPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-white space-y-4">
-        <Loader2 className="w-10 h-10 animate-spin text-amber-500" />
-        <p className="text-slate-400 text-sm font-medium">Initializing secure assessment environment...</p>
+      <div className="min-h-screen bg-transparent text-[#1a2540] dark:text-[#e8edf5] flex flex-col items-center justify-center space-y-4 relative z-10 font-sans">
+        <Loader2 className="w-10 h-10 animate-spin text-[var(--primary)]" />
+        <p className="font-mono text-xs uppercase tracking-wider text-[var(--muted)]">INITIALIZING SECURE ASSESSMENT ENVIRONMENT...</p>
       </div>
     );
   }
 
   if (testEndedError) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-white font-sans">
-        <div className="max-w-md w-full bg-slate-900 border border-slate-800 p-8 rounded-3xl text-center space-y-5 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-          <div className="w-16 h-16 rounded-2xl bg-rose-500/20 border border-rose-500/40 text-rose-400 flex items-center justify-center mx-auto shadow-lg shadow-rose-950/50">
+      <div className="min-h-screen bg-transparent flex flex-col items-center justify-center p-6 text-[#1a2540] dark:text-[#e8edf5] font-sans relative z-10">
+        <div className="max-w-md w-full panel p-8 text-center space-y-5 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+          <div className="w-16 h-16 bg-rose-500/10 border border-rose-500/30 text-rose-500 flex items-center justify-center mx-auto">
             <Clock className="w-8 h-8" />
           </div>
           <div>
-            <h2 className="text-xl font-bold tracking-tight text-white">Assessment Has Ended</h2>
-            <p className="text-xs text-rose-400 font-semibold mt-1">Examination Window Closed</p>
+            <h2 className="text-xl font-bold font-mono uppercase tracking-wider">ASSESSMENT HAS ENDED</h2>
+            <p className="font-mono text-xs text-rose-500 uppercase tracking-wider mt-1">Examination Window Closed</p>
           </div>
-          <p className="text-xs text-slate-400 leading-relaxed bg-slate-950/60 p-3.5 rounded-2xl border border-slate-800">
+          <p className="text-xs text-[var(--muted)] leading-relaxed panel p-3.5 border border-[var(--grid-line)] font-mono">
             {testEndedError}
           </p>
           <button
             type="button"
             onClick={() => router.push('/student/assessments')}
-            className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-indigo-600/30"
+            className="w-full py-3 bg-[var(--primary)] text-white font-mono text-xs uppercase tracking-wider hover:opacity-90 transition border border-[var(--primary)]"
           >
-            Return to Assessment Hub
+            RETURN TO ASSESSMENT HUB →
           </button>
         </div>
       </div>
@@ -1364,23 +1364,23 @@ export default function TakeAssessmentPage() {
   // ---------------------------------------------------------------------------
   if (showPreFlight) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4">
-        <div className="max-w-2xl w-full bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl space-y-6 animate-in fade-in zoom-in-95 duration-200">
+      <div className="min-h-screen bg-transparent text-[#1a2540] dark:text-[#e8edf5] flex items-center justify-center p-4 relative z-10 font-sans">
+        <div className="max-w-2xl w-full panel p-6 sm:p-8 shadow-2xl space-y-6 animate-in fade-in zoom-in-95 duration-200">
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+          <div className="flex items-center justify-between border-b border-[var(--grid-line)] pb-4">
             <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-xl bg-gradient-to-tr from-amber-600 to-rose-500 text-white shadow-lg shadow-amber-500/20">
+              <div className="p-2.5 bg-[var(--primary)] text-white">
                 <Shield className="w-6 h-6" />
               </div>
               <div>
-                <h1 className="text-xl font-extrabold text-white">AI Proctoring & Pre-Exam Setup</h1>
-                <p className="text-xs text-slate-400">
+                <h1 className="text-xl font-extrabold font-mono uppercase tracking-wider">AI PROCTORING & PRE-EXAM SETUP</h1>
+                <p className="font-mono text-xs text-[var(--muted)]">
                   {examData?.assessment?.title} • {examData?.assessment?.code}
                 </p>
               </div>
             </div>
-            <span className="px-2.5 py-1 text-xs font-mono font-bold rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30">
-              {examData?.assessment?.durationMinutes} Mins
+            <span className="px-2.5 py-1 font-mono text-xs font-bold border border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400">
+              {examData?.assessment?.durationMinutes} MINS
             </span>
           </div>
 
@@ -1550,48 +1550,48 @@ export default function TakeAssessmentPage() {
   // ---------------------------------------------------------------------------
   if (result) {
     return (
-      <div className="min-h-screen bg-slate-950 text-white p-6 sm:p-12">
+      <div className="min-h-screen bg-transparent text-[#1a2540] dark:text-[#e8edf5] p-6 sm:p-12 relative z-10 font-sans">
         <div className="max-w-4xl mx-auto space-y-8">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl p-8 shadow-2xl text-center">
+          <div className="panel p-8 shadow-2xl text-center">
             <div
-              className={`w-16 h-16 rounded-2xl mx-auto flex items-center justify-center mb-4 ${
+              className={`w-16 h-16 mx-auto flex items-center justify-center mb-4 ${
                 result.passed
-                  ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                  : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                  ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/30'
+                  : 'bg-rose-500/10 text-rose-500 border border-rose-500/30'
               }`}
             >
               <Award className="w-8 h-8" />
             </div>
 
-            <span className="text-xs uppercase font-mono font-bold tracking-wider text-slate-400">
+            <span className="font-mono text-xs uppercase font-bold tracking-wider text-[var(--muted)]">
               {result.courseCode} • {result.assessmentCode}
             </span>
-            <h1 className="text-2xl sm:text-3xl font-bold mt-1">{result.assessmentTitle}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold font-mono uppercase tracking-wider mt-1">{result.assessmentTitle}</h1>
 
             <div className="mt-6 flex flex-wrap justify-center gap-4 sm:gap-6">
-              <div className="bg-slate-800/80 px-6 py-4 rounded-2xl border border-slate-700">
-                <span className="text-xs text-slate-400 block font-medium">Your Score</span>
-                <span className="text-2xl font-black text-white">
+              <div className="panel px-6 py-4">
+                <span className="font-mono text-xs text-[var(--muted)] block font-medium">YOUR SCORE</span>
+                <span className="text-2xl font-black font-mono">
                   {result.totalScore} / {result.totalMarks}
                 </span>
               </div>
-              <div className="bg-slate-800/80 px-6 py-4 rounded-2xl border border-slate-700">
-                <span className="text-xs text-slate-400 block font-medium">Percentage</span>
-                <span className="text-2xl font-black text-indigo-400">
+              <div className="panel px-6 py-4">
+                <span className="font-mono text-xs text-[var(--muted)] block font-medium">PERCENTAGE</span>
+                <span className="text-2xl font-black font-mono text-[var(--primary)]">
                   {result.percentage}%
                 </span>
               </div>
-              <div className="bg-slate-800/80 px-6 py-4 rounded-2xl border border-slate-700">
-                <span className="text-xs text-slate-400 block font-medium">Proctoring Trust</span>
-                <span className={`text-2xl font-black font-mono ${trustScore >= 80 ? 'text-emerald-400' : 'text-amber-400'}`}>
+              <div className="panel px-6 py-4">
+                <span className="font-mono text-xs text-[var(--muted)] block font-medium">PROCTORING TRUST</span>
+                <span className={`text-2xl font-black font-mono ${trustScore >= 80 ? 'text-emerald-500' : 'text-amber-500'}`}>
                   {trustScore}%
                 </span>
               </div>
-              <div className="bg-slate-800/80 px-6 py-4 rounded-2xl border border-slate-700">
-                <span className="text-xs text-slate-400 block font-medium">Outcome</span>
+              <div className="panel px-6 py-4">
+                <span className="font-mono text-xs text-[var(--muted)] block font-medium">OUTCOME</span>
                 <span
-                  className={`text-2xl font-black ${
-                    result.passed ? 'text-emerald-400' : 'text-rose-400'
+                  className={`text-2xl font-black font-mono ${
+                    result.passed ? 'text-emerald-500' : 'text-rose-500'
                   }`}
                 >
                   {result.passed ? 'PASSED' : 'RETAKE'}
@@ -1603,10 +1603,10 @@ export default function TakeAssessmentPage() {
               <button
                 type="button"
                 onClick={() => setResultTab('leaderboard')}
-                className={`px-5 py-2.5 rounded-xl font-bold text-xs flex items-center gap-2 transition ${
+                className={`px-5 py-2.5 font-mono text-xs uppercase tracking-wider border transition ${
                   resultTab === 'leaderboard'
-                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30'
-                    : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                    ? 'bg-[var(--primary)] text-white border-[var(--primary)]'
+                    : 'border-[var(--grid-line)] text-[var(--muted)] hover:text-inherit'
                 }`}
               >
                 <Trophy className="w-4 h-4 text-amber-400" />
@@ -1727,7 +1727,7 @@ export default function TakeAssessmentPage() {
 
   return (
     <div
-      className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col transition-colors duration-200 select-none"
+      className="min-h-screen bg-transparent text-[#1a2540] dark:text-[#e8edf5] flex flex-col transition-colors duration-200 select-none relative z-10"
       style={{
         userSelect: 'none',
         WebkitUserSelect: 'none',

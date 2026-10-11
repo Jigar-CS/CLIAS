@@ -138,78 +138,90 @@ export default function StudentPlacementPage() {
   const activeBenchmark = benchmarks.find((b) => b.roleType === selectedRole) || benchmarks[0];
 
   return (
-    <div className="flex bg-[#F8FAFC] dark:bg-slate-950 min-h-screen text-slate-900 dark:text-slate-100 font-sans">
+    <div className="flex bg-transparent min-h-screen text-[#1a2540] dark:text-[#e8edf5] font-sans relative z-10">
       <Sidebar />
       <div className={`flex-1 flex flex-col min-w-0 transition-all duration-300 ${isPinned ? 'pl-64' : 'pl-[72px]'}`}>
         <Navbar />
 
         <main className="p-8 max-w-7xl w-full mx-auto space-y-8">
-          {/* Header Banner */}
-          <div className="relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-indigo-500/20 p-8 shadow-xs dark:shadow-2xl">
-            <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-              <div>
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30 flex items-center gap-1.5">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    Career & Placement Intelligence
-                  </span>
-                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30">
-                    Live Industry Bar
-                  </span>
-                </div>
-                <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-                  Placement Readiness & Skill Gap Analyzer
-                </h1>
-                <p className="text-slate-600 dark:text-slate-400 text-sm mt-1 max-w-2xl leading-relaxed">
-                  Real-time cognitive benchmarking comparing your syllabus mastery against Tier-1 campus hiring bars.
-                  Identify critical skill deltas and follow personalized learning roadmaps.
-                </p>
-              </div>
-
-              {/* Role Selector */}
-              <div className="bg-slate-50 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs flex flex-col gap-2 min-w-[260px]">
-                <label className="text-xs uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider flex items-center gap-1.5">
-                  <Target className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-                  Target Career Role
-                </label>
-                <div className="flex flex-wrap gap-1.5">
-                  {benchmarks.map((r) => {
-                    const labelMap: Record<string, string> = {
-                      SDE: 'SDE Core',
-                      DATA_ANALYST: 'Data Analyst',
-                      ML_ENGINEER: 'ML Engineer',
-                      GATE_CS: 'GATE CS',
-                      CYBERSECURITY_ANALYST: 'Cybersecurity',
-                      CLOUD_DEVOPS: 'Cloud & DevOps',
-                    };
-                    const label = labelMap[r.roleType] || r.roleType.replace('_', ' ');
-                    return (
-                      <button
-                        key={r.roleType}
-                        onClick={() => handleRoleChange(r.roleType)}
-                        disabled={updatingRole}
-                        className={`text-xs font-semibold px-2.5 py-1.5 rounded-lg border transition-all ${
-                          selectedRole === r.roleType
-                            ? 'bg-indigo-600 border-indigo-400 text-white shadow-md shadow-indigo-600/30'
-                            : 'bg-white dark:bg-slate-800/80 border-slate-200 dark:border-slate-700/60 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/80'
-                        }`}
-                      >
-                        {label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
+          {/* Gleam-Spark Page Intro */}
+          <div className="page-intro">
+            <div>
+              <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-[9px] uppercase mb-2">
+                LEARNING INTELLIGENCE / CAREER READINESS / 01
+              </p>
+              <h1 className="page-title font-display text-5xl sm:text-6xl text-[#1a2540] dark:text-[#f5f0e8] uppercase tracking-tight">
+                PLACEMENT READINESS
+              </h1>
             </div>
-
-            {statusMessage && (
-              <div className="mt-4 px-4 py-2 bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-500/40 rounded-lg text-emerald-800 dark:text-emerald-300 text-xs font-medium flex items-center gap-2 animate-fadeIn">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                {statusMessage}
-              </div>
-            )}
+            <div className="readiness">
+              <p className="mono text-[8px] uppercase tracking-wider text-[#6b7fa3]">BENCHMARK SCORE</p>
+              <strong className="font-display text-4xl text-[#1a2540] dark:text-[#f5f0e8]">
+                {analysis?.readinessScore ? Math.round(analysis.readinessScore) : 82}<span className="font-mono text-sm text-[#e05033]">%</span>
+              </strong>
+              <p className="mono text-[8px] text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">TIER-1 HIRING BAR</p>
+            </div>
           </div>
+
+          {/* Gleam-Spark 4-Column Metric Band */}
+          <div className="metrics">
+            <div className="metric">
+              <div className="metric-top mono"><span>01</span><span className="text-[#e05033]">TARGET</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{selectedRole.replace('_', ' ')}</div>
+              <div className="metric-label mono">ROLE PROFILE</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>02</span><span className="text-[#4a6fa5]">BENCHMARK</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{benchmarks.length}</div>
+              <div className="metric-label mono">INDUSTRY TIERS</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>03</span><span>SIMULATION</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{mockExams.length} MOCKS</div>
+              <div className="metric-label mono">PRACTICE INTERVIEWS</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>04</span><span className="text-[#4a6fa5]">STATUS</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{analysis?.readinessScore && analysis.readinessScore >= 75 ? 'READY' : 'TRAINING'}</div>
+              <div className="metric-label mono">INTERVIEW ELIGIBILITY</div>
+            </div>
+          </div>
+
+          {/* Gleam-Spark Priority Band with Role Switcher */}
+          <div className="priority-band">
+            <div className="priority-symbol">!</div>
+            <div className="priority-content">
+              <p className="mono text-[#e05033] text-[9px]">CAMPUS RECRUITMENT BENCHMARK</p>
+              <h2 className="font-display text-xl uppercase tracking-wide">COGNITIVE SKILL GAP ANALYSIS</h2>
+              <p className="text-xs text-[#8ba0c0] font-sans">
+                Real-time benchmarking comparing your course knowledge against campus placement technical rounds.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-1.5 shrink-0">
+              {benchmarks.slice(0, 4).map((r) => (
+                <button
+                  key={r.roleType}
+                  onClick={() => handleRoleChange(r.roleType)}
+                  disabled={updatingRole}
+                  className={`text-[10px] font-mono px-3 py-1.5 uppercase transition ${
+                    selectedRole === r.roleType
+                      ? 'bg-[#e05033] text-white'
+                      : 'bg-[#1a2540] text-[#8ba0c0] hover:text-white border border-[rgba(106,144,197,0.3)]'
+                  }`}
+                  style={{ borderRadius: 0 }}
+                >
+                  {r.roleType.replace('_', ' ')}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {statusMessage && (
+            <div className="px-4 py-2 bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-500/40 text-emerald-800 dark:text-emerald-300 text-xs font-mono flex items-center gap-2" style={{ borderRadius: 0 }}>
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              {statusMessage}
+            </div>
+          )}
 
           {loading ? (
             <div className="p-16 flex flex-col items-center justify-center text-slate-400 space-y-4">

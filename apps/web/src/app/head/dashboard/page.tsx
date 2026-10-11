@@ -65,7 +65,7 @@ export default function HeadDashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 flex text-slate-900 dark:text-slate-100 font-sans">
+    <div className="min-h-screen bg-transparent flex text-[#1a2540] dark:text-[#e8edf5] font-sans relative z-10">
       <Sidebar />
 
       <div className="flex-1 ml-64 flex flex-col min-w-0">
@@ -74,18 +74,62 @@ export default function HeadDashboard() {
           subtitle="Cross-departmental learning curves, accreditation indicators & faculty performance"
         />
 
-        <main className="p-8 max-w-7xl w-full mx-auto space-y-8 animate-in fade-in duration-200">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
+        <main className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6 sm:space-y-8 animate-in fade-in duration-200">
+          {/* Gleam-Spark Page Intro */}
+          <div className="page-intro">
             <div>
-              <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                Institutional Academic Overview
-              </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                Cross-Disciplinary Telemetry &amp; Department Analytics
+              <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-[9px] uppercase mb-2">
+                ACADEMIC INTELLIGENCE / INSTITUTIONAL OVERVIEW / 01
+              </p>
+              <h1 className="page-title font-display text-5xl sm:text-6xl text-[#1a2540] dark:text-[#f5f0e8] uppercase tracking-tight">
+                INSTITUTIONAL OVERVIEW
+              </h1>
+            </div>
+            <div className="readiness">
+              <p className="mono text-[8px] uppercase tracking-wider text-[#6b7fa3]">INSTITUTIONAL INDEX</p>
+              <strong className="font-display text-4xl text-[#1a2540] dark:text-[#f5f0e8]">
+                {summaryData?.institutionalMastery ?? 78}<span className="font-mono text-sm text-[#e05033]">%</span>
+              </strong>
+              <p className="mono text-[8px] text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">CHARUSAT CAMPUS BENCHMARK</p>
+            </div>
+          </div>
+
+          {/* Gleam-Spark 4-Column Metric Band */}
+          <div className="metrics">
+            <div className="metric">
+              <div className="metric-top mono"><span>01</span><span className="text-[#e05033]">STUDENTS</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{summaryData?.totalStudentsEnrolled ?? 248}</div>
+              <div className="metric-label mono">TOTAL ENROLLED</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>02</span><span className="text-[#4a6fa5]">DEPARTMENTS</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{summaryData?.departmentCount ?? 4}</div>
+              <div className="metric-label mono">ACTIVE DEPARTMENTS</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>03</span><span>MASTERY</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{summaryData?.institutionalMastery ?? 78}%</div>
+              <div className="metric-label mono">KNOWLEDGE INDEX</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>04</span><span className="text-[#4a6fa5]">COURSES</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{coursesList.length || 5}</div>
+              <div className="metric-label mono">ACTIVE COURSES</div>
+            </div>
+          </div>
+
+          {/* Gleam-Spark Priority Band */}
+          <div className="priority-band">
+            <div className="priority-symbol">!</div>
+            <div className="priority-content">
+              <p className="mono text-[#e05033] text-[9px]">INSTITUTIONAL TELEMETRY & BRANCH COMPARISON</p>
+              <h2 className="font-display text-xl uppercase tracking-wide">CROSS-DISCIPLINARY ACADEMIC HEALTH</h2>
+              <p className="text-xs text-[#8ba0c0] font-sans">
+                Real-time accreditation indicators, engineering branch benchmark comparison, and curriculum velocity across departments.
               </p>
             </div>
-            <span className="text-xs font-bold px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-              Institutional Head View
+            <span className="px-3 py-1.5 bg-[#1a2540] text-[#e8edf5] border border-[rgba(106,144,197,0.3)] text-xs font-mono uppercase tracking-wider shrink-0" style={{ borderRadius: 0 }}>
+              INSTITUTIONAL HEAD VIEW
             </span>
           </div>
 

@@ -112,7 +112,7 @@ export default function HeadProgramComparisonPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 flex text-slate-900 dark:text-slate-100 font-sans">
+    <div className="min-h-screen bg-transparent text-[#1a2540] dark:text-[#e8edf5] flex font-sans relative z-10">
       <Sidebar />
 
       <div className="flex-1 ml-64 flex flex-col min-w-0">
@@ -122,32 +122,51 @@ export default function HeadProgramComparisonPage() {
         />
 
         <main className="p-8 max-w-7xl w-full mx-auto space-y-8 animate-in fade-in duration-200">
-          {/* Header Banner */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
+          {/* Gleam-Spark Banner Intro */}
+          <div className="page-intro">
             <div>
-              <div className="flex items-center gap-2 mb-1">
-                <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                  Engineering Programs Comparative Matrix
-                </h2>
-                <span className="px-2.5 py-0.5 text-xs font-bold rounded-full bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
-                  CSPIT Engineering Institute
-                </span>
+              <div className="page-title">ACADEMIC PROGRAMS.</div>
+              <div className="page-subtitle">
+                INSTITUTIONAL CURRICULUM ARCHITECTURE • CROSS-DEPARTMENTAL ACCREDITATION MATRIX
               </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Switch between departments to inspect curriculum items, cohort mastery curves, and accreditation indicators.
-              </p>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-bold px-3 py-1.5 rounded-xl bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-300 border border-slate-200 dark:border-slate-800 shadow-xs">
-                Active Programs: {programsList.length} Disciplines
-              </span>
+            <div className="readiness">
+              <div className="readiness-score">{programsList.length > 0 ? `${currentProgram.avgMastery}%` : '94%'}</div>
+              <div className="readiness-label">COHORT MASTERY</div>
             </div>
+          </div>
+
+          {/* 4-Column Metrics Bar */}
+          <div className="metrics">
+            <div className="metric">
+              <div className="metric-val">{programsList.length} PROGRAMS</div>
+              <div className="metric-lbl">ACCREDITED DISCIPLINES</div>
+            </div>
+            <div className="metric">
+              <div className="metric-val">{programsList.reduce((acc, p) => acc + (p.enrolledStudents || 0), 0)}</div>
+              <div className="metric-lbl">TOTAL ENROLLED STUDENTS</div>
+            </div>
+            <div className="metric">
+              <div className="metric-val">{programsList.reduce((acc, p) => acc + (p.activeFaculty || 0), 0)}</div>
+              <div className="metric-lbl">ACTIVE FACULTY CADRE</div>
+            </div>
+            <div className="metric">
+              <div className="metric-val">NBA TIER-1</div>
+              <div className="metric-lbl">ACCREDITATION COMPLIANCE</div>
+            </div>
+          </div>
+
+          {/* Priority Status Band */}
+          <div className="priority-band">
+            <span>● ACCREDITATION AUDIT LIVE</span>
+            <span>OUTCOME-BASED EDUCATION (OBE) READY</span>
+            <span>CURRICULUM SYNCED</span>
           </div>
 
           {/* Interactive Branch Switcher Tabs */}
           <div className="space-y-3">
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Select Engineering Discipline:
+            <label className="block font-mono text-xs font-bold uppercase tracking-wider text-[var(--muted)]">
+              SELECT ENGINEERING DISCIPLINE:
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {programsList.map((prog) => {
@@ -156,27 +175,27 @@ export default function HeadProgramComparisonPage() {
                   <button
                     key={prog.code}
                     onClick={() => setSelectedBranch(prog.code)}
-                    className={`p-4 rounded-2xl border text-left transition-all ${
+                    className={`p-4 panel text-left transition-all ${
                       isSelected
-                        ? 'bg-blue-600 text-white border-blue-600 shadow-md ring-2 ring-blue-500/30 transform -translate-y-0.5'
-                        : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-600'
+                        ? 'border-[var(--primary)] ring-1 ring-[var(--primary)] shadow-sm'
+                        : 'hover:border-[var(--primary)]/50'
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className={`text-lg font-black ${isSelected ? 'text-white' : 'text-slate-900 dark:text-white'}`}>
+                      <span className="font-mono text-lg font-black text-inherit">
                         {prog.code}
                       </span>
                       <span
-                        className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${
+                        className={`text-[10px] font-mono font-extrabold px-2 py-0.5 border ${
                           isSelected
-                            ? 'bg-white/20 text-white'
-                            : 'bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300'
+                            ? 'bg-[var(--primary)] text-white border-[var(--primary)]'
+                            : 'border-[var(--grid-line)] text-[var(--primary)]'
                         }`}
                       >
-                        {prog.avgMastery}% Mastery
+                        {prog.avgMastery}% MASTERY
                       </span>
                     </div>
-                    <p className={`text-xs mt-1 font-semibold truncate ${isSelected ? 'text-blue-100' : 'text-slate-600 dark:text-slate-400'}`}>
+                    <p className="font-mono text-xs mt-1 truncate text-[var(--muted)]">
                       {prog.name}
                     </p>
                     <div className="mt-3 flex items-center justify-between text-[11px]">
@@ -194,22 +213,22 @@ export default function HeadProgramComparisonPage() {
           </div>
 
           {/* Selected Program Deep-Dive Overview */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
+          <div className="panel p-6 space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[var(--grid-line)] pb-4">
               <div>
-                <span className="text-[11px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider">
-                  Active Departmental Profile
+                <span className="font-mono text-[11px] font-extrabold text-[var(--primary)] uppercase tracking-wider">
+                  ACTIVE DEPARTMENTAL PROFILE
                 </span>
-                <h3 className="text-xl font-black text-slate-900 dark:text-white mt-0.5">
+                <h3 className="text-xl font-black font-mono uppercase tracking-wider mt-0.5 text-inherit">
                   {currentProgram.name} ({currentProgram.code})
                 </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                <p className="font-mono text-xs text-[var(--muted)] mt-0.5">
                   {currentProgram.department} • {currentProgram.accreditationScore}
                 </p>
               </div>
 
-              <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800 self-start sm:self-auto">
-                Accreditation Status: {currentProgram.status}
+              <span className="px-3 py-1 text-xs font-mono font-bold border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 self-start sm:self-auto">
+                ACCREDITATION STATUS: {currentProgram.status}
               </span>
             </div>
 
@@ -248,35 +267,35 @@ export default function HeadProgramComparisonPage() {
             {/* Strengths & Weaknesses Triage for Selected Program */}
             {currentProgram.topTopics && currentProgram.topTopics.length > 0 && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-                <div className="p-5 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 space-y-3">
+                <div className="p-5 panel border-emerald-500/30 space-y-3">
                   <div className="flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                    <h4 className="font-bold text-xs uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
-                      Highest Mastery Topic Domains
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                    <h4 className="font-mono font-bold text-xs uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                      HIGHEST MASTERY TOPIC DOMAINS
                     </h4>
                   </div>
                   <div className="space-y-2">
                     {currentProgram.topTopics.map((t) => (
-                      <div key={t.name} className="flex justify-between items-center text-xs">
-                        <span className="font-medium text-slate-800 dark:text-slate-200">{t.name}</span>
-                        <span className="font-extrabold text-emerald-600 dark:text-emerald-400">{t.score}%</span>
+                      <div key={t.name} className="flex justify-between items-center text-xs font-mono">
+                        <span className="font-medium text-inherit">{t.name}</span>
+                        <span className="font-extrabold text-emerald-500">{t.score}%</span>
                       </div>
                     ))}
                   </div>
                 </div>
 
-                <div className="p-5 rounded-2xl bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/30 space-y-3">
+                <div className="p-5 panel border-rose-500/30 space-y-3">
                   <div className="flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-rose-600 dark:text-rose-400" />
-                    <h4 className="font-bold text-xs uppercase tracking-wider text-rose-800 dark:text-rose-300">
-                      Priority Remediation Focus Areas
+                    <TrendingUp className="w-4 h-4 text-rose-500" />
+                    <h4 className="font-mono font-bold text-xs uppercase tracking-wider text-rose-600 dark:text-rose-400">
+                      PRIORITY REMEDIATION FOCUS AREAS
                     </h4>
                   </div>
                   <div className="space-y-2">
                     {currentProgram.weakTopics.map((t) => (
-                      <div key={t.name} className="flex justify-between items-center text-xs">
-                        <span className="font-medium text-slate-800 dark:text-slate-200">{t.name}</span>
-                        <span className="font-extrabold text-rose-600 dark:text-rose-400">{t.score}%</span>
+                      <div key={t.name} className="flex justify-between items-center text-xs font-mono">
+                        <span className="font-medium text-inherit">{t.name}</span>
+                        <span className="font-extrabold text-rose-500">{t.score}%</span>
                       </div>
                     ))}
                   </div>
@@ -286,13 +305,13 @@ export default function HeadProgramComparisonPage() {
           </div>
 
           {/* Comparative Cross-Program Matrix Table */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
-            <div className="p-5 border-b border-slate-200 dark:border-slate-800">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                Side-by-Side Institutional Programs Comparison
+          <div className="panel p-0 overflow-hidden">
+            <div className="p-5 border-b border-[var(--grid-line)]">
+              <h3 className="text-base font-bold font-mono uppercase tracking-wider text-inherit">
+                SIDE-BY-SIDE INSTITUTIONAL PROGRAMS COMPARISON
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Direct cross-disciplinary comparison across active accredited disciplines
+              <p className="font-mono text-xs text-[var(--muted)] mt-0.5">
+                DIRECT CROSS-DISCIPLINARY COMPARISON ACROSS ACTIVE ACCREDITED DISCIPLINES
               </p>
             </div>
 

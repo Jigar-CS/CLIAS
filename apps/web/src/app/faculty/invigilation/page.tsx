@@ -97,13 +97,6 @@ export default function FacultyInvigilationPage() {
           invigilatorNotes: s.invigilatorNotes,
           violations: s.violations || [],
         }));
-        // Sort sessions ID-wise
-        mapped.sort((a, b) =>
-          (a.enrollmentNumber || '').localeCompare(b.enrollmentNumber || '', undefined, {
-            numeric: true,
-            sensitivity: 'base',
-          }),
-        );
         setSessions(mapped);
         setSelectedSession((current) => {
           if (!current && mapped.length > 0) return mapped[0];
@@ -170,98 +163,73 @@ export default function FacultyInvigilationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex text-slate-100 font-sans">
+    <div className="min-h-screen bg-transparent text-[#1a2540] dark:text-[#e8edf5] flex font-sans relative z-10">
       <Sidebar />
       <div className="flex-1 ml-64 flex flex-col min-w-0">
         <Navbar
           title="Exam Integrity & AI Invigilation Console"
           subtitle="Real-time multi-modal proctoring logs, trust score audits & violation review"
         />
-        <main className="p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-300 w-full">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2.5 rounded-xl bg-gradient-to-tr from-amber-600 to-rose-500 text-white shadow-lg shadow-amber-500/20">
-              <ShieldAlert className="w-6 h-6" />
+        <main className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 sm:space-y-8 animate-in fade-in duration-300 w-full">
+          {/* Gleam-Spark Page Intro Banner */}
+          <div className="page-intro">
+            <div>
+              <p className="mono">FACULTY / PROCTORING / 04</p>
+              <h1 className="page-title display">
+                INVIGILATION <span className="coral">CONSOLE.</span>
+              </h1>
             </div>
-            <h1 className="text-3xl font-extrabold text-white tracking-tight">
-              Exam Integrity & AI Proctoring Audit Console
-            </h1>
-            <span className="px-2.5 py-0.5 text-xs font-bold rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
-              Proctoring Live
-            </span>
-          </div>
-          <p className="text-slate-400 text-sm">
-            AI-assisted exam integrity monitoring delivers an objective, auditable behavioral timeline with browser focus tracking, face enrollment verification, and human invigilator oversight.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-300">
-            <span className={`w-2 h-2 rounded-full ${isSyncing ? 'bg-amber-400 animate-ping' : 'bg-emerald-400 animate-pulse'}`} />
-            <span>{isSyncing ? 'Syncing...' : 'Live Polling Active'}</span>
-          </div>
-          <button
-            onClick={() => fetchSessions(true)}
-            className="p-2 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 hover:text-white hover:bg-slate-800 transition"
-            title="Refresh All Sessions"
-          >
-            <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin text-amber-400' : ''}`} />
-          </button>
-          <span className="text-xs font-bold px-3 py-1.5 rounded-xl bg-slate-900 text-slate-300 border border-slate-800 flex items-center gap-2">
-            <Camera className="w-3.5 h-3.5 text-emerald-400" />
-            Liveness Telemetry Active
-          </span>
-        </div>
-      </div>
-
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-slate-900/80 border border-slate-800 p-5 rounded-2xl flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-            <UserCheck className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-white">{sessions.length}</div>
-            <div className="text-xs text-slate-400 font-medium">Proctored Sessions</div>
-          </div>
-        </div>
-
-        <div className="bg-slate-900/80 border border-slate-800 p-5 rounded-2xl flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-            <ShieldCheck className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-white">
-              {sessions.filter((s) => s.trustScore >= 80).length}
+            <div className="readiness">
+              <p className="mono">PROCTORING AUDIT</p>
+              <strong>
+                {sessions.length}
+                <span>SESS</span>
+              </strong>
+              <p className="mono blue">{sessions.filter((s) => s.status === 'FLAGGED').length > 0 ? `${sessions.filter((s) => s.status === 'FLAGGED').length} SUSPECT SESSIONS` : 'INTEGRITY VERIFIED'}</p>
             </div>
-            <div className="text-xs text-slate-400 font-medium">High Trust (&ge;80%)</div>
           </div>
-        </div>
 
-        <div className="bg-slate-900/80 border border-slate-800 p-5 rounded-2xl flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
-            <AlertTriangle className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-white">
-              {sessions.filter((s) => s.status === 'FLAGGED').length}
+          {/* Gleam-Spark 4-Column Metrics Bar */}
+          <div className="metrics">
+            <div className="metric">
+              <div className="metric-top mono"><span>01</span><span>LIVE</span></div>
+              <div className="metric-value">{sessions.length}</div>
+              <div className="metric-label mono">PROCTORED SESSIONS</div>
             </div>
-            <div className="text-xs text-slate-400 font-medium">Flagged Sessions</div>
+            <div className="metric">
+              <div className="metric-top mono"><span>02</span><span className="blue">HIGH TRUST</span></div>
+              <div className="metric-value">{sessions.filter((s) => s.trustScore >= 80).length}</div>
+              <div className="metric-label mono">TRUST &ge; 80%</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>03</span><span className="coral">FLAGGED</span></div>
+              <div className="metric-value">{sessions.filter((s) => s.status === 'FLAGGED').length}</div>
+              <div className="metric-label mono">INTEGRITY FLAGS</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>04</span><span>AUDIT</span></div>
+              <div className="metric-value">100%</div>
+              <div className="metric-label mono">HUMAN-IN-THE-LOOP</div>
+            </div>
           </div>
-        </div>
 
-        <div className="bg-slate-900/80 border border-slate-800 p-5 rounded-2xl flex items-center gap-4">
-          <div className="p-3 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
-            <Eye className="w-5 h-5" />
+          {/* Gleam-Spark Priority Band Callout */}
+          <div className="priority-band">
+            <div className="priority-symbol">!</div>
+            <div className="priority-content">
+              <p className="mono">AI PROCTORING / REAL-TIME TELEMETRY</p>
+              <h2 className="display">REAL-TIME BEHAVIORAL AUDITING &amp; LOGGING</h2>
+              <p>AI-assisted exam integrity monitoring with browser focus tracking, continuous facial verification, and human invigilator oversight.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => fetchSessions(true)}
+              className="action-button bg-[#e05033] text-white hover:bg-[#c8432b] shrink-0"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 mr-2 ${isSyncing ? 'animate-spin' : ''}`} />
+              <span>SYNC TELEMETRY</span>
+            </button>
           </div>
-          <div>
-            <div className="text-2xl font-bold text-white">100%</div>
-            <div className="text-xs text-slate-400 font-medium">Human-in-the-Loop</div>
-          </div>
-        </div>
-      </div>
 
       {/* Main Grid: Sessions List + Detail Audit Log */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

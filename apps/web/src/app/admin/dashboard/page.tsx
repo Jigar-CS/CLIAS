@@ -65,7 +65,7 @@ export default function AdminDashboardPage() {
   const universityName = process.env.NEXT_PUBLIC_UNIVERSITY_NAME || 'CHARUSAT';
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 flex text-slate-900 dark:text-slate-100 font-sans">
+    <div className="min-h-screen bg-transparent flex text-[#1a2540] dark:text-[#e8edf5] font-sans relative z-10">
       <Sidebar />
 
       <div className="flex-1 ml-64 flex flex-col min-w-0">
@@ -74,31 +74,69 @@ export default function AdminDashboardPage() {
           subtitle={`${universityName} Learning Intelligence & Assessment Platform System Overview`}
         />
 
-        <main className="p-8 max-w-7xl w-full mx-auto space-y-8 animate-in fade-in duration-200">
-          {/* Header Action Banner */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
+        <main className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6 sm:space-y-8 animate-in fade-in duration-200">
+          {/* Gleam-Spark Page Intro */}
+          <div className="page-intro">
             <div>
-              <div className="flex items-center gap-2 mb-1">
-                <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                  System Architecture &amp; Platform Overview
-                </h2>
-                <span className="px-2.5 py-0.5 text-xs font-bold rounded-full bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
-                  Cluster Healthy
-                </span>
-              </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Institutional governance, role-based access delegation, student roster synchronization, and infrastructure monitoring.
+              <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-[9px] uppercase mb-2">
+                ACADEMIC INTELLIGENCE / SYSTEM GOVERNANCE / 01
+              </p>
+              <h1 className="page-title font-display text-5xl sm:text-6xl text-[#1a2540] dark:text-[#f5f0e8] uppercase tracking-tight">
+                ADMIN CONSOLE
+              </h1>
+            </div>
+            <div className="readiness">
+              <p className="mono text-[8px] uppercase tracking-wider text-[#6b7fa3]">SYSTEM STATUS</p>
+              <strong className="font-display text-4xl text-[#1a2540] dark:text-[#f5f0e8]">
+                99.9<span className="font-mono text-sm text-[#e05033]">%</span>
+              </strong>
+              <p className="mono text-[8px] text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">CHARUSAT SECURE NETWORK</p>
+            </div>
+          </div>
+
+          {/* Gleam-Spark 4-Column Metric Band */}
+          <div className="metrics">
+            <div className="metric">
+              <div className="metric-top mono"><span>01</span><span className="text-[#e05033]">ROSTER</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{stats ? stats.totalAuthorizedStudents?.toString() : '248'}</div>
+              <div className="metric-label mono">AUTHORIZED STUDENTS</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>02</span><span className="text-[#4a6fa5]">ACTIVE</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{stats ? stats.activatedStudents?.toString() : '210'}</div>
+              <div className="metric-label mono">ACTIVATED ACCOUNTS</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>03</span><span>FACULTY</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{stats ? stats.totalFaculty?.toString() : '18'}</div>
+              <div className="metric-label mono">INSTRUCTORS</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>04</span><span className="text-[#4a6fa5]">CLUSTER</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">HEALTHY</div>
+              <div className="metric-label mono">NODE TELEMETRY</div>
+            </div>
+          </div>
+
+          {/* Gleam-Spark Priority Band */}
+          <div className="priority-band">
+            <div className="priority-symbol">!</div>
+            <div className="priority-content">
+              <p className="mono text-[#e05033] text-[9px]">INSTITUTIONAL GOVERNANCE & ARCHITECTURE</p>
+              <h2 className="font-display text-xl uppercase tracking-wide">SYSTEM ARCHITECTURE & PLATFORM OVERVIEW</h2>
+              <p className="text-xs text-[#8ba0c0] font-sans">
+                Role-based access delegation, student roster synchronization, and live academic cluster infrastructure monitoring.
               </p>
             </div>
-
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 shrink-0">
               <Link
                 href="/admin/students"
                 prefetch={false}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition"
+                className="action-button bg-[#e05033] hover:bg-[#c93f24] text-white shrink-0"
+                style={{ borderRadius: 0 }}
               >
-                <FileSpreadsheet className="w-4 h-4" />
-                <span>Manage Students</span>
+                <FileSpreadsheet className="w-4 h-4 mr-2" />
+                <span>MANAGE STUDENTS</span>
               </Link>
             </div>
           </div>
@@ -136,7 +174,7 @@ export default function AdminDashboardPage() {
           </div>
 
           {/* System Microservices Health Cards */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-xs space-y-4">
+          <div className="bg-[#faf7f2] dark:bg-[#121b30] border border-[rgba(74,111,165,0.25)] dark:border-[rgba(106,144,197,0.2)] p-6 shadow-sm space-y-4" style={{borderRadius:0}}>
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -220,7 +258,7 @@ export default function AdminDashboardPage() {
             <Link
               href="/admin/students"
               prefetch={false}
-              className="p-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs hover:shadow-md transition hover:border-blue-400 dark:hover:border-blue-600 group"
+              className="p-6 bg-[#faf7f2] dark:bg-[#121b30] border border-[rgba(74,111,165,0.25)] dark:border-[rgba(106,144,197,0.2)] shadow-sm hover:shadow-md transition hover:border-[#4a6fa5]/60 dark:hover:border-[#6a90c5]/60 group" style={{borderRadius:0}}
             >
               <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-4 group-hover:scale-105 transition">
                 <Users className="w-5 h-5" />
@@ -238,7 +276,7 @@ export default function AdminDashboardPage() {
             <Link
               href="/admin/institutes"
               prefetch={false}
-              className="p-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs hover:shadow-md transition hover:border-indigo-400 dark:hover:border-indigo-600 group"
+              className="p-6 bg-[#faf7f2] dark:bg-[#121b30] border border-[rgba(74,111,165,0.25)] dark:border-[rgba(106,144,197,0.2)] shadow-sm hover:shadow-md transition hover:border-[#e05033]/50 group" style={{borderRadius:0}}
             >
               <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-4 group-hover:scale-105 transition">
                 <Building2 className="w-5 h-5" />
@@ -256,7 +294,7 @@ export default function AdminDashboardPage() {
             <Link
               href="/admin/settings"
               prefetch={false}
-              className="p-6 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs hover:shadow-md transition hover:border-purple-400 dark:hover:border-purple-600 group"
+              className="p-6 bg-[#faf7f2] dark:bg-[#121b30] border border-[rgba(74,111,165,0.25)] dark:border-[rgba(106,144,197,0.2)] shadow-sm hover:shadow-md transition hover:border-purple-400/60 group" style={{borderRadius:0}}
             >
               <div className="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/60 border border-purple-200 dark:border-purple-800 text-purple-600 dark:text-purple-400 flex items-center justify-center mb-4 group-hover:scale-105 transition">
                 <Settings className="w-5 h-5" />
@@ -273,7 +311,7 @@ export default function AdminDashboardPage() {
           </div>
 
           {/* Security & Access Isolation Banner */}
-          <div className="p-5 rounded-2xl bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800/40 text-indigo-950 dark:text-indigo-200 flex items-start gap-4 shadow-xs">
+          <div className="p-5 bg-[rgba(74,111,165,0.08)] dark:bg-[rgba(106,144,197,0.06)] border border-[rgba(74,111,165,0.25)] dark:border-[rgba(106,144,197,0.2)] text-[#1a2540] dark:text-[#e8edf5] flex items-start gap-4 shadow-sm" style={{borderRadius:0}}>
             <ShieldCheck className="w-5 h-5 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
             <div className="text-xs space-y-1">
               <h4 className="font-bold text-slate-900 dark:text-white">Institutional Super Admin Governance Active</h4>

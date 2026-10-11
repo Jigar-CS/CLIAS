@@ -20,16 +20,24 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
       </head>
-      <body className="min-h-screen bg-[#F7F7F3] text-[#111827] dark:bg-slate-950 dark:text-slate-100 transition-colors duration-200 selection:bg-blue-100 selection:text-blue-900">
-        <ThemeProvider>
-          <AuthProvider>
-            <SidebarProvider>{children}</SidebarProvider>
-          </AuthProvider>
-        </ThemeProvider>
+      <body className="min-h-screen text-[#1a2540] dark:text-[#e8edf5] transition-colors duration-200 selection:bg-[#e05033]/20 selection:text-[#e05033] antialiased font-sans grid-paper relative">
+        {/* Persistent Fullscreen Matrix Grid Overlay */}
+        <div
+          className="fixed inset-0 pointer-events-none z-0 matrix-grid"
+          aria-hidden="true"
+          style={{ position: 'fixed', inset: 0 }}
+        />
+        <div className="relative z-10 min-h-screen">
+          <ThemeProvider>
+            <AuthProvider>
+              <SidebarProvider>{children}</SidebarProvider>
+            </AuthProvider>
+          </ThemeProvider>
+        </div>
       </body>
     </html>
   );

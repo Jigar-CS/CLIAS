@@ -161,7 +161,7 @@ export default function AiQuestionGeneratorPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-transparent text-[#1a2540] dark:text-[#e8edf5] flex relative z-10">
       <Sidebar />
 
       <div className="flex-1 ml-64 flex flex-col min-w-0">
@@ -170,33 +170,91 @@ export default function AiQuestionGeneratorPage() {
           subtitle="Grounded LLM question generation with strict faculty-in-the-loop review"
         />
 
-        <main className="p-8 max-w-6xl w-full mx-auto space-y-8">
+        <main className="p-4 sm:p-6 lg:p-8 max-w-6xl w-full mx-auto space-y-6 sm:space-y-8">
+          {/* Gleam-Spark Page Intro */}
+          <div className="page-intro">
+            <div>
+              <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-[9px] uppercase mb-2">
+                ACADEMIC INTELLIGENCE / QUESTION STUDIO / 01
+              </p>
+              <h1 className="page-title font-display text-5xl sm:text-6xl text-[#1a2540] dark:text-[#f5f0e8] uppercase tracking-tight">
+                AI QUESTION STUDIO
+              </h1>
+            </div>
+            <div className="readiness">
+              <p className="mono text-[8px] uppercase tracking-wider text-[#6b7fa3]">STAGING QUEUE</p>
+              <strong className="font-display text-4xl text-[#1a2540] dark:text-[#f5f0e8]">
+                {stagedQuestions.length}<span className="font-mono text-sm text-[#e05033]">ITEMS</span>
+              </strong>
+              <p className="mono text-[8px] text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">AWAITING FACULTY APPROVAL</p>
+            </div>
+          </div>
+
+          {/* Gleam-Spark 4-Column Metric Band */}
+          <div className="metrics">
+            <div className="metric">
+              <div className="metric-top mono"><span>01</span><span className="text-[#e05033]">STATUS</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">ACTIVE</div>
+              <div className="metric-label mono">AI LLM ENGINE</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>02</span><span className="text-[#4a6fa5]">BLOOM</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl font-mono text-xl">{bloomLevel}</div>
+              <div className="metric-label mono">TAXONOMY LEVEL</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>03</span><span>STAGING</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{stagedQuestions.length}</div>
+              <div className="metric-label mono">ITEMS PENDING</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>04</span><span className="text-[#4a6fa5]">REVIEW</span></div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">HUMAN</div>
+              <div className="metric-label mono">IN-THE-LOOP APPROVAL</div>
+            </div>
+          </div>
+
+          {/* Gleam-Spark Priority Band with Architecture Toggle */}
+          <div className="priority-band">
+            <div className="priority-symbol">!</div>
+            <div className="priority-content">
+              <p className="mono text-[#e05033] text-[9px]">CURRICULUM-GROUNDED GENERATION PIPELINE</p>
+              <h2 className="font-display text-xl uppercase tracking-wide">SYNTHESIZE CALIBRATED ITEMS</h2>
+              <p className="text-xs text-[#8ba0c0] font-sans">
+                Generates 1 mathematically verified key and 3 diagnostic misconception distractors. All items require instructor approval.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowGuide(!showGuide)}
+              className="action-button bg-[#1a2540] hover:bg-[#25365d] text-white border border-[rgba(106,144,197,0.4)] shrink-0"
+              style={{ borderRadius: 0 }}
+            >
+              <HelpCircle className="w-4 h-4 mr-2 text-[#6a90c5]" />
+              <span>{showGuide ? 'HIDE PIPELINE' : 'VIEW 4-STAGE PIPELINE'}</span>
+            </button>
+          </div>
+
           {/* Top Generator Config Box */}
-          <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-100">
+          <div className="bg-[#faf7f2] dark:bg-[#121b30] p-6 sm:p-8 border border-[rgba(74,111,165,0.25)] dark:border-[rgba(106,144,197,0.2)] shadow-xs space-y-6" style={{ borderRadius: 0 }}>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-[rgba(74,111,165,0.15)]">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center border border-indigo-100 shadow-inner">
-                  <Sparkles className="w-5 h-5 animate-pulse" />
+                <div className="w-10 h-10 bg-[#e05033] text-white flex items-center justify-center font-bold" style={{ borderRadius: 0 }}>
+                  <Sparkles className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-slate-900 tracking-tight">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="index-box">AI STUDIO / 01</span>
+                    <span className="text-[10px] font-mono text-[#4a6fa5] uppercase tracking-wider">GROUNDED GENERATION</span>
+                  </div>
+                  <h2 className="font-display text-2xl text-[#1a2540] dark:text-[#f5f0e8] uppercase tracking-tight">
                     Curriculum-Grounded Question Generator
                   </h2>
-                  <p className="text-xs text-slate-500 mt-0.5">
+                  <p className="text-xs text-[#4a6fa5] dark:text-[#6a90c5] font-mono mt-0.5">
                     Generate Bloom-taxonomy aligned assessment items. All items are held in staging for human instructor approval.
                   </p>
                 </div>
               </div>
-
-              <button
-                type="button"
-                onClick={() => setShowGuide(!showGuide)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-indigo-200 bg-indigo-50/70 hover:bg-indigo-100/70 text-indigo-700 text-xs font-semibold transition self-start sm:self-auto"
-              >
-                <HelpCircle className="w-4 h-4 text-indigo-600" />
-                <span>How Questions Are Generated</span>
-                {showGuide ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-              </button>
             </div>
 
             {/* Architecture Explanation Box */}
@@ -420,7 +478,8 @@ export default function AiQuestionGeneratorPage() {
                 <button
                   type="submit"
                   disabled={generating}
-                  className="inline-flex items-center gap-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-600/20 transition disabled:opacity-50"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-[#e05033] hover:bg-[#c8432b] text-white font-mono text-[10px] uppercase font-bold tracking-wider shadow-sm transition disabled:opacity-50"
+                  style={{ borderRadius: 0 }}
                 >
                   {generating ? (
                     <Loader2 className="w-4 h-4 animate-spin" />

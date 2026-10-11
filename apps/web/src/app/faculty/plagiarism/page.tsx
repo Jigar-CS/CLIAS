@@ -285,34 +285,63 @@ export default function FacultyPlagiarismPage() {
   };
 
   return (
-    <div className="flex bg-slate-950 min-h-screen text-slate-100 font-sans">
+    <div className="min-h-screen bg-transparent text-[#1a2540] dark:text-[#e8edf5] flex font-sans relative z-10">
       <Sidebar />
       <div className="flex-1 flex flex-col lg:pl-64 min-w-0">
         <Navbar />
 
-        <main className="p-4 sm:p-8 max-w-7xl w-full mx-auto space-y-8">
-          {/* Header Banner */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-rose-950/60 via-red-950/40 to-slate-900 border border-rose-500/20 p-6 sm:p-8 shadow-2xl backdrop-blur-xl">
-            <div className="absolute top-0 right-0 -mt-8 -mr-8 w-64 h-64 bg-rose-500/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-              <div>
-                <div className="flex flex-wrap items-center gap-2 mb-2">
-                  <span className="px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30 flex items-center gap-1.5">
-                    <ShieldAlert className="w-3.5 h-3.5" />
-                    Plagiarism Audit & Code Similarity Studio
-                  </span>
-                  <span className="px-3 py-1 rounded-full text-xs font-medium bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                    AST Token Canonicalization & Winnowing
-                  </span>
-                </div>
-                <h1 className="text-3xl font-extrabold tracking-tight text-white">
-                  Plagiarism Audit & Code Similarity Studio
-                </h1>
-                <p className="text-slate-400 text-sm mt-1 max-w-2xl leading-relaxed">
-                  Audit student coding assessments for unauthorized collaboration and code cloning using structural token hashing,
-                  variable invariant normalization, and k-gram winnowing fingerprint overlap.
-                </p>
-              </div>
+        <main className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6 sm:space-y-8 animate-in fade-in duration-200">
+          {/* Gleam-Spark Page Intro Banner */}
+          <div className="page-intro">
+            <div>
+              <p className="mono">FACULTY / INTEGRITY / 05</p>
+              <h1 className="page-title display">
+                PLAGIARISM <span className="coral">STUDIO.</span>
+              </h1>
+            </div>
+            <div className="readiness">
+              <p className="mono">SIMILARITY THRESHOLD</p>
+              <strong>
+                {threshold}
+                <span>%</span>
+              </strong>
+              <p className="mono blue">WINNOWING AST CANONICALIZATION</p>
+            </div>
+          </div>
+
+          {/* Gleam-Spark 4-Column Metrics Bar */}
+          <div className="metrics">
+            <div className="metric">
+              <div className="metric-top mono"><span>01</span><span>AUDITS</span></div>
+              <div className="metric-value">{scans.length}</div>
+              <div className="metric-label mono">HISTORICAL AUDITS</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>02</span><span className="coral">SUSPECT</span></div>
+              <div className="metric-value">{scans.reduce((acc, s) => acc + s.flaggedPairsCount, 0)}</div>
+              <div className="metric-label mono">FLAGGED PAIRS</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>03</span><span>SUBMISSIONS</span></div>
+              <div className="metric-value">{scans.reduce((acc, s) => acc + s.totalSubmissionsScanned, 0)}</div>
+              <div className="metric-label mono">EVALUATED CODES</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>04</span><span className="blue">ALGO</span></div>
+              <div className="metric-value font-mono text-xl sm:text-2xl mt-1">WINNOWING</div>
+              <div className="metric-label mono">AST CANONICAL</div>
+            </div>
+          </div>
+
+          {/* Gleam-Spark Priority Band Callout */}
+          <div className="priority-band">
+            <div className="priority-symbol">!</div>
+            <div className="priority-content">
+              <p className="mono">CODE INTEGRITY AUDIT / WINNOWING</p>
+              <h2 className="display">STRUCTURAL CODE SIMILARITY &amp; CLONE DETECTION</h2>
+              <p>Audit student coding assessments for unauthorized collaboration using structural token hashing, variable invariant normalization, and k-gram winnowing fingerprint overlap.</p>
+            </div>
+          </div>
 
               {/* Scan Trigger Console */}
               <div className="bg-slate-900/90 border border-slate-800 rounded-xl p-4 shadow-lg flex flex-col gap-3 min-w-[320px]">
@@ -415,7 +444,6 @@ export default function FacultyPlagiarismPage() {
                   )}
                 </button>
               </div>
-            </div>
 
             {statusMessage && (
               <div className="mt-4 px-4 py-2.5 bg-slate-900/90 border border-rose-500/40 rounded-lg text-slate-200 text-xs font-medium flex items-center gap-2 animate-fadeIn">
@@ -423,7 +451,6 @@ export default function FacultyPlagiarismPage() {
                 <span>{statusMessage}</span>
               </div>
             )}
-          </div>
 
           {loading ? (
             <div className="p-16 flex flex-col items-center justify-center text-slate-400 space-y-4">

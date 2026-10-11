@@ -69,7 +69,7 @@ export default function AdminStudentsPage() {
     try {
       const [statsRes, studentsRes]: any = await Promise.all([
         api.get('/admin/dashboard').catch(() => null),
-        api.get('/admin/students?limit=2000').catch(() => null),
+        api.get('/admin/students?limit=200').catch(() => null),
       ]);
       if (statsRes) setStats(statsRes);
       const list = Array.isArray(studentsRes)
@@ -77,14 +77,6 @@ export default function AdminStudentsPage() {
         : Array.isArray(studentsRes?.data)
         ? studentsRes.data
         : [];
-
-      // Sort ID-wise
-      list.sort((a: AuthorizedStudent, b: AuthorizedStudent) =>
-        (a.enrollmentNumber || '').localeCompare(b.enrollmentNumber || '', undefined, {
-          numeric: true,
-          sensitivity: 'base',
-        }),
-      );
       setStudents(list);
     } catch {
       setStudents([]);
@@ -93,33 +85,26 @@ export default function AdminStudentsPage() {
 
   const availableDivisions = ['ALL', ...Array.from(new Set(students.map((s) => s.division).filter(Boolean))).sort()];
 
-  const filteredStudents = students
-    .filter((s) => {
-      const term = searchTerm.toLowerCase();
-      const matchesSearch =
-        s.name?.toLowerCase().includes(term) ||
-        s.enrollmentNumber?.toLowerCase().includes(term) ||
-        s.email?.toLowerCase().includes(term) ||
-        s.department?.toLowerCase().includes(term);
+  const filteredStudents = students.filter((s) => {
+    const term = searchTerm.toLowerCase();
+    const matchesSearch =
+      s.name?.toLowerCase().includes(term) ||
+      s.enrollmentNumber?.toLowerCase().includes(term) ||
+      s.email?.toLowerCase().includes(term) ||
+      s.department?.toLowerCase().includes(term);
 
-      const matchesStatus =
-        statusFilter === 'ALL' ||
-        (statusFilter === 'ACTIVATED' && s.activated) ||
-        (statusFilter === 'PENDING' && !s.activated);
+    const matchesStatus =
+      statusFilter === 'ALL' ||
+      (statusFilter === 'ACTIVATED' && s.activated) ||
+      (statusFilter === 'PENDING' && !s.activated);
 
-      const matchesDiv = divisionFilter === 'ALL' || s.division === divisionFilter;
+    const matchesDiv = divisionFilter === 'ALL' || s.division === divisionFilter;
 
-      return matchesSearch && matchesStatus && matchesDiv;
-    })
-    .sort((a, b) =>
-      (a.enrollmentNumber || '').localeCompare(b.enrollmentNumber || '', undefined, {
-        numeric: true,
-        sensitivity: 'base',
-      }),
-    );
+    return matchesSearch && matchesStatus && matchesDiv;
+  });
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] dark:bg-slate-950 flex text-slate-900 dark:text-slate-100 font-sans">
+    <div className="min-h-screen bg-transparent text-[#1a2540] dark:text-[#e8edf5] flex font-sans relative z-10">
       <Sidebar />
 
       <div className="flex-1 ml-64 flex flex-col min-w-0">
@@ -128,71 +113,73 @@ export default function AdminStudentsPage() {
           subtitle="Authorized student identities, CSV bulk roster ingestion & activation management"
         />
 
-        <main className="p-8 max-w-7xl w-full mx-auto space-y-8 animate-in fade-in duration-200">
-          {/* Top Action Bar */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
+        <main className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto space-y-6 sm:space-y-8 animate-in fade-in duration-200">
+          {/* Gleam-Spark Page Intro Banner */}
+          <div className="page-intro">
             <div>
-              <div className="flex items-center gap-2 mb-1">
-                <h2 className="text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-                  Authorized Student Roster
-                </h2>
-                <span className="px-2.5 py-0.5 text-xs font-bold rounded-full bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
-                  Official Registry Proxy
-                </span>
-              </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Official institution database proxy for secure student registration, identity verification, and activation.
-              </p>
+              <p className="mono">ADMIN / ROSTER / 02</p>
+              <h1 className="page-title display">
+                AUTHORIZED <span className="coral">STUDENTS.</span>
+              </h1>
             </div>
-
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                onClick={() => setIsCounsellorModalOpen(true)}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs transition transform hover:-translate-y-0.5 shrink-0"
-              >
-                <Users className="w-4 h-4" />
-                <span>Assign Counsellors (Excel / PDF)</span>
-              </button>
-              <button
-                onClick={() => setIsImportModalOpen(true)}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition transform hover:-translate-y-0.5 shrink-0"
-              >
-                <FileSpreadsheet className="w-4 h-4" />
-                <span>Import Students CSV</span>
-              </button>
+            <div className="readiness">
+              <p className="mono">ACTIVATION RATE</p>
+              <strong>
+                {stats?.activationRate || (students.length > 0 ? Math.round((students.filter((s) => s.activated).length / students.length) * 100) : 0)}
+                <span>%</span>
+              </strong>
+              <p className="mono blue">OFFICIAL REGISTRY PROXY</p>
             </div>
           </div>
 
-          {/* Metric Overview */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <MetricCard
-              title="Authorized Roster"
-              value={stats?.totalAuthorizedStudents || students.length}
-              subtitle="Imported Student Identities"
-              icon={Users}
-              color="indigo"
-            />
-            <MetricCard
-              title="Activated Accounts"
-              value={stats?.activatedStudents || students.filter((s) => s.activated).length}
-              subtitle="Registered & Practicing"
-              icon={CheckCircle2}
-              color="emerald"
-            />
-            <MetricCard
-              title="Activation Rate"
-              value={`${stats?.activationRate || Math.round((students.filter((s) => s.activated).length / students.length) * 100)}%`}
-              subtitle="Roster Onboarding Progress"
-              icon={ShieldCheck}
-              color="blue"
-            />
-            <MetricCard
-              title="Total Questions"
-              value={stats?.totalQuestionsInBank ?? 0}
-              subtitle="Approved Item Bank"
-              icon={BookOpen}
-              color="purple"
-            />
+          {/* Gleam-Spark 4-Column Metrics Bar */}
+          <div className="metrics">
+            <div className="metric">
+              <div className="metric-top mono"><span>01</span><span>+ALL</span></div>
+              <div className="metric-value">{stats?.totalAuthorizedStudents || students.length}</div>
+              <div className="metric-label mono">AUTHORIZED ROSTER</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>02</span><span className="coral">ACTIVE</span></div>
+              <div className="metric-value">{stats?.activatedStudents || students.filter((s) => s.activated).length}</div>
+              <div className="metric-label mono">ACTIVATED ACCOUNTS</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>03</span><span>PROGRESS</span></div>
+              <div className="metric-value">{stats?.activationRate || Math.round((students.filter((s) => s.activated).length / Math.max(students.length, 1)) * 100)}%</div>
+              <div className="metric-label mono">ACTIVATION RATE</div>
+            </div>
+            <div className="metric">
+              <div className="metric-top mono"><span>04</span><span className="blue">BANK</span></div>
+              <div className="metric-value">{stats?.totalQuestionsInBank ?? 0}</div>
+              <div className="metric-label mono">ITEM BANK ITEMS</div>
+            </div>
+          </div>
+
+          {/* Gleam-Spark Priority Band Callout */}
+          <div className="priority-band">
+            <div className="priority-symbol">!</div>
+            <div className="priority-content">
+              <p className="mono">INSTITUTIONAL REGISTRY / ACTIONS</p>
+              <h2 className="display">MANAGE ENROLLMENT &amp; ASSIGN COUNSELLORS</h2>
+              <p>Import official student batches via CSV or synchronize counsellor assignments across degree programs.</p>
+            </div>
+            <div className="flex items-center gap-3 shrink-0">
+              <button
+                type="button"
+                onClick={() => setIsCounsellorModalOpen(true)}
+                className="action-button bg-transparent border border-[var(--primary)] text-[var(--primary)] hover:bg-[var(--accent)]"
+              >
+                <span>ASSIGN COUNSELLORS</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsImportModalOpen(true)}
+                className="action-button bg-[#e05033] text-white hover:bg-[#c8432b]"
+              >
+                <span>IMPORT CSV →</span>
+              </button>
+            </div>
           </div>
 
           {/* Search & Filter Toolbar */}
