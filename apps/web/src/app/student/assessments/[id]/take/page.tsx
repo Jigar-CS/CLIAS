@@ -1328,7 +1328,7 @@ export default function TakeAssessmentPage() {
     return (
       <div className="min-h-screen bg-transparent text-[#1a2540] dark:text-[#e8edf5] flex flex-col items-center justify-center space-y-4 relative z-10 font-sans">
         <Loader2 className="w-10 h-10 animate-spin text-[var(--primary)]" />
-        <p className="font-mono text-xs uppercase tracking-wider text-[var(--muted)]">INITIALIZING SECURE ASSESSMENT ENVIRONMENT...</p>
+        <p className="font-mono text-xs uppercase tracking-wider text-slate-600 dark:text-slate-400">INITIALIZING SECURE ASSESSMENT ENVIRONMENT...</p>
       </div>
     );
   }
@@ -1344,7 +1344,7 @@ export default function TakeAssessmentPage() {
             <h2 className="text-xl font-bold font-mono uppercase tracking-wider">ASSESSMENT HAS ENDED</h2>
             <p className="font-mono text-xs text-rose-500 uppercase tracking-wider mt-1">Examination Window Closed</p>
           </div>
-          <p className="text-xs text-[var(--muted)] leading-relaxed panel p-3.5 border border-[var(--grid-line)] font-mono">
+          <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed panel p-3.5 border border-[var(--grid-line)] font-mono">
             {testEndedError}
           </p>
           <button
@@ -1374,7 +1374,7 @@ export default function TakeAssessmentPage() {
               </div>
               <div>
                 <h1 className="text-xl font-extrabold font-mono uppercase tracking-wider">AI PROCTORING & PRE-EXAM SETUP</h1>
-                <p className="font-mono text-xs text-[var(--muted)]">
+                <p className="font-mono text-xs text-slate-600 dark:text-slate-400 font-medium">
                   {examData?.assessment?.title} • {examData?.assessment?.code}
                 </p>
               </div>
@@ -1419,47 +1419,47 @@ export default function TakeAssessmentPage() {
             </div>
 
             {/* Checklist */}
-            <div className="space-y-3 bg-slate-950/60 p-4 rounded-2xl border border-slate-800 text-xs">
-              <h3 className="font-bold text-slate-200 uppercase tracking-wider text-[11px]">
+            <div className="space-y-3 bg-slate-50 dark:bg-slate-950/60 p-4 border border-slate-200 dark:border-slate-800 text-xs">
+              <h3 className="font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider text-[11px]">
                 Pre-Exam Diagnostics
               </h3>
 
               <div className="space-y-2">
-                <div className="flex items-center justify-between p-2 rounded-xl bg-slate-900 border border-slate-800">
-                  <span className="flex items-center gap-2 text-slate-300">
-                    <Camera className="w-4 h-4 text-slate-400" /> Webcam Feed
+                <div className="flex items-center justify-between p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                  <span className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                    <Camera className="w-4 h-4 text-slate-500" /> Webcam Feed
                   </span>
                   {cameraPermission === 'granted' ? (
-                    <span className="text-emerald-400 font-bold flex items-center gap-1">
+                    <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
                       <CheckCircle2 className="w-3.5 h-3.5" /> Ready
                     </span>
                   ) : (
-                    <span className="text-rose-400 font-bold flex items-center gap-1">
+                    <span className="text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1">
                       <XCircle className="w-3.5 h-3.5" /> Required
                     </span>
                   )}
                 </div>
 
-                <div className="flex items-center justify-between p-2 rounded-xl bg-slate-900 border border-slate-800">
-                  <span className="flex items-center gap-2 text-slate-300">
-                    <Mic className="w-4 h-4 text-slate-400" /> Microphone
+                <div className="flex items-center justify-between p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                  <span className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                    <Mic className="w-4 h-4 text-slate-500" /> Microphone
                   </span>
                   {micPermission === 'granted' ? (
-                    <span className="text-emerald-400 font-bold flex items-center gap-1">
+                    <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
                       <CheckCircle2 className="w-3.5 h-3.5" /> Ready
                     </span>
                   ) : (
-                    <span className="text-rose-400 font-bold flex items-center gap-1">
+                    <span className="text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1">
                       <XCircle className="w-3.5 h-3.5" /> Required
                     </span>
                   )}
                 </div>
 
-                <div className="flex items-center justify-between p-2 rounded-xl bg-slate-900 border border-slate-800">
-                  <span className="flex items-center gap-2 text-slate-300">
-                    <Maximize2 className="w-4 h-4 text-slate-400" /> Fullscreen Lockdown
+                <div className="flex items-center justify-between p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+                  <span className="flex items-center gap-2 text-slate-700 dark:text-slate-300">
+                    <Maximize2 className="w-4 h-4 text-slate-500" /> Fullscreen Lockdown
                   </span>
-                  <span className="text-amber-400 font-bold">Enforced on Entry</span>
+                  <span className="text-amber-600 dark:text-amber-400 font-bold">Enforced on Entry</span>
                 </div>
               </div>
             </div>
@@ -1563,32 +1563,32 @@ export default function TakeAssessmentPage() {
               <Award className="w-8 h-8" />
             </div>
 
-            <span className="font-mono text-xs uppercase font-bold tracking-wider text-[var(--muted)]">
+            <span className="font-mono text-xs uppercase font-bold tracking-wider text-slate-600 dark:text-slate-400">
               {result.courseCode} • {result.assessmentCode}
             </span>
             <h1 className="text-2xl sm:text-3xl font-bold font-mono uppercase tracking-wider mt-1">{result.assessmentTitle}</h1>
 
             <div className="mt-6 flex flex-wrap justify-center gap-4 sm:gap-6">
               <div className="panel px-6 py-4">
-                <span className="font-mono text-xs text-[var(--muted)] block font-medium">YOUR SCORE</span>
+                <span className="font-mono text-xs text-slate-600 dark:text-slate-400 block font-bold">YOUR SCORE</span>
                 <span className="text-2xl font-black font-mono">
                   {result.totalScore} / {result.totalMarks}
                 </span>
               </div>
               <div className="panel px-6 py-4">
-                <span className="font-mono text-xs text-[var(--muted)] block font-medium">PERCENTAGE</span>
+                <span className="font-mono text-xs text-slate-600 dark:text-slate-400 block font-bold">PERCENTAGE</span>
                 <span className="text-2xl font-black font-mono text-[var(--primary)]">
                   {result.percentage}%
                 </span>
               </div>
               <div className="panel px-6 py-4">
-                <span className="font-mono text-xs text-[var(--muted)] block font-medium">PROCTORING TRUST</span>
+                <span className="font-mono text-xs text-slate-600 dark:text-slate-400 block font-bold">PROCTORING TRUST</span>
                 <span className={`text-2xl font-black font-mono ${trustScore >= 80 ? 'text-emerald-500' : 'text-amber-500'}`}>
                   {trustScore}%
                 </span>
               </div>
               <div className="panel px-6 py-4">
-                <span className="font-mono text-xs text-[var(--muted)] block font-medium">OUTCOME</span>
+                <span className="font-mono text-xs text-slate-600 dark:text-slate-400 block font-bold">OUTCOME</span>
                 <span
                   className={`text-2xl font-black font-mono ${
                     result.passed ? 'text-emerald-500' : 'text-rose-500'
@@ -1606,7 +1606,7 @@ export default function TakeAssessmentPage() {
                 className={`px-5 py-2.5 font-mono text-xs uppercase tracking-wider border transition ${
                   resultTab === 'leaderboard'
                     ? 'bg-[var(--primary)] text-white border-[var(--primary)]'
-                    : 'border-[var(--grid-line)] text-[var(--muted)] hover:text-inherit'
+                    : 'border-[var(--grid-line)] text-slate-600 dark:text-slate-400 hover:text-inherit'
                 }`}
               >
                 <Trophy className="w-4 h-4 text-amber-400" />

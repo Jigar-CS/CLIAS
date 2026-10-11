@@ -157,7 +157,7 @@ export default function StudentPlacementPage() {
             <div className="readiness">
               <p className="mono text-[8px] uppercase tracking-wider text-[#6b7fa3]">BENCHMARK SCORE</p>
               <strong className="font-display text-4xl text-[#1a2540] dark:text-[#f5f0e8]">
-                {analysis?.readinessScore ? Math.round(analysis.readinessScore) : 82}<span className="font-mono text-sm text-[#e05033]">%</span>
+                {analysis?.readinessScore !== undefined && analysis?.readinessScore !== null ? Math.round(analysis.readinessScore) : 0}<span className="font-mono text-sm text-[#e05033]">%</span>
               </strong>
               <p className="mono text-[8px] text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">TIER-1 HIRING BAR</p>
             </div>
@@ -182,7 +182,7 @@ export default function StudentPlacementPage() {
             </div>
             <div className="metric">
               <div className="metric-top mono"><span>04</span><span className="text-[#4a6fa5]">STATUS</span></div>
-              <div className="metric-value font-display text-2xl sm:text-3xl">{analysis?.readinessScore && analysis.readinessScore >= 75 ? 'READY' : 'TRAINING'}</div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{(analysis?.readinessScore ?? 0) >= 75 ? 'READY' : 'TRAINING'}</div>
               <div className="metric-label mono">INTERVIEW ELIGIBILITY</div>
             </div>
           </div>

@@ -287,7 +287,7 @@ export default function StudentLearningPath() {
               {/* Macro Readiness KPI Summary */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-xs">
-                  <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs mb-2 font-semibold">
+                  <div className="flex items-center justify-between text-slate-700 dark:text-slate-300 text-xs mb-2 font-bold">
                     <span>Curriculum Readiness</span>
                     <TrendingUp className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                   </div>
@@ -303,41 +303,41 @@ export default function StudentLearningPath() {
                 </div>
 
                 <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-xs">
-                  <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs mb-2 font-semibold">
+                  <div className="flex items-center justify-between text-slate-700 dark:text-slate-300 text-xs mb-2 font-bold">
                     <span>Mastered Topics</span>
                     <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                   </div>
                   <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">
                     {graph?.nodes.filter((n) => n.status === 'MASTERED').length || 0}
-                    <span className="text-xs text-slate-500 dark:text-slate-400 font-normal ml-1.5">
+                    <span className="text-xs text-slate-600 dark:text-slate-400 font-medium ml-1.5">
                       / {graph?.nodes.length || 0} Topics
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-2">Prerequisites permanently satisfied</p>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium mt-2">Prerequisites permanently satisfied</p>
                 </div>
 
                 <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-xs">
-                  <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs mb-2 font-semibold">
+                  <div className="flex items-center justify-between text-slate-700 dark:text-slate-300 text-xs mb-2 font-bold">
                     <span>Unlocked & Actionable</span>
                     <Unlock className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                   </div>
                   <div className="text-2xl font-black text-indigo-600 dark:text-indigo-400">
                     {graph?.unlockedTopicsCount || 0}
-                    <span className="text-xs text-slate-500 dark:text-slate-400 font-normal ml-1.5">Available for drill</span>
+                    <span className="text-xs text-slate-600 dark:text-slate-400 font-medium ml-1.5">Available for drill</span>
                   </div>
-                  <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-2">Foundations validated by engine</p>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium mt-2">Foundations validated by engine</p>
                 </div>
 
                 <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-xs">
-                  <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs mb-2 font-semibold">
+                  <div className="flex items-center justify-between text-slate-700 dark:text-slate-300 text-xs mb-2 font-bold">
                     <span>Spaced Review Queue</span>
                     <RotateCcw className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                   </div>
                   <div className="text-2xl font-black text-amber-600 dark:text-amber-400">
                     {spacedQueue.length}
-                    <span className="text-xs text-slate-500 dark:text-slate-400 font-normal ml-1.5">Topics Due</span>
+                    <span className="text-xs text-slate-600 dark:text-slate-400 font-medium ml-1.5">Topics Due</span>
                   </div>
-                  <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-2">Ebbinghaus retention decay active</p>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium mt-2">Ebbinghaus retention decay active</p>
                 </div>
               </div>
 
@@ -446,7 +446,7 @@ export default function StudentLearningPath() {
                     <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-5 sticky top-6 shadow-xs">
                       <div className="flex items-start justify-between">
                         <div>
-                          <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+                          <span className="text-[10px] font-mono text-slate-700 dark:text-slate-300 font-bold uppercase tracking-wider block">
                             Inspecting Concept Node
                           </span>
                           <h3 className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">{selectedNode.name}</h3>
@@ -457,19 +457,19 @@ export default function StudentLearningPath() {
                       {/* Detailed Metric Breakout */}
                       <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 space-y-3">
                         <div className="flex items-center justify-between text-xs">
-                          <span className="text-slate-500 dark:text-slate-400">Current Retention Index</span>
+                          <span className="text-slate-700 dark:text-slate-300 font-medium">Current Retention Index</span>
                           <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
                             {Math.round(selectedNode.decayedMastery)}%
                           </span>
                         </div>
                         <div className="flex items-center justify-between text-xs">
-                          <span className="text-slate-500 dark:text-slate-400">Latent Probability P(L)</span>
+                          <span className="text-slate-700 dark:text-slate-300 font-medium">Latent Probability P(L)</span>
                           <span className="font-mono font-bold text-indigo-600 dark:text-indigo-400">
                             {(selectedNode.bktProbability * 100).toFixed(1)}%
                           </span>
                         </div>
                         <div className="flex items-center justify-between text-xs">
-                          <span className="text-slate-500 dark:text-slate-400">Prerequisite Readiness</span>
+                          <span className="text-slate-700 dark:text-slate-300 font-medium">Prerequisite Readiness</span>
                           <span
                             className={`font-semibold ${
                               selectedNode.isPrerequisiteSatisfied ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'
@@ -482,7 +482,7 @@ export default function StudentLearningPath() {
 
                       {/* Prerequisite Check */}
                       <div className="space-y-2">
-                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
+                        <span className="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider block">
                           Prerequisite Topics
                         </span>
                         {selectedNode.prerequisites && selectedNode.prerequisites.length > 0 ? (
@@ -500,7 +500,7 @@ export default function StudentLearningPath() {
                             ))}
                           </div>
                         ) : (
-                          <p className="text-xs text-slate-400 dark:text-slate-500 italic">
+                          <p className="text-xs text-slate-600 dark:text-slate-400 italic font-medium">
                             Foundational concept. No prior prerequisites required.
                           </p>
                         )}

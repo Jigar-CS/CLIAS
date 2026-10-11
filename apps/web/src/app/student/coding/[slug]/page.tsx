@@ -269,7 +269,7 @@ export default function ProblemEditorPage() {
           <div className="flex items-center justify-between">
             <Link
               href="/student/coding"
-              className="inline-flex items-center gap-1.5 font-mono text-xs uppercase tracking-wider text-[var(--muted)] hover:text-[var(--primary)] transition-colors"
+              className="inline-flex items-center gap-1.5 font-mono text-xs uppercase tracking-wider text-slate-600 dark:text-slate-400 hover:text-[var(--primary)] transition-colors font-medium"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               ← BACK TO CODING ARENA
@@ -292,12 +292,12 @@ export default function ProblemEditorPage() {
               >
                 {problem?.difficulty || 'MEDIUM'}
               </span>
-              <span className="font-mono text-xs text-[var(--muted)]">PROBLEM #{problem?.slug}</span>
+              <span className="font-mono text-xs text-slate-600 dark:text-slate-400 font-medium">PROBLEM #{problem?.slug}</span>
             </div>
           </div>
 
           {loading || !problem ? (
-            <div className="panel p-16 text-center font-mono text-xs uppercase tracking-wider text-[var(--muted)]">
+            <div className="panel p-16 text-center font-mono text-xs uppercase tracking-wider text-slate-600 dark:text-slate-400">
               INITIALIZING CODE COMPILER SANDBOX...
             </div>
           ) : (
@@ -311,7 +311,7 @@ export default function ProblemEditorPage() {
                     className={`font-mono text-xs uppercase tracking-wider px-3 py-1.5 border transition-all flex items-center gap-1.5 ${
                       leftTab === 'problem'
                         ? 'bg-[var(--primary)] text-white border-[var(--primary)]'
-                        : 'border-[var(--grid-line)] text-[var(--muted)] hover:text-inherit'
+                        : 'border-[var(--grid-line)] text-slate-600 dark:text-slate-400 hover:text-inherit'
                     }`}
                   >
                     <BookOpen className="w-3.5 h-3.5" />
@@ -567,7 +567,7 @@ export default function ProblemEditorPage() {
                 <div className="panel p-4 flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <FileCode className="w-4 h-4 text-[var(--primary)]" />
-                    <span className="font-mono text-xs uppercase tracking-wider text-[var(--muted)]">
+                    <span className="font-mono text-xs uppercase tracking-wider text-slate-700 dark:text-slate-300 font-semibold">
                       COMPILER:
                     </span>
                     <select
@@ -575,17 +575,17 @@ export default function ProblemEditorPage() {
                       onChange={(e) => handleLanguageChange(e.target.value)}
                       className="bg-transparent border border-[var(--grid-line)] font-mono text-xs uppercase tracking-wider px-2.5 py-1.5 focus:outline-none focus:border-[var(--primary)] text-inherit"
                     >
-                      <option value="PYTHON" className="bg-slate-900 text-slate-100">Python 3.11</option>
-                      <option value="JAVASCRIPT" className="bg-slate-900 text-slate-100">JavaScript (Node.js)</option>
-                      <option value="CPP" className="bg-slate-900 text-slate-100">C++20 (GCC 13)</option>
-                      <option value="JAVA" className="bg-slate-900 text-slate-100">Java 21 (OpenJDK)</option>
+                      <option value="PYTHON" className="bg-[var(--card)] text-[var(--foreground)]">Python 3.11</option>
+                      <option value="JAVASCRIPT" className="bg-[var(--card)] text-[var(--foreground)]">JavaScript (Node.js)</option>
+                      <option value="CPP" className="bg-[var(--card)] text-[var(--foreground)]">C++20 (GCC 13)</option>
+                      <option value="JAVA" className="bg-[var(--card)] text-[var(--foreground)]">Java 21 (OpenJDK)</option>
                     </select>
                   </div>
 
                   <div className="flex items-center gap-2">
                     <button
                       onClick={handleReset}
-                      className="p-1.5 border border-[var(--grid-line)] text-[var(--muted)] hover:text-inherit hover:bg-[var(--secondary)]/10 transition-colors"
+                      className="p-1.5 border border-[var(--grid-line)] text-slate-600 dark:text-slate-400 hover:text-inherit hover:bg-[var(--secondary)]/10 transition-colors"
                       title="Reset Starter Code"
                     >
                       <RotateCcw className="w-4 h-4" />
@@ -701,24 +701,24 @@ export default function ProblemEditorPage() {
                       {testList[selectedTestTab] && (
                         <div className="p-3.5 panel text-xs font-mono space-y-2">
                           <div>
-                            <span className="text-[var(--muted)]">INPUT: </span>
+                            <span className="text-slate-700 dark:text-slate-300 font-bold">INPUT: </span>
                             <span className="text-inherit">
                               {testList[selectedTestTab].input}
                             </span>
                           </div>
                           <div>
-                            <span className="text-[var(--muted)]">EXPECTED OUTPUT: </span>
+                            <span className="text-slate-700 dark:text-slate-300 font-bold">EXPECTED OUTPUT: </span>
                             <span className="text-emerald-500 font-bold">
                               {testList[selectedTestTab].expectedOutput ?? testList[selectedTestTab].expected ?? '(none)'}
                             </span>
                           </div>
                           <div>
-                            <span className="text-[var(--muted)]">ACTUAL OUTPUT: </span>
+                            <span className="text-slate-700 dark:text-slate-300 font-bold">ACTUAL OUTPUT: </span>
                             <span
                               className={
                                 testList[selectedTestTab].status === 'PASSED'
-                                  ? 'text-emerald-500 font-bold'
-                                  : 'text-rose-500 font-bold'
+                                    ? 'text-emerald-500 font-bold'
+                                    : 'text-rose-500 font-bold'
                               }
                             >
                               {(() => {
@@ -733,7 +733,7 @@ export default function ProblemEditorPage() {
                           </div>
                           {testList[selectedTestTab].consoleOutput && (
                             <div className="pt-2 border-t border-[var(--grid-line)]">
-                              <span className="text-[var(--muted)]">STDOUT / CONSOLE: </span>
+                              <span className="text-slate-700 dark:text-slate-300 font-bold">STDOUT / CONSOLE: </span>
                               <pre className="text-amber-500 text-[11px] mt-1 whitespace-pre-wrap font-mono">
                                 {testList[selectedTestTab].consoleOutput}
                               </pre>
@@ -785,19 +785,19 @@ export default function ProblemEditorPage() {
                         SCORE: {inspectedSubmission.score ?? 0}%
                       </span>
                     </div>
-                    <p className="font-mono text-[11px] text-[var(--muted)]">
+                    <p className="font-mono text-[11px] text-slate-600 dark:text-slate-400 font-medium">
                       Submitted on {new Date(inspectedSubmission.createdAt).toLocaleString()} • {inspectedSubmission.language} • {inspectedSubmission.testCasesPassed ?? 0}/{inspectedSubmission.totalTestCases ?? 0} test cases passed ({inspectedSubmission.executionTimeMs}ms)
                     </p>
                   </div>
                   <button
                     onClick={() => setInspectedSubmission(null)}
-                    className="p-1.5 border border-[var(--grid-line)] text-[var(--muted)] hover:text-inherit hover:bg-[var(--secondary)]/10 transition-colors"
+                    className="p-1.5 border border-[var(--grid-line)] text-slate-600 dark:text-slate-400 hover:text-inherit hover:bg-[var(--secondary)]/10 transition-colors"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
 
-                <div className="p-2.5 border border-[var(--grid-line)] bg-[var(--secondary)]/10 font-mono text-[11px] text-[var(--muted)]">
+                <div className="p-2.5 border border-[var(--grid-line)] bg-[var(--secondary)]/10 font-mono text-[11px] text-slate-700 dark:text-slate-300 font-medium">
                   READ-ONLY VIEW. Closing this modal preserves your current working draft in the editor.
                 </div>
 

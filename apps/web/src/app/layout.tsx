@@ -24,12 +24,12 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="min-h-screen text-[#1a2540] dark:text-[#e8edf5] transition-colors duration-200 selection:bg-[#e05033]/20 selection:text-[#e05033] antialiased font-sans grid-paper relative">
-        {/* Persistent Fullscreen Matrix Grid Overlay */}
+      <body className="min-h-screen text-[#1a2540] dark:text-[#e8edf5] selection:bg-[#e05033]/20 selection:text-[#e05033] antialiased font-sans relative">
+        {/* Persistent Fullscreen Matrix Grid Overlay (GPU composited, zero scroll overhead) */}
         <div
           className="fixed inset-0 pointer-events-none z-0 matrix-grid"
           aria-hidden="true"
-          style={{ position: 'fixed', inset: 0 }}
+          style={{ position: 'fixed', inset: 0, transform: 'translateZ(0)' }}
         />
         <div className="relative z-10 min-h-screen">
           <ThemeProvider>

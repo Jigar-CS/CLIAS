@@ -178,8 +178,14 @@ export default function StudentDashboard() {
 
   const loadDashboardData = async () => {
     try {
-      const data: any = await api.get('/analytics/student/me/summary');
-      if (data && typeof data === 'object') {
+      const [summaryRes, notifsRes, assessRes] = await Promise.allSettled([
+        api.get('/analytics/student/me/summary'),
+        api.get('/disputes/notifications'),
+        api.get('/assessments/student'),
+      ]);
+
+      if (summaryRes.status === 'fulfilled' && summaryRes.value && typeof summaryRes.value === 'object') {
+        const data: any = summaryRes.value;
         const curveArray = Array.isArray(data.learningCurve) ? data.learningCurve : [];
         setSummary({
           overallMastery: typeof data.overallMastery === 'number' ? data.overallMastery : 0,
@@ -204,30 +210,23 @@ export default function StudentDashboard() {
           fetchFilteredCurve(savedSource || 'ALL', savedTopic || 'ALL');
         }
       }
-    } catch {
-      // Keep real zero state
-    }
 
-    try {
-      const notifs: any = await api.get('/disputes/notifications');
-      const activeNudge =
-        notifs?.find((n: any) => n.type === 'REMEDIATION_NUDGE' && !n.read) ||
-        notifs?.find((n: any) => n.type === 'REMEDIATION_NUDGE');
-      if (activeNudge) {
-        let meta = {};
-        try {
-          meta = JSON.parse(activeNudge.metadata || '{}');
-        } catch { }
-        setRemediationNudge({ ...activeNudge, meta });
+      if (notifsRes.status === 'fulfilled') {
+        const notifs: any = notifsRes.value;
+        const activeNudge =
+          notifs?.find((n: any) => n.type === 'REMEDIATION_NUDGE' && !n.read) ||
+          notifs?.find((n: any) => n.type === 'REMEDIATION_NUDGE');
+        if (activeNudge) {
+          let meta = {};
+          try {
+            meta = JSON.parse(activeNudge.metadata || '{}');
+          } catch { }
+          setRemediationNudge({ ...activeNudge, meta });
+        }
       }
-    } catch {
-      // silent
-    }
 
-    try {
-      const assessData: any = await api.get('/assessments/student');
-      if (Array.isArray(assessData)) {
-        const pending = assessData.filter((a: any) => a.hasAvailableAttempts);
+      if (assessRes.status === 'fulfilled' && Array.isArray(assessRes.value)) {
+        const pending = assessRes.value.filter((a: any) => a.hasAvailableAttempts);
         setAssignedAssessments(pending);
       }
     } catch {
@@ -257,11 +256,11 @@ export default function StudentDashboard() {
             <div className="readiness">
               <p className="mono">LEARNING READINESS</p>
               <strong>
-                {Math.min(99, Math.max(45, Math.round(summary?.overallMastery > 0 ? (summary.overallMastery * 0.85 + summary.accuracy * 0.15) : 82)))}
+                {summary ? Math.min(100, Math.round((summary.overallMastery || 0) * 0.85 + (summary.accuracy || 0) * 0.15)) : 0}
                 <span>%</span>
               </strong>
               <p className="mono blue">
-                {summary?.overallMastery >= 75 ? 'READY FOR ADVANCED DRILL' : summary?.overallMastery >= 50 ? 'STABLE FOUNDATION' : 'READY FOR CHALLENGE'}
+                {(summary?.overallMastery ?? 0) >= 75 ? 'READY FOR ADVANCED DRILL' : (summary?.overallMastery ?? 0) >= 50 ? 'STABLE FOUNDATION' : 'READY FOR CHALLENGE'}
               </p>
             </div>
           </div>
@@ -633,25 +632,31 @@ export default function StudentDashboard() {
 
           {/* Cognitive Intelligence Advice Banner */}
           {summary?.cognitiveAdvice && (
-            <div className="p-5 md:p-6 rounded-3xl bg-gradient-to-r from-indigo-900 via-slate-900 to-indigo-950 text-white shadow-xl shadow-indigo-950/10 border border-indigo-500/20 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-80 h-full bg-gradient-to-l from-indigo-500/10 to-transparent pointer-events-none" />
-
+            <div className="panel p-5 md:p-6 bg-[#faf7f2] dark:bg-[#121b30] border border-[var(--strong-border)] shadow-xs relative overflow-hidden">
               <div className="relative z-10">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-indigo-500/30 border border-indigo-400/40 text-indigo-300 flex items-center justify-center font-bold shadow-md">
-                      <Sparkles className="w-4 h-4 text-indigo-300" />
+                    <div className="w-8 h-8 bg-[#e05033] text-white flex items-center justify-center font-bold shrink-0">
+                      <Sparkles className="w-4 h-4 text-white" />
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-sm font-black tracking-tight text-white uppercase">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="text-xs sm:text-sm font-mono font-bold tracking-wider text-slate-900 dark:text-white uppercase">
                           Cognitive Intelligence Advice
                         </h3>
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-white/10 border border-white/20 text-indigo-200">
-                          {summary.cognitiveAdvice.focusType.replace('_', ' ')}
+                        <span
+                          className={`px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wider border ${
+                            summary.cognitiveAdvice.urgency === 'HIGH'
+                              ? 'bg-[#e05033]/15 text-[#e05033] border-[#e05033]/40'
+                              : summary.cognitiveAdvice.urgency === 'MEDIUM'
+                              ? 'bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/40'
+                              : 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/40'
+                          }`}
+                        >
+                          {summary.cognitiveAdvice.focusType.replace(/_/g, ' ')}
                         </span>
                       </div>
-                      <p className="text-xs font-bold text-indigo-300 mt-0.5">
+                      <p className="text-xs font-bold text-[#4a6fa5] dark:text-[#6a90c5] mt-0.5">
                         {summary.cognitiveAdvice.headline}
                       </p>
                     </div>
@@ -660,7 +665,7 @@ export default function StudentDashboard() {
                   {summary.cognitiveAdvice.targetTopicId && (
                     <Link
                       href={`/student/practice?topicId=${summary.cognitiveAdvice.targetTopicId}`}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white text-xs font-black transition shadow-lg shrink-0"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#e05033] hover:bg-[#c8432b] text-white text-xs font-mono font-bold uppercase tracking-wider transition shadow-xs shrink-0"
                     >
                       <span>Practice {summary.cognitiveAdvice.targetTopicName}</span>
                       <ArrowRight className="w-3.5 h-3.5" />
@@ -668,18 +673,18 @@ export default function StudentDashboard() {
                   )}
                 </div>
 
-                <p className="text-xs md:text-sm text-indigo-100/90 leading-relaxed mb-4 max-w-4xl">
+                <p className="text-xs md:text-sm text-slate-700 dark:text-slate-300 leading-relaxed mb-4 font-sans">
                   {summary.cognitiveAdvice.advice}
                 </p>
 
                 {summary.cognitiveAdvice.actionItems && summary.cognitiveAdvice.actionItems.length > 0 && (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-3 border-t border-indigo-500/20">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-3 border-t border-[var(--border)]">
                     {summary.cognitiveAdvice.actionItems.map((item: string, idx: number) => (
-                      <div key={idx} className="flex items-start gap-2 text-xs text-indigo-200">
-                        <span className="w-4 h-4 rounded-full bg-white/10 border border-white/20 text-white flex items-center justify-center font-bold shrink-0 text-[10px] mt-0.5">
+                      <div key={idx} className="flex items-start gap-2.5 text-xs text-slate-800 dark:text-slate-200">
+                        <span className="w-4 h-4 bg-[#4a6fa5] text-white flex items-center justify-center font-mono font-bold shrink-0 text-[10px] mt-0.5">
                           {idx + 1}
                         </span>
-                        <span>{item}</span>
+                        <span className="leading-snug font-medium">{item}</span>
                       </div>
                     ))}
                   </div>

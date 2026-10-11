@@ -816,37 +816,37 @@ export default function CodingProblemsPage() {
 
           {/* Read-Only Historical Submission Code & Score Inspection Modal */}
           {inspectedSubmission && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs animate-in fade-in duration-200">
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden space-y-4 p-6">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-200">
+              <div className="bg-white dark:bg-[#121b30] border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden space-y-4 p-6 text-slate-900 dark:text-slate-100">
+                <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2.5">
-                      <FileCode className="w-4 h-4 text-blue-400" />
-                      <h3 className="text-base font-bold text-white">
+                      <FileCode className="w-4 h-4 text-blue-500" />
+                      <h3 className="text-base font-bold text-slate-900 dark:text-white">
                         {inspectedSubmission.problem?.title || 'Historical Submission Code'}
                       </h3>
                       <span
                         className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
                           inspectedSubmission.status === 'ACCEPTED'
-                            ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                            ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20'
                             : inspectedSubmission.status === 'COMPILATION_ERROR'
-                            ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
-                            : 'bg-rose-500/20 text-rose-400 border-rose-500/30'
+                            ? 'bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-500/20'
+                            : 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20'
                         }`}
                       >
                         {inspectedSubmission.status.replace(/_/g, ' ')}
                       </span>
-                      <span className="text-xs font-bold text-blue-400">
+                      <span className="text-xs font-bold text-blue-600 dark:text-blue-400">
                         Score: {inspectedSubmission.score ?? 0}%
                       </span>
                     </div>
-                    <p className="text-[11px] text-slate-400">
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">
                       Submitted on {new Date(inspectedSubmission.createdAt).toLocaleString()} • {inspectedSubmission.language} • {inspectedSubmission.testCasesPassed ?? 0}/{inspectedSubmission.totalTestCases ?? 0} test cases passed ({inspectedSubmission.executionTimeMs}ms)
                     </p>
                   </div>
                   <button
                     onClick={() => setInspectedSubmission(null)}
-                    className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+                    className="p-1.5 text-slate-400 hover:text-slate-900 dark:hover:text-white rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                   >
                     <X className="w-4 h-4" />
                   </button>

@@ -47,7 +47,7 @@ export function AdaptiveCalibrationBanner({
   };
 
   return (
-    <div className="mb-6 rounded-2xl border border-[#141c2e]/14 dark:border-white/10 bg-[#faf8f5] dark:bg-[#0f172a] p-5 shadow-sm relative overflow-hidden transition-colors duration-200">
+    <div className="mb-6 rounded-2xl border border-[var(--border)] bg-[#faf8f5]/95 dark:bg-[#0f172a]/95 p-5 shadow-sm relative overflow-hidden transition-colors duration-200">
       {/* Subtle Ambient Accent */}
       <div className="absolute top-0 right-0 -mt-6 -mr-6 w-48 h-48 bg-red-500/10 rounded-full blur-2xl pointer-events-none" />
 
@@ -70,7 +70,7 @@ export function AdaptiveCalibrationBanner({
                 {adaptiveMode ? 'Adaptive Engine' : 'Custom Calibration'}
               </span>
             </div>
-            <p className="mt-1 text-xs text-[#141c2e]/70 dark:text-slate-300 leading-relaxed max-w-xl font-sans">
+            <p className="mt-1 text-xs text-slate-700 dark:text-slate-300 font-medium leading-relaxed max-w-xl font-sans">
               {adaptiveMode
                 ? calibration.pedagogicalRationale
                 : `Manual challenge calibration active (${activeDifficulty}). You are manually calibrating to practice ${activeDifficulty.toLowerCase()}-tier conceptual questions in ${calibration.topicName}, overriding the automatic diagnostic baseline.`}
@@ -80,7 +80,7 @@ export function AdaptiveCalibrationBanner({
 
         <div className="flex items-center gap-3.5 self-end sm:self-center shrink-0">
           <div className="text-right">
-            <div className="text-[10px] font-mono font-bold text-[#141c2e]/60 dark:text-slate-400 uppercase tracking-wider">
+            <div className="text-[10px] font-mono font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
               {adaptiveMode ? 'Calibrated Tier' : 'User-Selected Tier'}
             </div>
             <span
@@ -108,7 +108,7 @@ export function AdaptiveCalibrationBanner({
       </div>
 
       {/* Mastery & Confidence Interval Bar */}
-      <div className="relative z-10 mt-4 pt-3.5 border-t border-[#141c2e]/10 dark:border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs text-[#141c2e]/70 dark:text-slate-300 gap-3">
+      <div className="relative z-10 mt-4 pt-3.5 border-t border-[var(--border)] flex flex-col sm:flex-row sm:items-center sm:justify-between text-xs text-slate-700 dark:text-slate-300 gap-3">
         <div className="flex items-center gap-2">
           <TrendingUp className="h-4 w-4 text-[#dc2626] shrink-0" />
           <span>Active Mastery in <strong className="text-[#141c2e] dark:text-white font-semibold">{calibration.topicName}</strong>:</span>
@@ -117,8 +117,8 @@ export function AdaptiveCalibrationBanner({
           </span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-[#141c2e]/60 dark:text-slate-400 text-xs font-mono">95% Latent Ability Range:</span>
-          <div className="w-36 bg-[#141c2e]/10 dark:bg-slate-950 border border-[#141c2e]/15 dark:border-slate-800 h-2.5 rounded-full overflow-hidden relative shadow-inner">
+          <span className="text-slate-700 dark:text-slate-300 text-xs font-mono font-medium">95% Latent Ability Range:</span>
+          <div className="w-36 bg-[#141c2e]/10 dark:bg-slate-950 border border-[var(--border)] h-2.5 rounded-full overflow-hidden relative shadow-inner">
             <div
               className="bg-gradient-to-r from-[#dc2626] to-[#0d9488] h-full rounded-full shadow-xs"
               style={{

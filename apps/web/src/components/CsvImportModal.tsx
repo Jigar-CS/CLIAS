@@ -169,7 +169,7 @@ export function CsvImportModal({ isOpen, onClose, onSuccess }: CsvImportModalPro
                 type="button"
                 onClick={() => handlePreview()}
                 disabled={loading || !csvText.trim()}
-                className="px-4 py-1.5 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition disabled:opacity-50"
+                className="px-4 py-1.5 text-xs font-bold text-white bg-[#e05033] hover:bg-[#c8432b] rounded-lg transition disabled:opacity-50"
               >
                 {loading ? 'Validating...' : 'Validate & Preview'}
               </button>

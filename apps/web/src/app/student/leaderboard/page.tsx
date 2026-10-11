@@ -251,32 +251,30 @@ export default function StudentLeaderboardPage() {
 
           {/* MY STANDING HERO CARD */}
           {standing && (
-            <div className="relative overflow-hidden rounded-3xl p-6 md:p-8 bg-gradient-to-br from-[#0F172A] via-[#1E1B4B] to-[#172554] text-white border border-indigo-500/30 shadow-xl shadow-indigo-950/30">
-              <div className="absolute top-0 right-0 w-96 h-full bg-gradient-to-l from-blue-500/10 via-indigo-500/10 to-transparent pointer-events-none" />
-
+            <div className="panel p-6 md:p-8 bg-[var(--surface)] text-[var(--foreground)] border border-[var(--strong-border)] shadow-xs relative overflow-hidden">
               <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-400/40 flex items-center gap-1.5">
-                      <Crown className="w-3.5 h-3.5 fill-amber-300" />
+                    <span className="px-3 py-1 text-xs font-mono font-bold uppercase tracking-wider bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30 flex items-center gap-1.5">
+                      <Crown className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                       Your Standing: Rank #{standing.rank} of {standing.totalStudents}
                     </span>
                     {standing.score > 0 && (
-                      <span className="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center gap-1">
-                        <Sparkles className="w-3.5 h-3.5" />
+                      <span className="px-3 py-1 text-xs font-mono font-bold uppercase tracking-wider bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                        <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                         Top {100 - standing.percentile < 1 ? '1%' : `${(100 - standing.percentile).toFixed(1)}%`} in Class
                       </span>
                     )}
                   </div>
 
-                  <h3 className="text-3xl font-black tracking-tight text-white flex items-baseline gap-3">
+                  <h3 className="text-3xl font-display font-black tracking-tight text-slate-900 dark:text-white flex items-baseline gap-3">
                     <span>{standing.score}</span>
-                    <span className="text-sm font-semibold text-indigo-300">
+                    <span className="text-sm font-mono font-semibold text-[#4a6fa5] dark:text-[#6a90c5]">
                       / 100 {calculationType === 'composite' ? 'Hybrid Score' : calculationType === 'assessments' ? 'Exam Marks %' : 'Practice Points'}
                     </span>
                   </h3>
 
-                  <p className="text-xs text-indigo-200/80 max-w-xl">
+                  <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 max-w-xl leading-relaxed">
                     {standing.score === 0 && standing.questionsCount === 0 && standing.assessmentsCount === 0
                       ? 'Welcome! You haven’t completed any faculty assessments or adaptive practice sessions yet. Start practicing questions or take an exam to establish your official score and climb the class leaderboard.'
                       : standing.rank === 1
@@ -288,40 +286,40 @@ export default function StudentLeaderboardPage() {
                 </div>
 
                 {/* Score Breakdown Pills */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-white/5 p-4 rounded-2xl border border-white/10 backdrop-blur-md shrink-0">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-[var(--surface-muted)] p-4 border border-[var(--border)] shrink-0">
                   <div className="text-center p-2">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-200/70">
+                    <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
                       Assessment Marks
                     </p>
-                    <p className="text-lg font-black text-amber-300 mt-0.5">{standing.assessmentScore}%</p>
-                    <span className="text-[10px] text-indigo-300">70% Weight</span>
+                    <p className="text-xl font-mono font-black text-amber-600 dark:text-amber-400 mt-1">{standing.assessmentScore}%</p>
+                    <span className="text-[10px] font-mono font-medium text-slate-500 dark:text-slate-400">70% Weight</span>
                   </div>
 
-                  <div className="text-center p-2 border-l border-white/10">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-200/70">
+                  <div className="text-center p-2 border-l border-slate-200 dark:border-white/10">
+                    <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
                       Practice Mastery
                     </p>
-                    <p className="text-lg font-black text-blue-300 mt-0.5">{standing.practiceScore}%</p>
-                    <span className="text-[10px] text-indigo-300">30% Weight</span>
+                    <p className="text-xl font-mono font-black text-blue-600 dark:text-blue-400 mt-1">{standing.practiceScore}%</p>
+                    <span className="text-[10px] font-mono font-medium text-slate-500 dark:text-slate-400">30% Weight</span>
                   </div>
 
-                  <div className="text-center p-2 border-l border-white/10">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-200/70">
+                  <div className="text-center p-2 border-l border-slate-200 dark:border-white/10">
+                    <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
                       Accuracy
                     </p>
-                    <p className="text-lg font-black text-emerald-300 mt-0.5">{standing.accuracy}%</p>
-                    <span className="text-[10px] text-indigo-300">{standing.questionsCount} Solved</span>
+                    <p className="text-xl font-mono font-black text-emerald-600 dark:text-emerald-400 mt-1">{standing.accuracy}%</p>
+                    <span className="text-[10px] font-mono font-medium text-slate-500 dark:text-slate-400">{standing.questionsCount} Solved</span>
                   </div>
 
-                  <div className="text-center p-2 border-l border-white/10">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-indigo-200/70">
+                  <div className="text-center p-2 border-l border-slate-200 dark:border-white/10">
+                    <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
                       Active Streak
                     </p>
-                    <p className="text-lg font-black text-rose-300 mt-0.5 flex items-center justify-center gap-1">
-                      <Flame className="w-4 h-4 fill-rose-400" />
+                    <p className="text-xl font-mono font-black text-rose-600 dark:text-rose-400 mt-1 flex items-center justify-center gap-1">
+                      <Flame className="w-4 h-4 fill-rose-500 text-rose-500" />
                       {standing.streakDays}d
                     </p>
-                    <span className="text-[10px] text-indigo-300">Daily Goal</span>
+                    <span className="text-[10px] font-mono font-medium text-slate-500 dark:text-slate-400">Daily Goal</span>
                   </div>
                 </div>
               </div>
@@ -329,18 +327,18 @@ export default function StudentLeaderboardPage() {
           )}
 
           {/* FILTER CONTROLS BAR */}
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-5 shadow-xs space-y-4">
+          <div className="panel bg-[var(--surface)] border border-[var(--strong-border)] p-5 shadow-xs space-y-4">
             {/* 3 Core Calculation Mode Tabs */}
-            <div className="flex border-b border-slate-200 dark:border-slate-800 pb-3 flex-wrap gap-2 justify-between items-center">
-              <div className="flex gap-2 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80">
+            <div className="flex border-b border-[var(--border)] pb-3 flex-wrap gap-2 justify-between items-center">
+              <div className="flex gap-2 p-1 bg-[var(--surface-muted)]">
                 <button
                   onClick={() => {
                     setCalculationType('composite');
                     setCurrentPage(1);
                   }}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${calculationType === 'composite'
-                      ? 'bg-blue-600 text-white shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  className={`px-4 py-2 text-xs font-bold transition flex items-center gap-2 ${calculationType === 'composite'
+                      ? 'bg-[#1a2540] dark:bg-blue-600 text-white shadow-xs'
+                      : 'text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     }`}
                 >
                   <Sparkles className="w-3.5 h-3.5" />
@@ -352,9 +350,9 @@ export default function StudentLeaderboardPage() {
                     setCalculationType('assessments');
                     setCurrentPage(1);
                   }}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${calculationType === 'assessments'
-                      ? 'bg-blue-600 text-white shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  className={`px-4 py-2 text-xs font-bold transition flex items-center gap-2 ${calculationType === 'assessments'
+                      ? 'bg-[#1a2540] dark:bg-blue-600 text-white shadow-xs'
+                      : 'text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     }`}
                 >
                   <FileCheck className="w-3.5 h-3.5" />
@@ -366,9 +364,9 @@ export default function StudentLeaderboardPage() {
                     setCalculationType('practice');
                     setCurrentPage(1);
                   }}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 ${calculationType === 'practice'
-                      ? 'bg-blue-600 text-white shadow-xs'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  className={`px-4 py-2 text-xs font-bold transition flex items-center gap-2 ${calculationType === 'practice'
+                      ? 'bg-[#1a2540] dark:bg-blue-600 text-white shadow-xs'
+                      : 'text-slate-700 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                     }`}
                 >
                   <BrainCircuit className="w-3.5 h-3.5" />
@@ -376,14 +374,14 @@ export default function StudentLeaderboardPage() {
                 </button>
               </div>
 
-              <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                <Info className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+              <div className="text-[11px] font-semibold text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                <Info className="w-3.5 h-3.5 text-[#4a6fa5] dark:text-blue-400" />
                 <span>{metaInfo?.calculationFormula || 'Calculating percentile distribution'}</span>
               </div>
             </div>
 
             {/* Subject Dropdown & Division & Search */}
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-1">
+            <div className="flex flex-col sm:row items-stretch sm:items-center justify-between gap-3 pt-1">
               <div className="flex items-center gap-3 flex-wrap flex-1">
                 {/* Subject Selector */}
                 <div className="relative min-w-[240px]">
@@ -393,7 +391,7 @@ export default function StudentLeaderboardPage() {
                       setSelectedCourseId(e.target.value);
                       setCurrentPage(1);
                     }}
-                    className="w-full pl-3 pr-8 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
+                    className="w-full pl-3 pr-8 py-2 text-xs bg-[var(--surface-muted)] border border-[var(--border)] text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#4a6fa5] font-semibold"
                   >
                     <option value="all">📚 All Semester Subjects (Aggregate)</option>
                     {courses.map((c) => (
@@ -412,7 +410,7 @@ export default function StudentLeaderboardPage() {
                       setSelectedDivision(e.target.value);
                       setCurrentPage(1);
                     }}
-                    className="w-full pl-3 pr-8 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 font-semibold"
+                    className="w-full pl-3 pr-8 py-2 text-xs bg-[var(--surface-muted)] border border-[var(--border)] text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#4a6fa5] font-semibold"
                   >
                     <option value="ALL">All Divisions</option>
                     <option value="CE-A">Division CE-A</option>
@@ -423,7 +421,7 @@ export default function StudentLeaderboardPage() {
 
               {/* Search bar */}
               <div className="relative w-full sm:w-64">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                <Search className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
                   value={searchQuery}
@@ -432,7 +430,7 @@ export default function StudentLeaderboardPage() {
                     setCurrentPage(1);
                   }}
                   placeholder="Search student or ID..."
-                  className="w-full pl-9 pr-4 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-9 pr-4 py-2 text-xs bg-[var(--surface-muted)] border border-[var(--border)] text-slate-900 dark:text-white focus:outline-none focus:ring-1 focus:ring-[#4a6fa5]"
                 />
               </div>
             </div>
@@ -442,26 +440,26 @@ export default function StudentLeaderboardPage() {
           {podium.length >= 3 && !searchQuery && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end pt-6 pb-2">
               {/* 2nd Place (Silver) */}
-              <div className="order-2 md:order-1 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 text-center relative shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition">
-                <div className="absolute -top-5 left-1/2 -translate-x-1/2 w-10 h-10 rounded-2xl bg-slate-200 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center font-black text-slate-600 dark:text-slate-300 shadow-md">
+              <div className="order-2 md:order-1 panel bg-[var(--surface)] border border-[var(--border)] p-6 text-center relative shadow-xs hover:border-[#4a6fa5] transition">
+                <div className="absolute -top-5 left-1/2 -translate-x-1/2 w-10 h-10 bg-slate-200 dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600 flex items-center justify-center font-black text-slate-700 dark:text-slate-300 shadow-md">
                   2
                 </div>
                 <div className="pt-3 space-y-2">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-slate-400 to-slate-600 text-white font-extrabold text-xl flex items-center justify-center mx-auto shadow-md">
+                  <div className="w-16 h-16 bg-gradient-to-br from-slate-400 to-slate-600 text-white font-extrabold text-xl flex items-center justify-center mx-auto shadow-md">
                     {podium[1].name.slice(0, 2).toUpperCase()}
                   </div>
                   <div>
                     <h4 className="text-base font-bold text-slate-900 dark:text-white truncate">
                       {podium[1].name}
                     </h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
+                    <p className="text-xs text-slate-600 dark:text-slate-400 font-mono">
                       {podium[1].enrollmentNumber} • {podium[1].division}
                     </p>
                   </div>
-                  <div className="inline-block px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-xs font-black text-slate-700 dark:text-slate-300">
+                  <div className="inline-block px-3 py-1 bg-slate-100 dark:bg-slate-800 text-xs font-black text-slate-700 dark:text-slate-300">
                     {podium[1].score} pts
                   </div>
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400 flex justify-center gap-3 pt-1">
+                  <div className="text-[11px] text-slate-600 dark:text-slate-400 flex justify-center gap-3 pt-1">
                     <span>Exam: {podium[1].assessmentScore}%</span>
                     <span>Practice: {podium[1].practiceScore}%</span>
                   </div>
@@ -469,29 +467,29 @@ export default function StudentLeaderboardPage() {
               </div>
 
               {/* 1st Place (Gold / Champion) */}
-              <div className="order-1 md:order-2 bg-gradient-to-b from-amber-500/10 via-white to-white dark:from-amber-500/10 dark:via-slate-900 dark:to-slate-900 rounded-3xl border-2 border-amber-400 dark:border-amber-500/60 p-7 text-center relative shadow-xl shadow-amber-500/10 -translate-y-2">
-                <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 text-white flex items-center justify-center font-black shadow-lg shadow-amber-500/30">
+              <div className="order-1 md:order-2 panel bg-gradient-to-b from-amber-500/10 via-[var(--surface)] to-[var(--surface)] border-2 border-amber-500/70 p-7 text-center relative shadow-md -translate-y-2">
+                <div className="absolute -top-6 left-1/2 -translate-x-1/2 w-12 h-12 bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center font-black shadow-lg">
                   <Crown className="w-6 h-6 fill-white" />
                 </div>
                 <div className="pt-4 space-y-2">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-700 dark:text-amber-400">
                     Cohort Champion
                   </span>
-                  <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-amber-400 to-amber-600 text-white font-black text-2xl flex items-center justify-center mx-auto shadow-lg shadow-amber-500/30 ring-4 ring-amber-100 dark:ring-amber-950">
+                  <div className="w-20 h-20 bg-gradient-to-br from-amber-500 to-amber-600 text-white font-black text-2xl flex items-center justify-center mx-auto shadow-md ring-4 ring-amber-200 dark:ring-amber-950">
                     {podium[0].name.slice(0, 2).toUpperCase()}
                   </div>
                   <div>
                     <h4 className="text-lg font-black text-slate-900 dark:text-white truncate">
                       {podium[0].name}
                     </h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
+                    <p className="text-xs text-slate-600 dark:text-slate-400 font-mono">
                       {podium[0].enrollmentNumber} • {podium[0].division}
                     </p>
                   </div>
-                  <div className="inline-block px-4 py-1.5 rounded-full bg-amber-500 text-white text-xs font-black shadow-md shadow-amber-500/30">
+                  <div className="inline-block px-4 py-1.5 bg-amber-500 text-white text-xs font-black shadow-md">
                     {podium[0].score} pts
                   </div>
-                  <div className="text-[11px] text-slate-600 dark:text-slate-300 font-semibold flex justify-center gap-3 pt-1">
+                  <div className="text-[11px] text-slate-700 dark:text-slate-300 font-semibold flex justify-center gap-3 pt-1">
                     <span>Exam: {podium[0].assessmentScore}%</span>
                     <span>Practice: {podium[0].practiceScore}%</span>
                   </div>
@@ -499,26 +497,26 @@ export default function StudentLeaderboardPage() {
               </div>
 
               {/* 3rd Place (Bronze) */}
-              <div className="order-3 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 text-center relative shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition">
-                <div className="absolute -top-5 left-1/2 -translate-x-1/2 w-10 h-10 rounded-2xl bg-amber-700/20 text-amber-700 border-2 border-amber-700/40 flex items-center justify-center font-black shadow-md">
+              <div className="order-3 panel bg-[var(--surface)] border border-[var(--border)] p-6 text-center relative shadow-xs hover:border-[#4a6fa5] transition">
+                <div className="absolute -top-5 left-1/2 -translate-x-1/2 w-10 h-10 bg-amber-800/15 text-amber-800 dark:text-amber-300 border-2 border-amber-800/30 flex items-center justify-center font-black shadow-md">
                   3
                 </div>
                 <div className="pt-3 space-y-2">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-700 to-amber-900 text-white font-extrabold text-xl flex items-center justify-center mx-auto shadow-md">
+                  <div className="w-16 h-16 bg-gradient-to-br from-amber-700 to-amber-900 text-white font-extrabold text-xl flex items-center justify-center mx-auto shadow-md">
                     {podium[2].name.slice(0, 2).toUpperCase()}
                   </div>
                   <div>
                     <h4 className="text-base font-bold text-slate-900 dark:text-white truncate">
                       {podium[2].name}
                     </h4>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
+                    <p className="text-xs text-slate-600 dark:text-slate-400 font-mono">
                       {podium[2].enrollmentNumber} • {podium[2].division}
                     </p>
                   </div>
-                  <div className="inline-block px-3 py-1 rounded-full bg-amber-100 dark:bg-amber-950/60 text-xs font-black text-amber-800 dark:text-amber-300">
+                  <div className="inline-block px-3 py-1 bg-amber-100 dark:bg-amber-950/60 text-xs font-black text-amber-900 dark:text-amber-300">
                     {podium[2].score} pts
                   </div>
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400 flex justify-center gap-3 pt-1">
+                  <div className="text-[11px] text-slate-600 dark:text-slate-400 flex justify-center gap-3 pt-1">
                     <span>Exam: {podium[2].assessmentScore}%</span>
                     <span>Practice: {podium[2].practiceScore}%</span>
                   </div>
@@ -528,13 +526,13 @@ export default function StudentLeaderboardPage() {
           )}
 
           {/* FULL CLASS RANKINGS TABLE */}
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
-            <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+          <div className="panel bg-[var(--surface)] border border-[var(--strong-border)] shadow-xs overflow-hidden">
+            <div className="p-5 border-b border-[var(--border)] flex items-center justify-between">
               <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Users className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                <Users className="w-4 h-4 text-[#4a6fa5] dark:text-blue-400" />
                 <span>Full Semester Roster Standings ({filteredRankings.length} Students)</span>
               </h3>
-              <span className="text-xs text-slate-500 dark:text-slate-400">
+              <span className="text-xs text-slate-600 dark:text-slate-400">
                 Sorted by {calculationType === 'composite' ? 'Hybrid Score' : calculationType === 'assessments' ? 'Faculty Marks' : 'Practice Mastery'}
               </span>
             </div>
@@ -542,7 +540,7 @@ export default function StudentLeaderboardPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800 font-bold uppercase tracking-wider text-[10px]">
+                  <tr className="bg-[var(--surface-muted)] text-slate-600 dark:text-slate-400 border-b border-[var(--border)] font-bold uppercase tracking-wider text-[10px]">
                     <th className="py-3.5 px-4 w-16 text-center">Rank</th>
                     <th className="py-3.5 px-4">Student &amp; Enrollment ID</th>
                     <th className="py-3.5 px-3">Division</th>
@@ -555,14 +553,14 @@ export default function StudentLeaderboardPage() {
                     <th className="py-3.5 px-4">Key Achievements</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                   {paginatedRankings.map((student) => {
                     const isMe = student.isCurrentUser;
                     return (
                       <tr
                         key={student.studentId}
-                        className={`transition hover:bg-slate-50/80 dark:hover:bg-slate-800/40 ${isMe
-                            ? 'bg-blue-50/70 dark:bg-blue-950/40 border-l-4 border-l-blue-600 font-medium'
+                        className={`transition hover:bg-slate-100/60 dark:hover:bg-slate-800/40 ${isMe
+                            ? 'bg-blue-500/10 dark:bg-blue-950/40 border-l-4 border-l-[#4a6fa5] font-medium'
                             : ''
                           }`}
                       >
@@ -570,9 +568,9 @@ export default function StudentLeaderboardPage() {
                         <td className="py-3.5 px-4">
                           <div className="flex items-center gap-3">
                             <div
-                              className={`w-8 h-8 rounded-xl font-bold text-xs flex items-center justify-center shrink-0 ${isMe
-                                  ? 'bg-blue-600 text-white'
-                                  : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                              className={`w-8 h-8 font-bold text-xs flex items-center justify-center shrink-0 ${isMe
+                                  ? 'bg-[#1a2540] dark:bg-blue-600 text-white'
+                                  : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
                                 }`}
                             >
                               {student.name.slice(0, 2).toUpperCase()}
@@ -581,19 +579,19 @@ export default function StudentLeaderboardPage() {
                               <p className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                                 <span>{student.name}</span>
                                 {isMe && (
-                                  <span className="text-[10px] font-black uppercase px-1.5 py-0.2 rounded bg-blue-600 text-white">
+                                  <span className="text-[10px] font-mono font-black uppercase px-1.5 py-0.2 bg-[#4a6fa5] text-white">
                                     You
                                   </span>
                                 )}
                               </p>
-                              <p className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+                              <p className="text-[11px] text-slate-600 dark:text-slate-400 font-mono">
                                 {student.enrollmentNumber}
                               </p>
                             </div>
                           </div>
                         </td>
                         <td className="py-3.5 px-3">
-                          <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                          <span className="px-2 py-0.5 text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700">
                             {student.division}
                           </span>
                         </td>
@@ -615,23 +613,23 @@ export default function StudentLeaderboardPage() {
                           )}
                         </td>
                         <td className="py-3.5 px-4 text-right">
-                          <span className="font-black text-sm text-blue-600 dark:text-blue-400">
+                          <span className="font-mono font-black text-sm text-[#4a6fa5] dark:text-blue-400">
                             {student.score}
                           </span>
                         </td>
                         <td className="py-3.5 px-4 text-right">
-                          <span className="font-bold text-slate-800 dark:text-slate-200">
+                          <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
                             {student.assessmentScore}%
                           </span>
-                          <span className="text-[10px] text-slate-400 block">
+                          <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 block">
                             {student.assessmentsCount} tests
                           </span>
                         </td>
                         <td className="py-3.5 px-4 text-right">
-                          <span className="font-bold text-slate-800 dark:text-slate-200">
+                          <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
                             {student.practiceScore}%
                           </span>
-                          <span className="text-[10px] text-slate-400 block">
+                          <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 block">
                             {student.questionsCount} Qs ({student.accuracy}%)
                           </span>
                         </td>
@@ -640,7 +638,7 @@ export default function StudentLeaderboardPage() {
                             {student.badges.map((b, idx) => (
                               <span
                                 key={idx}
-                                className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+                                className="px-2 py-0.5 text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
                               >
                                 {b}
                               </span>
@@ -652,7 +650,7 @@ export default function StudentLeaderboardPage() {
                   })}
                   {paginatedRankings.length === 0 && (
                     <tr>
-                      <td colSpan={8} className="py-12 text-center text-slate-400">
+                      <td colSpan={8} className="py-12 text-center text-slate-500 dark:text-slate-400">
                         No students found for this division or filter.
                       </td>
                     </tr>
@@ -663,22 +661,22 @@ export default function StudentLeaderboardPage() {
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
-              <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                <span className="text-xs text-slate-500 dark:text-slate-400">
+              <div className="p-4 border-t border-[var(--border)] flex items-center justify-between">
+                <span className="text-xs text-slate-600 dark:text-slate-400 font-mono">
                   Page {currentPage} of {totalPages} ({filteredRankings.length} students)
                 </span>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
-                    className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-40"
+                    className="p-1.5 border border-[var(--border)] text-slate-700 dark:text-slate-300 disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-slate-800"
                   >
                     <ChevronLeft className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
-                    className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 disabled:opacity-40"
+                    className="p-1.5 border border-[var(--border)] text-slate-700 dark:text-slate-300 disabled:opacity-40 hover:bg-slate-100 dark:hover:bg-slate-800"
                   >
                     <ChevronRight className="w-4 h-4" />
                   </button>

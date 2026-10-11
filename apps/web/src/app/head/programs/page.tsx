@@ -165,7 +165,7 @@ export default function HeadProgramComparisonPage() {
 
           {/* Interactive Branch Switcher Tabs */}
           <div className="space-y-3">
-            <label className="block font-mono text-xs font-bold uppercase tracking-wider text-[var(--muted)]">
+            <label className="block font-mono text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
               SELECT ENGINEERING DISCIPLINE:
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -195,11 +195,11 @@ export default function HeadProgramComparisonPage() {
                         {prog.avgMastery}% MASTERY
                       </span>
                     </div>
-                    <p className="font-mono text-xs mt-1 truncate text-[var(--muted)]">
+                    <p className="font-mono text-xs mt-1 truncate text-slate-600 dark:text-slate-400 font-medium">
                       {prog.name}
                     </p>
                     <div className="mt-3 flex items-center justify-between text-[11px]">
-                      <span className={isSelected ? 'text-blue-200' : 'text-slate-400'}>
+                      <span className={isSelected ? 'text-blue-200' : 'text-slate-600 dark:text-slate-400'}>
                         {prog.enrolledStudents} Students
                       </span>
                       <span className={`font-bold ${isSelected ? 'text-white' : 'text-emerald-600 dark:text-emerald-400'}`}>
@@ -222,7 +222,7 @@ export default function HeadProgramComparisonPage() {
                 <h3 className="text-xl font-black font-mono uppercase tracking-wider mt-0.5 text-inherit">
                   {currentProgram.name} ({currentProgram.code})
                 </h3>
-                <p className="font-mono text-xs text-[var(--muted)] mt-0.5">
+                <p className="font-mono text-xs text-slate-600 dark:text-slate-400 font-medium mt-0.5">
                   {currentProgram.department} • {currentProgram.accreditationScore}
                 </p>
               </div>
@@ -310,7 +310,7 @@ export default function HeadProgramComparisonPage() {
               <h3 className="text-base font-bold font-mono uppercase tracking-wider text-inherit">
                 SIDE-BY-SIDE INSTITUTIONAL PROGRAMS COMPARISON
               </h3>
-              <p className="font-mono text-xs text-[var(--muted)] mt-0.5">
+              <p className="font-mono text-xs text-slate-600 dark:text-slate-400 font-medium mt-0.5">
                 DIRECT CROSS-DISCIPLINARY COMPARISON ACROSS ACTIVE ACCREDITED DISCIPLINES
               </p>
             </div>

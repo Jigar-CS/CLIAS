@@ -158,17 +158,36 @@ export class PlacementService {
     // Fetch student's authentic skill masteries
     const masteries = await this.prisma.skillMastery.findMany({
       where: { studentId: studentProfileId },
-      include: { topic: true },
+      include: {
+        topic: {
+          include: {
+            course: true,
+          },
+        },
+      },
     });
 
-    const studentSkillBySlug: Record<string, number> = {};
-    const studentSkillByName: Record<string, number> = {};
-    for (const m of masteries) {
-      if (m.topic) {
-        studentSkillBySlug[m.topic.slug] = m.masteryScore ?? 0.0;
-        studentSkillByName[m.topic.name.toLowerCase().trim()] = m.masteryScore ?? 0.0;
-      }
-    }
+    // Fetch student's real assessment submissions
+    const submissions =
+      (await this.prisma.assessmentSubmission?.findMany({
+        where: {
+          studentId: studentProfileId,
+          status: SubmissionStatus.EVALUATED,
+        },
+        select: {
+          percentage: true,
+          totalScore: true,
+          passed: true,
+        },
+      })) || [];
+
+    const mockTestsTaken = submissions.length;
+    const avgMockScore =
+      mockTestsTaken > 0
+        ? Math.round(
+            (submissions.reduce((acc, s) => acc + (s.percentage || 0), 0) / mockTestsTaken) * 10,
+          ) / 10
+        : 0.0;
 
     interface BenchmarkSkillItem {
       topicSlug?: string;
@@ -198,6 +217,16 @@ export class PlacementService {
       ];
     }
 
+    const domainTaxonomy: Record<string, string[]> = {
+      arrays: ['array', 'arrays', 'matrix', 'matrices', 'vector', 'container', 'dynamic-array', 'contiguous', 'structured'],
+      linkedLists: ['linked-list', 'linked', 'pointer', 'pointers', 'singly', 'doubly', 'node', 'lists'],
+      trees: ['tree', 'trees', 'bst', 'binary-search', 'binary', 'heap', 'traversal', 'balanced'],
+      graphs: ['graph', 'graphs', 'shortest-path', 'shortest paths', 'dijkstra', 'bfs', 'dfs', 'neural'],
+      dp: ['dynamic-programming', 'dynamic', 'dp', 'memoization', 'optimization', 'paradigms', 'subproblem'],
+      dbms: ['sql', 'dbms', 'database', 'relational', 'normalization', 'query', 'indexing'],
+      os: ['process', 'processes', 'thread', 'threads', 'concurrency', 'os', 'deadlock', 'operating'],
+    };
+
     const verifiedSkills: Array<{ skill: string; mastery: number; required: number }> = [];
     const skillGaps: SkillGapItem[] = [];
 
@@ -206,34 +235,67 @@ export class PlacementService {
 
     for (const item of parsedSkills) {
       const skillName = item.topicName || item.skill || 'Core Skill';
-      const skillSlug = item.topicSlug || '';
+      const skillSlug = (item.topicSlug || '').toLowerCase().trim();
+      const lowerSkillName = skillName.toLowerCase().trim();
       const requiredMastery = item.minMastery || 75.0;
       const weight = item.weight || 1.0;
 
-      // Authentic student mastery: 0 if not practiced yet
-      const studentMastery =
-        (skillSlug && studentSkillBySlug[skillSlug] !== undefined)
-          ? studentSkillBySlug[skillSlug]
-          : (studentSkillByName[skillName.toLowerCase().trim()] !== undefined)
-          ? studentSkillByName[skillName.toLowerCase().trim()]
-          : 0.0;
+      // 1. Direct slug or name match
+      let studentMastery: number | null = null;
+      for (const m of masteries) {
+        if (!m.topic) continue;
+        const mSlug = (m.topic.slug || '').toLowerCase().trim();
+        const mName = (m.topic.name || '').toLowerCase().trim();
+        if (skillSlug && (mSlug === skillSlug || skillSlug.includes(mSlug) || mSlug.includes(skillSlug))) {
+          studentMastery = Math.max(studentMastery ?? 0, m.masteryScore ?? 0);
+        } else if (lowerSkillName && (mName === lowerSkillName || lowerSkillName.includes(mName) || mName.includes(lowerSkillName))) {
+          studentMastery = Math.max(studentMastery ?? 0, m.masteryScore ?? 0);
+        }
+      }
 
-      const gap = Math.max(0, Math.round((requiredMastery - studentMastery) * 10) / 10);
+      // 2. Taxonomy domain matching
+      if (studentMastery === null || studentMastery === 0) {
+        let detectedDomain: string | null = null;
+        for (const [dom, keywords] of Object.entries(domainTaxonomy)) {
+          if (keywords.some((kw) => skillSlug.includes(kw) || lowerSkillName.includes(kw))) {
+            detectedDomain = dom;
+            break;
+          }
+        }
+
+        if (detectedDomain) {
+          const domKeywords = domainTaxonomy[detectedDomain];
+          const matched = masteries.filter((m) => {
+            if (!m.topic) return false;
+            const tSlug = (m.topic.slug || '').toLowerCase();
+            const tName = (m.topic.name || '').toLowerCase();
+            return domKeywords.some((kw) => tSlug.includes(kw) || tName.includes(kw));
+          });
+
+          if (matched.length > 0) {
+            studentMastery = Math.max(...matched.map((m) => m.masteryScore ?? 0));
+          }
+        }
+      }
+
+      // If this specific competency has not been practiced yet, authentic mastery is 0.0
+      const finalMastery = studentMastery !== null ? Math.round(studentMastery * 10) / 10 : 0.0;
+      const gap = Math.max(0, Math.round((requiredMastery - finalMastery) * 10) / 10);
       totalWeight += requiredMastery * weight;
-      earnedWeight += Math.min(studentMastery, requiredMastery) * weight;
+      earnedWeight += Math.min(finalMastery, requiredMastery) * weight;
 
       if (gap <= 0) {
         verifiedSkills.push({
           skill: skillName,
-          mastery: Math.round(studentMastery * 10) / 10,
+          mastery: finalMastery,
           required: requiredMastery,
         });
       } else {
         const priority: 'HIGH' | 'MEDIUM' | 'LOW' =
-          studentMastery === 0 || gap > 25 ? 'HIGH' : gap > 12 ? 'MEDIUM' : 'LOW';
+          finalMastery === 0 || gap > 25 ? 'HIGH' : gap > 12 ? 'MEDIUM' : 'LOW';
         skillGaps.push({
           skill: skillName,
-          studentMastery: Math.round(studentMastery * 10) / 10,
+          studentMastery: finalMastery,
           requiredMastery,
           gap,
           priority,
@@ -241,35 +303,16 @@ export class PlacementService {
       }
     }
 
+    // Authentic Placement Readiness: Exactly the weighted percentage of role benchmark competencies mastered
     const readinessScore =
       totalWeight > 0 ? Math.round((earnedWeight / totalWeight) * 1000) / 10 : 0.0;
+
     const hiringBarStatus =
       readinessScore >= (benchmark.targetMastery || 80.0)
         ? 'MEETS_BAR'
         : readinessScore >= 55.0
         ? 'NEAR_BAR'
         : 'DEVELOPING';
-
-    // Fetch student's real assessment submissions
-    const submissions = await this.prisma.assessmentSubmission.findMany({
-      where: {
-        studentId: studentProfileId,
-        status: SubmissionStatus.EVALUATED,
-      },
-      select: {
-        percentage: true,
-        totalScore: true,
-        passed: true,
-      },
-    });
-
-    const mockTestsTaken = submissions.length;
-    const avgMockScore =
-      mockTestsTaken > 0
-        ? Math.round(
-            (submissions.reduce((acc, s) => acc + s.percentage, 0) / mockTestsTaken) * 10,
-          ) / 10
-        : 0.0;
 
     // Build dynamic personalized roadmap
     const personalizedRoadmap: string[] = [];

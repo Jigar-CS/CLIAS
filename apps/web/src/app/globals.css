@@ -33,7 +33,7 @@
 
   /* Muted parchment surfaces */
   --muted:          #ede8df;
-  --muted-foreground: #6b7fa3;      /* gleam oklch(0.555 0.04 252) */
+  --muted-foreground: #475569;      /* High-contrast readable slate text */
 
   /* Accent teal */
   --accent:         #d6e4f0;
@@ -49,7 +49,7 @@
   --ring:           #e05033;
 
   /* gleam-spark special tokens */
-  --grid-line:      rgba(74, 111, 165, 0.36);
+  --grid-line:      rgba(74, 111, 165, 0.14);
   --chart-fill:     rgba(74, 111, 165, 0.15);
   --heat-strong:    #4a6fa5;
   --heat-medium:    #7b9bbf;
@@ -75,7 +75,7 @@ html.dark {
   --secondary-foreground: #0c1220;
 
   --muted:          #1a2540;
-  --muted-foreground: #8ba0c0;
+  --muted-foreground: #94a3b8;
 
   --accent:         #1e3050;
   --accent-foreground: #e8edf5;
@@ -88,7 +88,7 @@ html.dark {
   --input:          rgba(106, 144, 197, 0.25);
   --ring:           #e8604a;
 
-  --grid-line:      rgba(106, 144, 197, 0.34);
+  --grid-line:      rgba(106, 144, 197, 0.16);
   --chart-fill:     rgba(106, 144, 197, 0.12);
   --heat-strong:    #6a90c5;
   --heat-medium:    #4a6fa5;
@@ -108,12 +108,6 @@ body {
   color: var(--foreground);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-image:
-    radial-gradient(circle at 1px 1px, var(--secondary) 2px, transparent 0),
-    linear-gradient(var(--grid-line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px) !important;
-  background-size: 80px 80px, 80px 80px, 80px 80px !important;
-  background-attachment: fixed !important;
 }
 
 /* Universal 0px border-radius in accordance with gleam-spark design */
@@ -131,34 +125,41 @@ body {
 }
 
 /* ==============================================================================
-   GLEAM-SPARK GRID PAPER (grid-paper class + body background)
+   GLEAM-SPARK GRID PAPER (subtle, non-intrusive matrix grid)
    ============================================================================== */
 .grid-paper,
 .matrix-grid,
 .atlas-grid {
   background-image:
-    radial-gradient(circle at 1px 1px, var(--secondary) 2px, transparent 0),
+    radial-gradient(circle at 1px 1px, rgba(74, 111, 165, 0.22) 1.5px, transparent 0),
     linear-gradient(var(--grid-line) 1px, transparent 1px),
     linear-gradient(90deg, var(--grid-line) 1px, transparent 1px) !important;
   background-size: 80px 80px, 80px 80px, 80px 80px !important;
-  background-attachment: fixed !important;
+}
+
+html.dark .grid-paper,
+html.dark .matrix-grid,
+html.dark .atlas-grid {
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(106, 144, 197, 0.24) 1.5px, transparent 0),
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px) !important;
+  background-size: 80px 80px, 80px 80px, 80px 80px !important;
 }
 
 .matrix-crosshairs {
   background-image:
-    radial-gradient(circle at 1px 1px, var(--primary) 2px, transparent 0),
+    radial-gradient(circle at 1px 1px, var(--primary) 1.5px, transparent 0),
     linear-gradient(var(--grid-line) 1px, transparent 1px),
     linear-gradient(90deg, var(--grid-line) 1px, transparent 1px) !important;
   background-size: 80px 80px, 80px 80px, 80px 80px !important;
 }
 
-/* Translucent panels allowing background matrix grid to shine through */
+/* Translucent parchment panels (0.95 opacity: content is completely clear, background grid does not bleed through) */
 .matrix-box,
 .matrix-card,
 .panel {
-  background-color: rgba(250, 247, 242, 0.55) !important;
-  backdrop-filter: blur(2px) !important;
-  -webkit-backdrop-filter: blur(2px) !important;
+  background-color: rgba(250, 247, 242, 0.95) !important;
   border: 1px solid var(--strong-border) !important;
   position: relative;
   border-radius: 0 !important;
@@ -167,18 +168,14 @@ body {
 html.dark .matrix-box,
 html.dark .matrix-card,
 html.dark .panel {
-  background-color: rgba(18, 27, 48, 0.55) !important;
-  backdrop-filter: blur(2px) !important;
-  -webkit-backdrop-filter: blur(2px) !important;
+  background-color: rgba(18, 27, 48, 0.95) !important;
   border: 1px solid var(--strong-border) !important;
 }
 
-/* Soften all heavy opaque white/dark surfaces across pages to let matrix grid show */
+/* Translucent surfaces across pages — ensures high contrast and 60fps scrolling without backdrop blur */
 .bg-white,
 [class*="bg-white"] {
-  background-color: rgba(250, 247, 242, 0.55) !important;
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  background-color: rgba(250, 247, 242, 0.95) !important;
 }
 
 html.dark .bg-white,
@@ -188,9 +185,46 @@ html.dark .bg-slate-950,
 html.dark [class*="bg-slate-900"],
 html.dark [class*="bg-slate-950"],
 html.dark [class*="bg-[#121b30]"] {
-  background-color: rgba(18, 27, 48, 0.55) !important;
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  background-color: rgba(18, 27, 48, 0.95) !important;
+}
+
+/* Eliminate old dark box backgrounds lingering in light mode */
+html:not(.dark) .bg-slate-900:not([data-keep-dark]),
+html:not(.dark) .bg-slate-950:not([data-keep-dark]),
+html:not(.dark) .bg-slate-850:not([data-keep-dark]),
+html:not(.dark) [class*="bg-slate-900"]:not([data-keep-dark]),
+html:not(.dark) [class*="bg-[#0f172a]" i]:not([data-keep-dark]),
+html:not(.dark) [class*="bg-[#111827]" i]:not([data-keep-dark]),
+html:not(.dark) [class*="bg-[#1e293b]" i]:not([data-keep-dark]),
+html:not(.dark) [class*="bg-[#121b30]" i]:not([data-keep-dark]),
+html:not(.dark) [class*="bg-[#141c2e]" i]:not([data-keep-dark]) {
+  background-color: rgba(250, 247, 242, 0.95) !important;
+  color: #1a2540 !important;
+  border-color: rgba(74, 111, 165, 0.22) !important;
+}
+
+html:not(.dark) .bg-slate-900:not([data-keep-dark]) .text-white,
+html:not(.dark) .bg-slate-950:not([data-keep-dark]) .text-white,
+html:not(.dark) [class*="bg-slate-900"]:not([data-keep-dark]) .text-white,
+html:not(.dark) [class*="bg-[#0f172a]" i]:not([data-keep-dark]) .text-white,
+html:not(.dark) [class*="bg-[#111827]" i]:not([data-keep-dark]) .text-white,
+html:not(.dark) [class*="bg-[#1e293b]" i]:not([data-keep-dark]) .text-white {
+  color: #1a2540 !important;
+}
+
+html:not(.dark) .bg-slate-900:not([data-keep-dark]) .text-slate-200,
+html:not(.dark) .bg-slate-900:not([data-keep-dark]) .text-slate-300,
+html:not(.dark) .bg-slate-900:not([data-keep-dark]) .text-slate-400,
+html:not(.dark) [class*="bg-slate-900"]:not([data-keep-dark]) .text-slate-200,
+html:not(.dark) [class*="bg-slate-900"]:not([data-keep-dark]) .text-slate-300,
+html:not(.dark) [class*="bg-slate-900"]:not([data-keep-dark]) .text-slate-400,
+html:not(.dark) [class*="bg-[#0f172a]" i]:not([data-keep-dark]) .text-slate-300,
+html:not(.dark) [class*="bg-[#0f172a]" i]:not([data-keep-dark]) .text-slate-400,
+html:not(.dark) [class*="bg-[#111827]" i]:not([data-keep-dark]) .text-slate-300,
+html:not(.dark) [class*="bg-[#111827]" i]:not([data-keep-dark]) .text-slate-400,
+html:not(.dark) [class*="bg-[#1e293b]" i]:not([data-keep-dark]) .text-slate-300,
+html:not(.dark) [class*="bg-[#1e293b]" i]:not([data-keep-dark]) .text-slate-400 {
+  color: var(--muted-foreground) !important;
 }
 
 /* ==============================================================================
@@ -717,13 +751,29 @@ html.dark .bg-red-50 {
 }
 
 .priority-band {
-  background: var(--foreground);
-  color: var(--background);
+  background: rgba(250, 247, 242, 0.96);
+  color: var(--foreground);
+  border: 1px solid var(--strong-border);
+  box-shadow: 0 1px 4px rgba(26, 37, 64, 0.05);
   display: flex;
   align-items: center;
   padding: 26px 24px;
   gap: 25px;
   margin-bottom: 24px;
+}
+
+html.dark .priority-band {
+  background: rgba(18, 27, 48, 0.96);
+  color: var(--foreground);
+  border: 1px solid var(--strong-border);
+}
+
+.priority-band .priority-content h2 {
+  color: var(--foreground);
+}
+
+.priority-band .priority-content p {
+  color: var(--muted-foreground);
 }
 
 .priority-symbol {
@@ -965,15 +1015,13 @@ html.dark .bg-red-50 {
   display: flex;
   flex-direction: column;
   min-height: 245px;
-  background: rgba(250, 247, 242, 0.55);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
+  background: rgba(250, 247, 242, 0.95);
   border-radius: 0 !important;
   transition: transform 0.15s ease, border-color 0.15s ease;
 }
 
 html.dark .course {
-  background: rgba(18, 27, 48, 0.55);
+  background: rgba(18, 27, 48, 0.95);
 }
 
 .course:hover {
@@ -1031,7 +1079,7 @@ html.dark .course {
   border-radius: 0 !important;
   text-align: left;
   padding: 16px 20px;
-  background: rgba(250, 247, 242, 0.65);
+  background: rgba(250, 247, 242, 0.95);
   font-family: var(--font-sans);
   font-size: 13px;
   cursor: pointer;
@@ -1041,7 +1089,7 @@ html.dark .course {
 }
 
 html.dark .answer {
-  background: rgba(18, 27, 48, 0.65);
+  background: rgba(18, 27, 48, 0.95);
 }
 
 .answer:hover {
@@ -1121,7 +1169,7 @@ html.dark .answer {
 .field-label select,
 .field-label textarea {
   border: 1px solid var(--border);
-  background: rgba(250, 247, 242, 0.65);
+  background: rgba(250, 247, 242, 0.95);
   padding: 14px 16px;
   font: 13px var(--font-sans);
   color: var(--foreground);
@@ -1132,13 +1180,13 @@ html.dark .answer {
 html.dark .field-label input,
 html.dark .field-label select,
 html.dark .field-label textarea {
-  background: rgba(18, 27, 48, 0.65);
+  background: rgba(18, 27, 48, 0.95);
   color: var(--foreground);
 }
 
 .notice {
   border: 1px solid var(--secondary);
-  background: rgba(250, 247, 242, 0.85);
+  background: rgba(250, 247, 242, 0.96);
   padding: 18px;
   margin-bottom: 24px;
   font-size: 12px;
@@ -1150,5 +1198,5 @@ html.dark .field-label textarea {
 }
 
 html.dark .notice {
-  background: rgba(18, 27, 48, 0.85);
+  background: rgba(18, 27, 48, 0.96);
 }

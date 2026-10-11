@@ -83,6 +83,18 @@ export default function StudentAssessmentsPage() {
   const courses = Array.from(new Set(assessments.map((a) => a.courseCode)));
   const filtered = filterCourse === 'ALL' ? assessments : assessments.filter((a) => a.courseCode === filterCourse);
 
+  const completedAssessments = assessments.filter(
+    (a) => typeof a.bestPercentage === 'number' && a.bestPercentage !== null,
+  );
+
+  const avgExamScore =
+    completedAssessments.length > 0
+      ? Math.round(
+          completedAssessments.reduce((acc, a) => acc + (a.bestPercentage || 0), 0) /
+            completedAssessments.length,
+        )
+      : 0;
+
   return (
     <div className="min-h-screen bg-transparent text-[#1a2540] dark:text-[#e8edf5] flex font-sans relative z-10">
       <Sidebar />
@@ -107,7 +119,7 @@ export default function StudentAssessmentsPage() {
             <div className="readiness">
               <p className="mono text-[8px] uppercase tracking-wider text-[#6b7fa3]">EXAM READINESS</p>
               <strong className="font-display text-4xl text-[#1a2540] dark:text-[#f5f0e8]">
-                88<span className="font-mono text-sm text-[#e05033]">%</span>
+                {avgExamScore}<span className="font-mono text-sm text-[#e05033]">%</span>
               </strong>
               <p className="mono text-[8px] text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">PROCTORED EVALUATION</p>
             </div>

@@ -212,7 +212,7 @@ export default function AdminSettingsPage() {
                   ACTIVE SPECIFICATION
                 </span>
               </div>
-              <p className="font-mono text-xs text-[var(--muted)]">
+              <p className="font-mono text-xs text-slate-600 dark:text-slate-400 font-medium">
                 CONFIGURE INSTITUTIONAL IDENTITY, AUTHENTICATION TIMEOUTS, AND MICROSERVICE PIPELINE ENDPOINTS.
               </p>
             </div>
@@ -251,7 +251,7 @@ export default function AdminSettingsPage() {
                 <Building className="w-5 h-5 text-[var(--primary)]" />
                 <div>
                   <h3 className="text-base font-bold font-mono uppercase tracking-wider text-inherit">INSTITUTIONAL IDENTITY &amp; DOMAIN</h3>
-                  <p className="font-mono text-xs text-[var(--muted)]">CONTROLS EMAIL VALIDATION DOMAINS AND UNIVERSITY BRANDING</p>
+                  <p className="font-mono text-xs text-slate-600 dark:text-slate-400 font-medium">CONTROLS EMAIL VALIDATION DOMAINS AND UNIVERSITY BRANDING</p>
                 </div>
               </div>
 
@@ -320,7 +320,7 @@ export default function AdminSettingsPage() {
                 <Lock className="w-5 h-5 text-[var(--primary)]" />
                 <div>
                   <h3 className="text-base font-bold font-mono uppercase tracking-wider text-inherit">SECURITY &amp; ACCESS GOVERNANCE</h3>
-                  <p className="font-mono text-xs text-[var(--muted)]">JWT TOKEN DURATIONS, OTP VERIFICATION LIMITS, AND STRICT ROLE ISOLATION</p>
+                  <p className="font-mono text-xs text-slate-600 dark:text-slate-400 font-medium">JWT TOKEN DURATIONS, OTP VERIFICATION LIMITS, AND STRICT ROLE ISOLATION</p>
                 </div>
               </div>
 
@@ -334,10 +334,10 @@ export default function AdminSettingsPage() {
                     onChange={(e) => setJwtExpiry(e.target.value)}
                     className="w-full px-3.5 py-2.5 bg-transparent border border-[var(--grid-line)] focus:outline-none focus:border-[var(--primary)] text-inherit"
                   >
-                    <option value="1d" className="bg-slate-900 text-slate-100">1 Day</option>
-                    <option value="7d" className="bg-slate-900 text-slate-100">7 Days (Default)</option>
-                    <option value="14d" className="bg-slate-900 text-slate-100">14 Days</option>
-                    <option value="30d" className="bg-slate-900 text-slate-100">30 Days</option>
+                    <option value="1d" className="bg-[var(--card)] text-[var(--foreground)]">1 Day</option>
+                    <option value="7d" className="bg-[var(--card)] text-[var(--foreground)]">7 Days (Default)</option>
+                    <option value="14d" className="bg-[var(--card)] text-[var(--foreground)]">14 Days</option>
+                    <option value="30d" className="bg-[var(--card)] text-[var(--foreground)]">30 Days</option>
                   </select>
                 </div>
 
@@ -382,7 +382,7 @@ export default function AdminSettingsPage() {
                     <span className="font-mono text-xs font-bold block uppercase tracking-wider">
                       ENFORCE STRICT ROLE ISOLATION MATRIX (RULE 5 &amp; 23)
                     </span>
-                    <span className="font-mono text-[11px] text-[var(--muted)] block">
+                    <span className="font-mono text-[11px] text-slate-600 dark:text-slate-400 font-medium block">
                       Guarantees counsellors view only assigned mentees, faculty access only designated courses, and unassigned records are strictly quarantined.
                     </span>
                   </div>
@@ -396,7 +396,7 @@ export default function AdminSettingsPage() {
                 <Cpu className="w-5 h-5 text-cyan-500" />
                 <div>
                   <h3 className="text-base font-bold font-mono uppercase tracking-wider text-inherit">AI MICROSERVICE &amp; SEMANTIC RAG SETTINGS</h3>
-                  <p className="font-mono text-xs text-[var(--muted)]">ENDPOINTS AND HYPERPARAMETERS FOR SOCRATIC TUTORING AND GROUNDED GENERATION</p>
+                  <p className="font-mono text-xs text-slate-600 dark:text-slate-400 font-medium">ENDPOINTS AND HYPERPARAMETERS FOR SOCRATIC TUTORING AND GROUNDED GENERATION</p>
                 </div>
               </div>
 
@@ -451,7 +451,7 @@ export default function AdminSettingsPage() {
                 <Mail className="w-5 h-5 text-purple-500" />
                 <div>
                   <h3 className="text-base font-bold font-mono uppercase tracking-wider text-inherit">EMAIL &amp; NOTIFICATION RELAY</h3>
-                  <p className="font-mono text-xs text-[var(--muted)]">DRIVER CONFIGURATION FOR OTP DELIVERY AND PROCTORING VIOLATION ALERTS</p>
+                  <p className="font-mono text-xs text-slate-600 dark:text-slate-400 font-medium">DRIVER CONFIGURATION FOR OTP DELIVERY AND PROCTORING VIOLATION ALERTS</p>
                 </div>
               </div>
 

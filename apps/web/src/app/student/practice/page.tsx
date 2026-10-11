@@ -716,7 +716,7 @@ export default function PracticePage() {
               )}
               {/* Learning Path Concept Drill Pre-Configuration Banner */}
               {isLearningPathDrillMode && (
-                <div className="p-4 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-transparent border border-indigo-300 dark:border-indigo-800 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="p-4 bg-indigo-50/95 dark:bg-indigo-950/60 border border-indigo-200 dark:border-indigo-800 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-900/50 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold text-base shadow-xs shrink-0">
                       🎯
@@ -730,7 +730,7 @@ export default function PracticePage() {
                           Targeted Concept: {courses.find((c) => c.id === selectedCourseId)?.topics?.find((t: any) => t.id === selectedTopicId)?.name || 'Selected Concept'} ({courses.find((c) => c.id === selectedCourseId)?.code || 'Course'})
                         </h4>
                       </div>
-                      <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5 leading-relaxed">
+                      <p className="text-[11px] text-slate-700 dark:text-slate-300 mt-0.5 leading-relaxed font-medium">
                         Course and concept parameters are pre-configured. Review your desired question count or difficulty below and click <strong>Begin Standard Session</strong>.
                       </p>
                     </div>
@@ -748,7 +748,7 @@ export default function PracticePage() {
 
               {/* Faculty Remediation Nudge Active Banner */}
               {isRemediationMode && !isLearningPathDrillMode && (
-                <div className="p-4 bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-transparent border border-blue-300 dark:border-blue-800 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="p-4 bg-blue-50/95 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-base shadow-xs shrink-0">
                       🎯
@@ -762,7 +762,7 @@ export default function PracticePage() {
                           Targeted Remediation Practice Session
                         </h4>
                       </div>
-                      <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5 leading-relaxed">
+                      <p className="text-[11px] text-slate-700 dark:text-slate-300 mt-0.5 leading-relaxed font-medium">
                         Your course instructor dispatched this practice session to strengthen your conceptual grasp on {courses.find((c) => c.id === selectedCourseId)?.topics?.find((t: any) => t.id === selectedTopicId)?.name || 'this topic'}.
                       </p>
                     </div>

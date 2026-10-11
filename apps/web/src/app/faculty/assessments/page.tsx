@@ -1060,98 +1060,124 @@ export default function FacultyAssessmentsPage() {
               <span>Loading assessments...</span>
             </div>
           ) : assessments.length === 0 ? (
-            <div className="border border-[rgba(74,111,165,0.25)] dark:border-[rgba(106,144,197,0.2)] bg-[#faf7f2] dark:bg-[#121b30] p-12 text-center text-slate-400" style={{ borderRadius: 0 }}>
+            <div className="border border-[rgba(74,111,165,0.25)] dark:border-[rgba(106,144,197,0.2)] bg-[#faf7f2] dark:bg-[#121b30] p-12 text-center text-slate-500 dark:text-slate-400" style={{ borderRadius: 0 }}>
               <FileText className="w-12 h-12 text-[#4a6fa5] mx-auto mb-3" />
-              <p className="text-base font-bold text-white">No Assessments Created</p>
-              <p className="text-xs text-slate-400 mt-1">Click Create Assessment to launch your first exam.</p>
+              <p className="text-base font-bold text-slate-900 dark:text-white">No Assessments Created</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Click Create Assessment to launch your first exam.</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {assessments.map((a) => (
                 <div
                   key={a.id}
-                  className="bg-[#111827] rounded-2xl border border-slate-800 p-6 shadow-md hover:border-slate-700 transition space-y-4"
+                  className="panel bg-[var(--surface)] text-[var(--foreground)] border border-[var(--strong-border)] p-6 shadow-xs hover:border-[#4a6fa5] transition flex flex-col justify-between space-y-4"
                 >
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
-                        {a.type} • {a.code}
-                      </span>
-                      { (a.isCodingExam || a.title?.includes('[CODING]') || a.description?.toLowerCase().includes('coding')) && (
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 flex items-center gap-1">
-                          <Terminal className="w-3 h-3 text-cyan-400" />
-                          Coding Exam
+                  <div className="space-y-3">
+                    {/* Tags row */}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="px-2 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider bg-[#4a6fa5]/10 text-[#4a6fa5] dark:text-[#6a90c5] border border-[#4a6fa5]/30">
+                          {a.type} • {a.code}
                         </span>
-                      )}
-                      <span
-                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                          a.division === 'CS Div 1' || a.division === 'DIV 1'
-                            ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                        {(a.isCodingExam || a.title?.includes('[CODING]') || a.description?.toLowerCase().includes('coding')) && (
+                          <span className="px-2 py-0.5 text-[10px] font-mono font-black uppercase tracking-wider bg-cyan-500/10 text-cyan-800 dark:text-cyan-300 border border-cyan-500/30 flex items-center gap-1">
+                            <Terminal className="w-3 h-3 text-cyan-600 dark:text-cyan-400" />
+                            Coding Exam
+                          </span>
+                        )}
+                        <span
+                          className={`px-2 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider ${
+                            a.division === 'CS Div 1' || a.division === 'DIV 1'
+                              ? 'bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/30'
+                              : a.division === 'CS Div 2' || a.division === 'DIV 2'
+                              ? 'bg-purple-500/10 text-purple-800 dark:text-purple-300 border border-purple-500/30'
+                              : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700'
+                          }`}
+                        >
+                          {a.division === 'CS Div 1' || a.division === 'DIV 1'
+                            ? 'CS Div 1'
                             : a.division === 'CS Div 2' || a.division === 'DIV 2'
-                            ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30'
-                            : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                            ? 'CS Div 2'
+                            : 'Both Divisions (All)'}
+                        </span>
+                      </div>
+
+                      <span
+                        className={`px-2.5 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 ${
+                          a.status === 'DRAFT'
+                            ? 'bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30'
+                            : a.isExpired || a.status === 'COMPLETED'
+                            ? 'bg-rose-500/15 text-rose-800 dark:text-rose-300 border border-rose-500/30'
+                            : 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30'
                         }`}
                       >
-                        {a.division === 'CS Div 1' || a.division === 'DIV 1'
-                          ? 'CS Div 1'
-                          : a.division === 'CS Div 2' || a.division === 'DIV 2'
-                          ? 'CS Div 2'
-                          : 'Both Divisions (All)'}
+                        <span className={`w-1.5 h-1.5 rounded-full ${
+                          a.status === 'DRAFT'
+                            ? 'bg-amber-500'
+                            : a.isExpired || a.status === 'COMPLETED'
+                            ? 'bg-rose-500'
+                            : 'bg-emerald-500 animate-pulse'
+                        }`} />
+                        <span>{a.status === 'DRAFT' ? 'DRAFT' : a.isExpired || a.status === 'COMPLETED' ? 'ENDED' : 'PUBLISHED'}</span>
                       </span>
                     </div>
 
-                    <span
-                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1.5 ${
-                        a.status === 'DRAFT'
-                          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
-                          : a.isExpired || a.status === 'COMPLETED'
-                          ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
-                          : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                      }`}
-                    >
-                      <span className={`w-1.5 h-1.5 rounded-full ${
-                        a.status === 'DRAFT'
-                          ? 'bg-amber-400'
-                          : a.isExpired || a.status === 'COMPLETED'
-                          ? 'bg-rose-400'
-                          : 'bg-emerald-400 animate-pulse'
-                      }`} />
-                      <span>{a.status === 'DRAFT' ? 'DRAFT (Not Published)' : a.isExpired || a.status === 'COMPLETED' ? 'ENDED' : 'PUBLISHED'}</span>
-                    </span>
-                  </div>
-
-                  <div>
-                    <h3 className="text-base font-bold text-white leading-snug">{a.title}</h3>
-                    {a.description && (
-                      <p className="text-xs text-slate-400 mt-1 line-clamp-2">{a.description}</p>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-2 text-center text-xs bg-[#1E293B] p-3 rounded-xl border border-slate-700/60">
                     <div>
-                      <span className="text-[10px] text-slate-400 block font-medium">Duration</span>
-                      <strong className="text-white font-bold">{a.durationMinutes}m</strong>
-                      <span className="text-[9px] text-slate-500 block">
-                        (+5m: {a.durationMinutes + 5}m)
-                      </span>
+                      <h3 className="text-base font-display font-bold uppercase tracking-wide text-slate-900 dark:text-white leading-snug">
+                        {a.title}
+                      </h3>
+                      {a.description && (
+                        <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 line-clamp-2 leading-relaxed font-sans">
+                          {a.description}
+                        </p>
+                      )}
                     </div>
-                    <div>
-                      <span className="text-[10px] text-slate-400 block font-medium">Total Marks</span>
-                      <strong className="text-white font-bold">{a.totalMarks} pts</strong>
-                    </div>
-                    <div>
-                      <span className="text-[10px] text-slate-400 block font-medium">Items</span>
-                      <strong className="text-white font-bold">{a.totalQuestions} items</strong>
+
+                    {/* Gleam-Spark Technical Metric Tri-Grid */}
+                    <div className="grid grid-cols-3 gap-px bg-[var(--border)] border border-[var(--border)]">
+                      <div className="bg-[var(--surface-muted)] p-3 text-center">
+                        <span className="font-mono text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+                          Duration
+                        </span>
+                        <strong className="font-display text-xl sm:text-2xl text-slate-900 dark:text-white block mt-0.5">
+                          {a.durationMinutes}m
+                        </strong>
+                        <span className="font-mono text-[9px] text-[#4a6fa5] dark:text-[#6a90c5] block mt-0.5">
+                          BUFFER: +5M
+                        </span>
+                      </div>
+                      <div className="bg-[var(--surface-muted)] p-3 text-center">
+                        <span className="font-mono text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+                          Total Marks
+                        </span>
+                        <strong className="font-display text-xl sm:text-2xl text-[#e05033] block mt-0.5">
+                          {a.totalMarks} <span className="font-mono text-xs text-slate-500 dark:text-slate-400">PTS</span>
+                        </strong>
+                        <span className="font-mono text-[9px] text-slate-500 dark:text-slate-400 block mt-0.5">
+                          BENCHMARK
+                        </span>
+                      </div>
+                      <div className="bg-[var(--surface-muted)] p-3 text-center">
+                        <span className="font-mono text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
+                          Questions
+                        </span>
+                        <strong className="font-display text-xl sm:text-2xl text-slate-900 dark:text-white block mt-0.5">
+                          {a.totalQuestions}
+                        </strong>
+                        <span className="font-mono text-[9px] text-[#4a6fa5] dark:text-[#6a90c5] block mt-0.5">
+                          ITEMS
+                        </span>
+                      </div>
                     </div>
                   </div>
 
                   {/* Assessment Card Action Buttons */}
-                  <div className="pt-2 flex items-center gap-2 border-t border-slate-800 flex-wrap">
+                  <div className="pt-3 flex items-center gap-2 border-t border-[var(--border)] flex-wrap">
                     {a.status === 'DRAFT' ? (
                       <button
                         type="button"
                         onClick={() => handlePublishAssessment(a)}
-                        className="py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition flex items-center gap-1.5 shadow-md shadow-emerald-600/30"
+                        className="py-1.5 px-3 bg-[#059669] hover:bg-[#047857] text-white text-[11px] font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 transition shadow-xs"
                         title="Publish assessment now so it reflects immediately in student panels"
                       >
                         <Send className="w-3.5 h-3.5" />
@@ -1161,7 +1187,7 @@ export default function FacultyAssessmentsPage() {
                       <button
                         type="button"
                         onClick={() => handleUnpublishAssessment(a)}
-                        className="py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-500/30 text-xs font-bold transition flex items-center gap-1.5"
+                        className="py-1.5 px-3 border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-800 dark:text-amber-300 text-[11px] font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 transition"
                         title="Revert to draft (hide from student panels)"
                       >
                         <span>Move to Draft</span>
@@ -1171,47 +1197,47 @@ export default function FacultyAssessmentsPage() {
                     <button
                       type="button"
                       onClick={() => openEditModal(a)}
-                      className="py-2 px-3 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-200 border border-indigo-500/40 text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
+                      className="py-1.5 px-3 border border-[var(--border)] bg-[var(--surface-muted)] hover:bg-[#1a2540] hover:text-white text-slate-800 dark:text-slate-200 text-[11px] font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 transition"
                       title="Edit assessment time limit, title, status and window"
                     >
-                      <Sliders className="w-3.5 h-3.5 text-indigo-400" />
+                      <Sliders className="w-3.5 h-3.5 text-[#4a6fa5]" />
                       <span>Edit Test</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => openAnalyticsModal(a.id)}
-                      className="py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold transition flex items-center justify-center gap-1.5"
+                      className="py-1.5 px-3 border border-[var(--border)] bg-[var(--surface-muted)] hover:bg-[#1a2540] hover:text-white text-slate-800 dark:text-slate-200 text-[11px] font-mono font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 transition"
                     >
-                      <TrendingUp className="w-3.5 h-3.5" />
+                      <TrendingUp className="w-3.5 h-3.5 text-[#4a6fa5]" />
                       <span>Cohort Analytics</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => setLeaderboardModalData({ id: a.id, title: a.title })}
-                      className="py-2 px-3 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold transition flex items-center gap-1.5 shadow-2xs"
+                      className="py-1.5 px-3 border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 text-amber-800 dark:text-amber-300 text-[11px] font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 transition"
                       title="View dynamic live ranking leaderboard"
                     >
-                      <Trophy className="w-3.5 h-3.5 text-amber-400" />
+                      <Trophy className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                       <span>Leaderboard</span>
                     </button>
                     {(a.isCodingExam || a.title?.includes('[CODING]') || a.description?.toLowerCase().includes('coding')) && (
                       <button
                         type="button"
                         onClick={() => handleInspectProblems(a)}
-                        className="py-2 px-3 rounded-xl bg-cyan-950/60 hover:bg-cyan-900/60 text-cyan-300 border border-cyan-500/30 text-xs font-bold transition flex items-center gap-1.5"
+                        className="py-1.5 px-3 border border-cyan-500/40 bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-800 dark:text-cyan-300 text-[11px] font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 transition"
                         title="Inspect Coding Problems & Test Cases"
                       >
-                        <Code className="w-3.5 h-3.5 text-cyan-400" />
+                        <Code className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
                         <span>Problem Spec</span>
                       </button>
                     )}
                     <button
                       type="button"
                       onClick={() => exportDirectCsv(a.id)}
-                      className="py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-bold transition flex items-center gap-1.5"
+                      className="py-1.5 px-3 border border-[var(--border)] bg-[var(--surface-muted)] hover:bg-[#1a2540] hover:text-white text-slate-800 dark:text-slate-200 text-[11px] font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 transition"
                       title="Export Student Marks CSV"
                     >
-                      <Download className="w-3.5 h-3.5 text-emerald-400" />
+                      <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                       <span>Export</span>
                     </button>
                   </div>
@@ -1224,20 +1250,25 @@ export default function FacultyAssessmentsPage() {
 
       {/* Create Assessment Wizard Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in">
-          <div className="bg-[#0F172A] w-full max-w-3xl rounded-3xl shadow-2xl border border-slate-700 overflow-hidden flex flex-col max-h-[92vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in">
+          <div className="panel bg-[var(--surface)] text-[var(--foreground)] border border-[var(--strong-border)] w-full max-w-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-700/80 bg-[#1E293B]/80">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[var(--border)] bg-[var(--surface-muted)]">
               <div>
-                <h3 className="text-lg font-extrabold text-white tracking-tight">Create New Course Assessment</h3>
-                <p className="text-xs text-slate-300 mt-0.5">
+                <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-[9px] uppercase mb-0.5">
+                  ASSESSMENT AUTHORING / WIZARD
+                </p>
+                <h3 className="font-display text-2xl uppercase tracking-tight text-slate-900 dark:text-white">
+                  Create New Course Assessment
+                </h3>
+                <p className="text-xs text-slate-600 dark:text-slate-400 font-sans mt-0.5">
                   Allocate to target student division and select approved questions from question bank
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-700/80 transition"
+                className="p-1.5 border border-[var(--border)] text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1245,28 +1276,28 @@ export default function FacultyAssessmentsPage() {
 
             <form onSubmit={handleCreateAssessment} className="p-6 overflow-y-auto space-y-5">
               {/* Assigned Course Header */}
-              <div className="p-3.5 bg-emerald-950/60 border border-emerald-500/30 rounded-2xl text-xs flex items-center justify-between">
+              <div className="p-3.5 bg-[var(--surface-muted)] border border-[var(--border)] text-xs flex items-center justify-between">
                 <div>
-                  <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block">
+                  <span className="font-mono text-[9px] font-bold text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider block">
                     Assigned Teaching Subject
                   </span>
-                  <span className="font-extrabold text-white text-sm">
+                  <span className="font-bold text-slate-900 dark:text-white text-sm">
                     {courses.find((c) => c.id === selectedCourseId)?.code} - {courses.find((c) => c.id === selectedCourseId)?.name}
                   </span>
                 </div>
-                <span className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                <span className="font-mono text-[9px] font-bold px-2 py-0.5 uppercase bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30">
                   Fixed For Faculty
                 </span>
               </div>
 
               {/* Examination Format & Engine Selector */}
               <div>
-                <label className="block text-xs font-bold text-slate-200 mb-2 flex items-center justify-between">
+                <label className="block font-mono text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2 flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
-                    <Cpu className="w-4 h-4 text-cyan-400" />
+                    <Cpu className="w-4 h-4 text-[#4a6fa5] dark:text-cyan-400" />
                     Examination Format & Evaluation Engine
                   </span>
-                  <span className="text-[11px] text-slate-400 font-normal">
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">
                     Select automated code judge or objective question bank
                   </span>
                 </label>
@@ -1280,22 +1311,22 @@ export default function FacultyAssessmentsPage() {
                         setNewTitle(newTitle ? `${newTitle} (Coding)` : 'Data Structures Practical Coding Exam');
                       }
                     }}
-                    className={`p-3.5 rounded-2xl border text-left transition-all ${
+                    className={`p-3.5 border text-left transition-all ${
                       examMode === 'CODING'
-                        ? 'bg-cyan-950/70 border-2 border-cyan-400 ring-2 ring-cyan-500/30 text-white shadow-lg shadow-cyan-950/50'
-                        : 'bg-[#1E293B] border border-slate-700 hover:border-slate-500 text-slate-300'
+                        ? 'bg-[var(--surface-muted)] border-2 border-[#e05033] shadow-xs'
+                        : 'bg-[var(--surface)] border border-[var(--border)] hover:border-[#4a6fa5]'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                        <Terminal className="w-4 h-4 text-cyan-400" />
+                      <span className="font-display text-sm uppercase text-slate-900 dark:text-white flex items-center gap-1.5">
+                        <Terminal className="w-4 h-4 text-[#e05033]" />
                         Coding Exam
                       </span>
-                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-cyan-400 text-cyan-950">
+                      <span className="font-mono text-[9px] font-bold px-1.5 py-0.5 bg-cyan-500/10 text-cyan-800 dark:text-cyan-300 border border-cyan-500/30">
                         JUDGE
                       </span>
                     </div>
-                    <p className="text-[11px] text-slate-300 font-medium leading-snug">
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400 font-sans leading-snug">
                       Problem statements, sample test cases & hidden check test cases
                     </p>
                   </button>
@@ -1304,22 +1335,22 @@ export default function FacultyAssessmentsPage() {
                   <button
                     type="button"
                     onClick={() => setExamMode('OBJECTIVE')}
-                    className={`p-3.5 rounded-2xl border text-left transition-all ${
+                    className={`p-3.5 border text-left transition-all ${
                       examMode === 'OBJECTIVE'
-                        ? 'bg-indigo-950/70 border-2 border-indigo-400 ring-2 ring-indigo-500/30 text-white shadow-lg shadow-indigo-950/50'
-                        : 'bg-[#1E293B] border border-slate-700 hover:border-slate-500 text-slate-300'
+                        ? 'bg-[var(--surface-muted)] border-2 border-[#4a6fa5] shadow-xs'
+                        : 'bg-[var(--surface)] border border-[var(--border)] hover:border-[#4a6fa5]'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                        <FileText className="w-4 h-4 text-indigo-400" />
+                      <span className="font-display text-sm uppercase text-slate-900 dark:text-white flex items-center gap-1.5">
+                        <FileText className="w-4 h-4 text-[#4a6fa5]" />
                         Objective MCQ
                       </span>
-                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-indigo-400 text-indigo-950">
+                      <span className="font-mono text-[9px] font-bold px-1.5 py-0.5 bg-indigo-500/10 text-indigo-800 dark:text-indigo-300 border border-indigo-500/30">
                         THEORY
                       </span>
                     </div>
-                    <p className="text-[11px] text-slate-300 font-medium leading-snug">
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400 font-sans leading-snug">
                       Select approved questions from curriculum question bank
                     </p>
                   </button>
@@ -1328,22 +1359,22 @@ export default function FacultyAssessmentsPage() {
                   <button
                     type="button"
                     onClick={() => setExamMode('HYBRID')}
-                    className={`p-3.5 rounded-2xl border text-left transition-all ${
+                    className={`p-3.5 border text-left transition-all ${
                       examMode === 'HYBRID'
-                        ? 'bg-purple-950/70 border-2 border-purple-400 ring-2 ring-purple-500/30 text-white shadow-lg shadow-purple-950/50'
-                        : 'bg-[#1E293B] border border-slate-700 hover:border-slate-500 text-slate-300'
+                        ? 'bg-[var(--surface-muted)] border-2 border-purple-500 shadow-xs'
+                        : 'bg-[var(--surface)] border border-[var(--border)] hover:border-[#4a6fa5]'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                        <Layers className="w-4 h-4 text-purple-400" />
+                      <span className="font-display text-sm uppercase text-slate-900 dark:text-white flex items-center gap-1.5">
+                        <Layers className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                         Hybrid Exam
                       </span>
-                      <span className="text-[10px] font-black px-1.5 py-0.5 rounded bg-purple-400 text-purple-950">
+                      <span className="font-mono text-[9px] font-bold px-1.5 py-0.5 bg-purple-500/10 text-purple-800 dark:text-purple-300 border border-purple-500/30">
                         MIXED
                       </span>
                     </div>
-                    <p className="text-[11px] text-slate-300 font-medium leading-snug">
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400 font-sans leading-snug">
                       Both theoretical questions and practical coding problems
                     </p>
                   </button>
@@ -1353,37 +1384,41 @@ export default function FacultyAssessmentsPage() {
               {/* Title & Code */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-200 mb-1.5">Assessment Title</label>
+                  <label className="block font-mono text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+                    Assessment Title
+                  </label>
                   <input
                     type="text"
                     required
                     value={newTitle}
                     onChange={(e) => setNewTitle(e.target.value)}
                     placeholder={examMode === 'CODING' ? 'e.g. DSA In-Browser Practical Examination' : 'e.g. Trees & BST Mastery Exam'}
-                    className="w-full p-3 text-xs bg-[#1E293B] border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 font-medium"
+                    className="w-full p-2.5 text-xs bg-[var(--surface-muted)] border border-[var(--border)] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#4a6fa5] focus:ring-1 focus:ring-[#4a6fa5] font-sans font-medium"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-200 mb-1.5">Assessment Code</label>
+                  <label className="block font-mono text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">
+                    Assessment Code
+                  </label>
                   <input
                     type="text"
                     required
                     value={newCode}
                     onChange={(e) => setNewCode(e.target.value)}
                     placeholder={examMode === 'CODING' ? 'e.g. CS301-CODE-LAB-01' : 'e.g. CS301-QUIZ-02'}
-                    className="w-full p-3 text-xs bg-[#1E293B] border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 font-medium"
+                    className="w-full p-2.5 text-xs bg-[var(--surface-muted)] border border-[var(--border)] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#4a6fa5] focus:ring-1 focus:ring-[#4a6fa5] font-sans font-medium"
                   />
                 </div>
               </div>
 
               {/* Target Division Allocation */}
               <div>
-                <label className="block text-xs font-bold text-slate-200 mb-2 flex items-center justify-between">
-                  <span className="flex items-center gap-1.5 text-slate-200">
-                    <Users className="w-4 h-4 text-indigo-400" />
+                <label className="block font-mono text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+                    <Users className="w-4 h-4 text-[#4a6fa5]" />
                     Target Student Allocation (Division)
                   </span>
-                  <span className="text-[11px] text-slate-400 font-normal">
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">
                     Reflected directly in assigned students' portals
                   </span>
                 </label>
@@ -1392,19 +1427,19 @@ export default function FacultyAssessmentsPage() {
                   <button
                     type="button"
                     onClick={() => setNewDivision('DIV 1')}
-                    className={`p-3.5 rounded-2xl border text-left transition-all ${
+                    className={`p-3.5 border text-left transition-all ${
                       newDivision === 'DIV 1'
-                        ? 'bg-amber-950/60 border-2 border-amber-400 ring-2 ring-amber-500/30 text-white shadow-lg shadow-amber-950/50'
-                        : 'bg-[#1E293B] border border-slate-700 hover:border-slate-500 text-slate-300'
+                        ? 'bg-[var(--surface-muted)] border-2 border-amber-500 shadow-xs'
+                        : 'bg-[var(--surface)] border border-[var(--border)] hover:border-slate-400'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-xs font-bold text-white">Division A</span>
-                      <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-amber-400 text-amber-950">
+                      <span className="font-display text-xs uppercase text-slate-900 dark:text-white">Division A</span>
+                      <span className="font-mono text-[9px] font-bold px-1.5 py-0.5 bg-amber-500/10 text-amber-800 dark:text-amber-300 border border-amber-500/30">
                         DIV 1
                       </span>
                     </div>
-                    <p className="text-[11px] text-slate-300 font-medium leading-snug">
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400 font-sans leading-snug">
                       Roll 24CS001 – 24CS065
                     </p>
                   </button>
@@ -1413,19 +1448,19 @@ export default function FacultyAssessmentsPage() {
                   <button
                     type="button"
                     onClick={() => setNewDivision('DIV 2')}
-                    className={`p-3.5 rounded-2xl border text-left transition-all ${
+                    className={`p-3.5 border text-left transition-all ${
                       newDivision === 'DIV 2'
-                        ? 'bg-purple-950/60 border-2 border-purple-400 ring-2 ring-purple-500/30 text-white shadow-lg shadow-purple-950/50'
-                        : 'bg-[#1E293B] border border-slate-700 hover:border-slate-500 text-slate-300'
+                        ? 'bg-[var(--surface-muted)] border-2 border-purple-500 shadow-xs'
+                        : 'bg-[var(--surface)] border border-[var(--border)] hover:border-slate-400'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-xs font-bold text-white">Division B</span>
-                      <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-purple-400 text-purple-950">
+                      <span className="font-display text-xs uppercase text-slate-900 dark:text-white">Division B</span>
+                      <span className="font-mono text-[9px] font-bold px-1.5 py-0.5 bg-purple-500/10 text-purple-800 dark:text-purple-300 border border-purple-500/30">
                         DIV 2
                       </span>
                     </div>
-                    <p className="text-[11px] text-slate-300 font-medium leading-snug">
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400 font-sans leading-snug">
                       Roll 24CS066 & above
                     </p>
                   </button>
@@ -1434,19 +1469,19 @@ export default function FacultyAssessmentsPage() {
                   <button
                     type="button"
                     onClick={() => setNewDivision('ALL')}
-                    className={`p-3.5 rounded-2xl border text-left transition-all ${
+                    className={`p-3.5 border text-left transition-all ${
                       newDivision === 'ALL'
-                        ? 'bg-indigo-950/60 border-2 border-indigo-400 ring-2 ring-indigo-500/30 text-white shadow-lg shadow-indigo-950/50'
-                        : 'bg-[#1E293B] border border-slate-700 hover:border-slate-500 text-slate-300'
+                        ? 'bg-[var(--surface-muted)] border-2 border-[#4a6fa5] shadow-xs'
+                        : 'bg-[var(--surface)] border border-[var(--border)] hover:border-slate-400'
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-xs font-bold text-white">Both Divisions</span>
-                      <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-indigo-400 text-indigo-950">
+                      <span className="font-display text-xs uppercase text-slate-900 dark:text-white">Both Divisions</span>
+                      <span className="font-mono text-[9px] font-bold px-1.5 py-0.5 bg-[#4a6fa5]/10 text-[#4a6fa5] dark:text-[#6a90c5] border border-[#4a6fa5]/30">
                         ALL
                       </span>
                     </div>
-                    <p className="text-[11px] text-slate-300 font-medium leading-snug">
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400 font-sans leading-snug">
                       All enrolled students
                     </p>
                   </button>
@@ -1456,11 +1491,11 @@ export default function FacultyAssessmentsPage() {
               {/* Assessment Type, Duration, Passing */}
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-200 mb-1.5">Type</label>
+                  <label className="block font-mono text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">Type</label>
                   <select
                     value={newType}
                     onChange={(e) => setNewType(e.target.value)}
-                    className="w-full p-3 text-xs bg-[#1E293B] border border-slate-600 rounded-xl text-white font-medium focus:outline-none focus:border-indigo-500"
+                    className="w-full p-2.5 text-xs bg-[var(--surface-muted)] border border-[var(--border)] text-slate-900 dark:text-white font-medium focus:outline-none focus:border-[#4a6fa5]"
                   >
                     <option value="QUIZ">Quiz / Lab Quiz</option>
                     <option value="UNIT_TEST">Unit Test</option>
@@ -1469,42 +1504,42 @@ export default function FacultyAssessmentsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-200 mb-1.5">Duration (Min)</label>
+                  <label className="block font-mono text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">Duration (Min)</label>
                   <input
                     type="number"
                     min={5}
                     max={180}
                     value={newDuration}
                     onChange={(e) => setNewDuration(Number(e.target.value))}
-                    className="w-full p-3 text-xs bg-[#1E293B] border border-slate-600 rounded-xl text-white font-medium focus:outline-none focus:border-indigo-500"
+                    className="w-full p-2.5 text-xs bg-[var(--surface-muted)] border border-[var(--border)] text-slate-900 dark:text-white font-medium focus:outline-none focus:border-[#4a6fa5]"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-200 mb-1.5">Passing %</label>
+                  <label className="block font-mono text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-1.5">Passing %</label>
                   <input
                     type="number"
                     min={10}
                     max={100}
                     value={newPassingMarks}
                     onChange={(e) => setNewPassingMarks(Number(e.target.value))}
-                    className="w-full p-3 text-xs bg-[#1E293B] border border-slate-600 rounded-xl text-white font-medium focus:outline-none focus:border-indigo-500"
+                    className="w-full p-2.5 text-xs bg-[var(--surface-muted)] border border-[var(--border)] text-slate-900 dark:text-white font-medium focus:outline-none focus:border-[#4a6fa5]"
                   />
                 </div>
               </div>
 
               {/* SECTION: Coding Problem Authoring & Management (For CODING and HYBRID modes) */}
               {(examMode === 'CODING' || examMode === 'HYBRID') && (
-                <div className="space-y-4 pt-4 border-t border-slate-700/80">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[#111827] p-4 rounded-2xl border border-cyan-500/40">
+                <div className="space-y-4 pt-4 border-t border-[var(--border)]">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[var(--surface-muted)] p-4 border border-[var(--border)]">
                     <div>
                       <div className="flex items-center gap-2">
-                        <Terminal className="w-5 h-5 text-cyan-400" />
-                        <h4 className="text-sm font-extrabold text-white">Coding Examination Problems & Code Judge</h4>
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                        <Terminal className="w-5 h-5 text-[#e05033]" />
+                        <h4 className="font-display text-sm uppercase text-slate-900 dark:text-white">Coding Examination Problems & Code Judge</h4>
+                        <span className="font-mono text-[9px] font-bold px-2 py-0.5 bg-cyan-500/10 text-cyan-800 dark:text-cyan-300 border border-cyan-500/30">
                           {authoredCodingProblems.length} Added
                         </span>
                       </div>
-                      <p className="text-xs text-slate-400 mt-1">
+                      <p className="text-xs text-slate-600 dark:text-slate-400 font-sans mt-1">
                         Add problem statements, sample test cases (visible to student), and evaluation test cases to check (hidden).
                       </p>
                     </div>
@@ -1513,7 +1548,7 @@ export default function FacultyAssessmentsPage() {
                       <button
                         type="button"
                         onClick={() => openAuthorModal()}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-xs font-bold shadow-md shadow-cyan-600/30 transition transform hover:-translate-y-0.5"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#e05033] hover:bg-[#c93f24] text-white text-xs font-mono font-bold uppercase tracking-wider transition"
                       >
                         <Plus className="w-4 h-4" />
                         <span>Author Problem</span>
@@ -1521,9 +1556,9 @@ export default function FacultyAssessmentsPage() {
                       <button
                         type="button"
                         onClick={handleOpenBankModal}
-                        className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold transition"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-muted)] text-slate-800 dark:text-slate-200 text-xs font-mono font-bold uppercase tracking-wider transition"
                       >
-                        <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
+                        <BookOpen className="w-3.5 h-3.5 text-[#4a6fa5]" />
                         <span>From Problem Bank</span>
                       </button>
                     </div>
@@ -1531,24 +1566,24 @@ export default function FacultyAssessmentsPage() {
 
                   {/* List of Authored Coding Problems */}
                   {authoredCodingProblems.length === 0 ? (
-                    <div className="rounded-2xl border border-dashed border-slate-700 p-8 text-center bg-[#0B0F19]/50">
-                      <Code className="w-10 h-10 text-cyan-500/50 mx-auto mb-2.5 animate-pulse" />
-                      <p className="text-xs font-bold text-white">No Coding Problems Added Yet</p>
-                      <p className="text-[11px] text-slate-400 mt-1 max-w-md mx-auto">
-                        Click <strong className="text-cyan-300">Author Problem</strong> to compose a problem statement, sample test cases, and hidden check cases, or select from the pre-seeded DSA bank.
+                    <div className="border border-dashed border-[var(--border)] p-8 text-center bg-[var(--surface-muted)]">
+                      <Code className="w-10 h-10 text-[#4a6fa5]/60 mx-auto mb-2.5 animate-pulse" />
+                      <p className="font-display text-sm uppercase text-slate-900 dark:text-white">No Coding Problems Added Yet</p>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 font-sans mt-1 max-w-md mx-auto">
+                        Click <strong className="text-[#e05033]">Author Problem</strong> to compose a problem statement, sample test cases, and hidden check cases, or select from the pre-seeded DSA bank.
                       </p>
                       <div className="mt-4 flex items-center justify-center gap-3">
                         <button
                           type="button"
                           onClick={() => openAuthorModal()}
-                          className="px-3.5 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-white text-xs font-bold rounded-xl transition"
+                          className="px-3.5 py-1.5 bg-[#e05033] hover:bg-[#c93f24] text-white font-mono text-xs font-bold uppercase tracking-wider transition"
                         >
                           + Author Problem
                         </button>
                         <button
                           type="button"
                           onClick={handleOpenBankModal}
-                          className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl border border-slate-700 transition"
+                          className="px-3.5 py-1.5 border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-muted)] text-slate-800 dark:text-slate-200 font-mono text-xs font-bold uppercase tracking-wider transition"
                         >
                           📚 Browse Problem Bank
                         </button>
@@ -1559,33 +1594,33 @@ export default function FacultyAssessmentsPage() {
                       {authoredCodingProblems.map((prob, idx) => (
                         <div
                           key={idx}
-                          className="p-4 rounded-2xl border border-slate-700 bg-[#1E293B]/70 hover:border-slate-600 transition space-y-3"
+                          className="p-4 border border-[var(--border)] bg-[var(--surface-muted)] hover:border-[#4a6fa5] transition space-y-3"
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="space-y-1">
                               <div className="flex items-center gap-2 flex-wrap">
-                                <span className="w-5 h-5 rounded-md bg-cyan-600 text-white text-[11px] font-black flex items-center justify-center">
+                                <span className="w-5 h-5 bg-[#1a2540] dark:bg-[#4a6fa5] text-white text-[11px] font-mono font-bold flex items-center justify-center">
                                   {idx + 1}
                                 </span>
-                                <h5 className="text-xs sm:text-sm font-extrabold text-white">{prob.title}</h5>
+                                <h5 className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">{prob.title}</h5>
                                 <span
-                                  className={`text-[9px] font-bold px-2 py-0.5 rounded-md uppercase border ${
+                                  className={`font-mono text-[9px] font-bold px-2 py-0.5 uppercase border ${
                                     prob.difficulty === 'EASY'
-                                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                                      ? 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-500/30'
                                       : prob.difficulty === 'HARD'
-                                      ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
-                                      : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                                      ? 'bg-rose-500/10 text-rose-800 dark:text-rose-300 border-rose-500/30'
+                                      : 'bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-500/30'
                                   }`}
                                 >
                                   {prob.difficulty}
                                 </span>
                                 {prob.tags && (
-                                  <span className="text-[10px] text-slate-400 font-medium bg-slate-800/80 px-2 py-0.5 rounded-md border border-slate-700">
+                                  <span className="font-mono text-[9px] text-slate-600 dark:text-slate-400 bg-[var(--surface)] px-2 py-0.5 border border-[var(--border)]">
                                     {prob.tags}
                                   </span>
                                 )}
                               </div>
-                              <p className="text-xs text-slate-300 line-clamp-2 leading-relaxed pl-7">
+                              <p className="text-xs text-slate-600 dark:text-slate-400 font-sans line-clamp-2 leading-relaxed pl-7">
                                 {prob.description}
                               </p>
                             </div>
@@ -1594,7 +1629,7 @@ export default function FacultyAssessmentsPage() {
                               <button
                                 type="button"
                                 onClick={() => openAuthorModal(idx)}
-                                className="p-1.5 text-slate-400 hover:text-cyan-300 hover:bg-slate-800 rounded-lg transition"
+                                className="p-1.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition"
                                 title="Edit Problem"
                               >
                                 <Edit3 className="w-4 h-4" />
@@ -1602,7 +1637,7 @@ export default function FacultyAssessmentsPage() {
                               <button
                                 type="button"
                                 onClick={() => handleRemoveAuthoredProblem(idx)}
-                                className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition"
+                                className="p-1.5 text-slate-600 dark:text-slate-400 hover:text-rose-500 hover:bg-slate-200 dark:hover:bg-slate-800 transition"
                                 title="Remove Problem"
                               >
                                 <Trash2 className="w-4 h-4" />
@@ -1611,13 +1646,13 @@ export default function FacultyAssessmentsPage() {
                           </div>
 
                           {/* Testcase Badges */}
-                          <div className="flex items-center gap-2 pt-2 border-t border-slate-700/60 pl-7 text-[11px] flex-wrap">
-                            <span className="px-2.5 py-1 rounded-lg bg-emerald-950/60 text-emerald-300 border border-emerald-500/30 font-bold flex items-center gap-1.5">
-                              <Eye className="w-3.5 h-3.5 text-emerald-400" />
+                          <div className="flex items-center gap-2 pt-2 border-t border-[var(--border)] pl-7 text-[11px] flex-wrap">
+                            <span className="font-mono text-[10px] px-2 py-0.5 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30 font-bold flex items-center gap-1.5">
+                              <Eye className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
                               <span>{prob.sampleTestCases?.length || 0} Sample Test Cases (Visible)</span>
                             </span>
-                            <span className="px-2.5 py-1 rounded-lg bg-indigo-950/60 text-indigo-300 border border-indigo-500/30 font-bold flex items-center gap-1.5">
-                              <Lock className="w-3.5 h-3.5 text-indigo-400" />
+                            <span className="font-mono text-[10px] px-2 py-0.5 bg-indigo-500/10 text-indigo-800 dark:text-indigo-300 border border-indigo-500/30 font-bold flex items-center gap-1.5">
+                              <Lock className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                               <span>{prob.testCasesToCheck?.length || 0} Check Test Cases (Hidden Judge)</span>
                             </span>
                           </div>
@@ -1630,32 +1665,32 @@ export default function FacultyAssessmentsPage() {
 
               {/* SECTION: Objective MCQ Selection & Document AI / RAG Engine (For OBJECTIVE and HYBRID modes) */}
               {(examMode === 'OBJECTIVE' || examMode === 'HYBRID') && (
-                <div className="space-y-4 pt-4 border-t border-slate-700/80">
+                <div className="space-y-4 pt-4 border-t border-[var(--border)]">
                   {/* Workflow Mode Selector Header */}
-                  <div className="bg-[#111827] p-4 rounded-2xl border border-indigo-500/40 space-y-3">
+                  <div className="panel bg-[var(--surface)] border border-[var(--border)] p-4 space-y-3">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                       <div>
                         <div className="flex items-center gap-2">
-                          <BrainCircuit className="w-5 h-5 text-indigo-400" />
-                          <h4 className="text-sm font-extrabold text-white">Objective Question Composition Engine</h4>
-                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">
+                          <BrainCircuit className="w-5 h-5 text-[#4a6fa5]" />
+                          <h4 className="font-display text-sm uppercase text-slate-900 dark:text-white">Objective Question Composition Engine</h4>
+                          <span className="font-mono text-[9px] font-bold px-2 py-0.5 bg-[#4a6fa5]/10 text-[#4a6fa5] dark:text-[#6a90c5] border border-[#4a6fa5]/30">
                             {selectedQuestionIds.length} in Draft
                           </span>
                         </div>
-                        <p className="text-xs text-slate-400 mt-0.5">
+                        <p className="text-xs text-slate-600 dark:text-slate-400 font-sans mt-0.5">
                           Choose how to compose questions: extract grounded candidate questions from course documents or browse the existing repository.
                         </p>
                       </div>
 
                       {/* Source Toggle Pills */}
-                      <div className="flex items-center p-1 bg-[#0F172A] rounded-xl border border-slate-700 shrink-0">
+                      <div className="flex items-center p-0.5 bg-[var(--surface-muted)] border border-[var(--border)] shrink-0">
                         <button
                           type="button"
                           onClick={() => setQuestionSourceWorkflow('DOCUMENT')}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono font-bold uppercase tracking-wider transition ${
                             questionSourceWorkflow === 'DOCUMENT'
-                              ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md'
-                              : 'text-slate-400 hover:text-white'
+                              ? 'bg-[#1a2540] dark:bg-[#4a6fa5] text-white shadow-xs'
+                              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                           }`}
                         >
                           <Upload className="w-3.5 h-3.5" />
@@ -1664,10 +1699,10 @@ export default function FacultyAssessmentsPage() {
                         <button
                           type="button"
                           onClick={() => setQuestionSourceWorkflow('BANK')}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                          className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono font-bold uppercase tracking-wider transition ${
                             questionSourceWorkflow === 'BANK'
-                              ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md'
-                              : 'text-slate-400 hover:text-white'
+                              ? 'bg-[#1a2540] dark:bg-[#4a6fa5] text-white shadow-xs'
+                              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                           }`}
                         >
                           <BookOpen className="w-3.5 h-3.5" />
@@ -1680,34 +1715,34 @@ export default function FacultyAssessmentsPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-[11px]">
                       <div
                         onClick={() => setQuestionSourceWorkflow('DOCUMENT')}
-                        className={`p-2.5 rounded-xl border cursor-pointer transition ${
+                        className={`p-3 border cursor-pointer transition ${
                           questionSourceWorkflow === 'DOCUMENT'
-                            ? 'bg-blue-950/40 border-blue-500/60 text-blue-200'
-                            : 'bg-[#1E293B]/40 border-slate-800 text-slate-400 hover:border-slate-700'
+                            ? 'bg-[var(--surface-muted)] border-2 border-[#4a6fa5]'
+                            : 'bg-[var(--surface)] border border-[var(--border)] hover:border-slate-400'
                         }`}
                       >
-                        <div className="font-bold flex items-center gap-1.5 text-white">
-                          <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                        <div className="font-bold flex items-center gap-1.5 text-slate-900 dark:text-white">
+                          <Sparkles className="w-3.5 h-3.5 text-[#4a6fa5]" />
                           <span>Option A: Document AI & RAG Extraction</span>
                         </div>
-                        <p className="mt-0.5 leading-snug">
+                        <p className="mt-1 text-slate-600 dark:text-slate-400 font-sans leading-snug">
                           Upload syllabus notes, question banks, or Viva PDFs up to 25 MB. Review candidate questions and import them directly.
                         </p>
                       </div>
 
                       <div
                         onClick={() => setQuestionSourceWorkflow('BANK')}
-                        className={`p-2.5 rounded-xl border cursor-pointer transition ${
+                        className={`p-3 border cursor-pointer transition ${
                           questionSourceWorkflow === 'BANK'
-                            ? 'bg-indigo-950/40 border-indigo-500/60 text-indigo-200'
-                            : 'bg-[#1E293B]/40 border-slate-800 text-slate-400 hover:border-slate-700'
+                            ? 'bg-[var(--surface-muted)] border-2 border-[#4a6fa5]'
+                            : 'bg-[var(--surface)] border border-[var(--border)] hover:border-slate-400'
                         }`}
                       >
-                        <div className="font-bold flex items-center gap-1.5 text-white">
-                          <Layers className="w-3.5 h-3.5 text-indigo-400" />
+                        <div className="font-bold flex items-center gap-1.5 text-slate-900 dark:text-white">
+                          <Layers className="w-3.5 h-3.5 text-[#4a6fa5]" />
                           <span>Option B: Course Question Bank</span>
                         </div>
-                        <p className="mt-0.5 leading-snug">
+                        <p className="mt-1 text-slate-600 dark:text-slate-400 font-sans leading-snug">
                           Select from previously approved questions for this course with topic, difficulty, and type filtering.
                         </p>
                       </div>
@@ -1716,14 +1751,14 @@ export default function FacultyAssessmentsPage() {
 
                   {/* WORKFLOW VIEW 1: Document AI & RAG Upload and Candidate Review */}
                   {questionSourceWorkflow === 'DOCUMENT' && (
-                    <div className="space-y-3 p-4 bg-[#111827] rounded-2xl border border-blue-500/30">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+                    <div className="space-y-3 p-4 bg-[var(--surface-muted)] border border-[var(--border)]">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[var(--border)] pb-3">
                         <div>
-                          <h5 className="text-xs font-bold text-white flex items-center gap-1.5">
-                            <Upload className="w-4 h-4 text-blue-400" />
+                          <h5 className="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                            <Upload className="w-4 h-4 text-[#4a6fa5]" />
                             <span>Document AI Question Extractor & RAG Ingestion</span>
                           </h5>
-                          <span className="text-[11px] text-slate-400">
+                          <span className="text-[11px] text-slate-600 dark:text-slate-400 font-sans">
                             Upload a course document (PDF, TXT, DOCX up to 25 MB) to parse candidate questions grounded in the content.
                           </span>
                         </div>
@@ -1737,7 +1772,7 @@ export default function FacultyAssessmentsPage() {
                               setCandidateQuestions([]);
                               setSelectedCandidateIndices([]);
                             }}
-                            className="text-[11px] text-slate-400 hover:text-rose-400 flex items-center gap-1 transition"
+                            className="text-[11px] font-mono text-slate-600 dark:text-slate-400 hover:text-rose-500 flex items-center gap-1 transition"
                           >
                             <X className="w-3.5 h-3.5" />
                             <span>Clear File</span>
@@ -1747,30 +1782,30 @@ export default function FacultyAssessmentsPage() {
 
                       {/* File Dropzone / Picker */}
                       {!ragFile ? (
-                        <div className="relative border-2 border-dashed border-slate-700 hover:border-blue-500/70 rounded-2xl p-6 text-center bg-[#0B0F19]/60 transition group cursor-pointer">
+                        <div className="relative border-2 border-dashed border-[var(--border)] hover:border-[#4a6fa5] p-6 text-center bg-[var(--surface)] transition group cursor-pointer">
                           <input
                             type="file"
                             accept=".pdf,.txt,.doc,.docx,application/pdf,text/plain"
                             onChange={handleSelectRagFile}
                             className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
                           />
-                          <FileUp className="w-9 h-9 text-blue-400/80 group-hover:text-blue-400 mx-auto mb-2 transition transform group-hover:-translate-y-0.5" />
-                          <p className="text-xs font-bold text-white">
+                          <FileUp className="w-9 h-9 text-[#4a6fa5] group-hover:scale-105 mx-auto mb-2 transition" />
+                          <p className="text-xs font-bold text-slate-900 dark:text-white">
                             Click or drag and drop your course PDF or question document
                           </p>
-                          <p className="text-[11px] text-slate-400 mt-1">
-                            Supports <strong className="text-blue-300">PDF, TXT, DOCX</strong> files up to <strong className="text-blue-300">25 MB</strong>
+                          <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1 font-sans">
+                            Supports <strong className="text-[#4a6fa5]">PDF, TXT, DOCX</strong> files up to <strong className="text-[#4a6fa5]">25 MB</strong>
                           </p>
                         </div>
                       ) : (
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-[#1E293B] rounded-xl border border-blue-500/40">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 bg-[var(--surface)] border border-[var(--border)]">
                           <div className="flex items-center gap-3 min-w-0">
-                            <div className="p-2.5 rounded-lg bg-blue-500/20 text-blue-400 border border-blue-500/40 shrink-0">
+                            <div className="p-2.5 bg-[#4a6fa5]/10 text-[#4a6fa5] border border-[#4a6fa5]/30 shrink-0">
                               <FileText className="w-5 h-5" />
                             </div>
                             <div className="min-w-0">
-                              <p className="text-xs font-bold text-white truncate">{ragFile.name}</p>
-                              <p className="text-[11px] text-slate-400">
+                              <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{ragFile.name}</p>
+                              <p className="text-[11px] text-slate-600 dark:text-slate-400 font-mono">
                                 {ragFile.size > 1024 * 1024
                                   ? `${(ragFile.size / (1024 * 1024)).toFixed(2)} MB`
                                   : `${(ragFile.size / 1024).toFixed(1)} KB`} • {ragFile.type || 'Document'}
@@ -1783,7 +1818,7 @@ export default function FacultyAssessmentsPage() {
                               type="button"
                               onClick={handleExtractFromDocument}
                               disabled={ragExtracting}
-                              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-600/30 transition disabled:opacity-50 flex items-center gap-1.5"
+                              className="px-4 py-2 bg-[#4a6fa5] hover:bg-[#3d5d8a] text-white font-mono text-xs font-bold uppercase tracking-wider transition disabled:opacity-50 flex items-center gap-1.5"
                             >
                               {ragExtracting ? (
                                 <>
@@ -1803,18 +1838,18 @@ export default function FacultyAssessmentsPage() {
 
                       {/* Status / Error feedback */}
                       {ragExtractError && (
-                        <div className="p-3 rounded-xl bg-rose-950/60 border border-rose-500/40 text-rose-300 text-xs flex items-center gap-2">
-                          <AlertTriangle className="w-4 h-4 shrink-0 text-rose-400" />
+                        <div className="p-3 bg-rose-500/10 border border-rose-500/30 text-rose-800 dark:text-rose-300 text-xs flex items-center gap-2 font-mono">
+                          <AlertTriangle className="w-4 h-4 shrink-0 text-rose-500" />
                           <span>{ragExtractError}</span>
                         </div>
                       )}
 
                       {ragExtractProgress && (
-                        <div className="p-3 rounded-xl bg-blue-950/40 border border-blue-500/40 text-blue-200 text-xs flex items-center gap-2">
+                        <div className="p-3 bg-blue-500/10 border border-blue-500/30 text-blue-800 dark:text-blue-300 text-xs flex items-center gap-2 font-mono">
                           {ragExtracting ? (
-                            <Loader2 className="w-4 h-4 shrink-0 animate-spin text-blue-400" />
+                            <Loader2 className="w-4 h-4 shrink-0 animate-spin text-blue-500" />
                           ) : (
-                            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-400" />
+                            <CheckCircle2 className="w-4 h-4 shrink-0 text-emerald-500" />
                           )}
                           <span>{ragExtractProgress}</span>
                         </div>
@@ -1823,22 +1858,22 @@ export default function FacultyAssessmentsPage() {
                       {/* Candidate Questions Review List */}
                       {candidateQuestions.length > 0 && (
                         <div className="space-y-3 pt-2">
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-[#0F172A] rounded-xl border border-slate-800">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 bg-[var(--surface)] border border-[var(--border)]">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-xs font-bold text-white">
+                              <span className="text-xs font-bold text-slate-900 dark:text-white font-mono">
                                 Candidate Questions ({candidateQuestions.length})
                               </span>
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                              <span className="font-mono px-2 py-0.5 text-[10px] font-bold bg-cyan-500/10 text-cyan-800 dark:text-cyan-300 border border-cyan-500/30">
                                 {selectedCandidateIndices.length} Selected
                               </span>
                               {candidateQuestions.some((q) => q.isAmbiguous) && (
                                 <button
                                   type="button"
                                   onClick={() => setCandidateOnlyAmbiguous((prev) => !prev)}
-                                  className={`px-2 py-0.5 rounded-full text-[10px] font-black border transition ${
+                                  className={`px-2 py-0.5 text-[10px] font-mono font-bold border transition ${
                                     candidateOnlyAmbiguous
-                                      ? 'bg-amber-400 text-amber-950 border-amber-400'
-                                      : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                                      ? 'bg-amber-500 text-white border-amber-500'
+                                      : 'bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-500/30'
                                   }`}
                                 >
                                   ⚠️ {candidateQuestions.filter((q) => q.isAmbiguous).length} Ambiguous Keys
@@ -1850,14 +1885,14 @@ export default function FacultyAssessmentsPage() {
                               <button
                                 type="button"
                                 onClick={() => setSelectedCandidateIndices(candidateQuestions.map((_, i) => i))}
-                                className="px-2.5 py-1 text-[11px] font-bold text-blue-400 hover:text-blue-300 hover:bg-blue-950/50 rounded-lg transition"
+                                className="px-2.5 py-1 text-[11px] font-mono font-bold uppercase text-[#4a6fa5] hover:underline transition"
                               >
                                 Select All ({candidateQuestions.length})
                               </button>
                               <button
                                 type="button"
                                 onClick={() => setSelectedCandidateIndices([])}
-                                className="px-2.5 py-1 text-[11px] font-medium text-slate-400 hover:text-white rounded-lg transition"
+                                className="px-2.5 py-1 text-[11px] font-mono font-bold uppercase text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition"
                               >
                                 Deselect All
                               </button>
@@ -1865,7 +1900,7 @@ export default function FacultyAssessmentsPage() {
                                 type="button"
                                 onClick={handleImportCandidatesToAssessment}
                                 disabled={importingToAssessment || selectedCandidateIndices.length === 0}
-                                className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-600/30 transition disabled:opacity-50 flex items-center gap-1.5"
+                                className="px-3.5 py-1.5 bg-[#059669] hover:bg-[#047857] text-white font-mono text-xs font-bold uppercase tracking-wider transition disabled:opacity-50 flex items-center gap-1.5"
                               >
                                 {importingToAssessment ? (
                                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -1888,38 +1923,38 @@ export default function FacultyAssessmentsPage() {
                                 return (
                                   <div
                                     key={candidateIdx}
-                                    className={`p-3.5 rounded-xl border transition-all space-y-2.5 ${
+                                    className={`p-3.5 border transition-all space-y-2.5 ${
                                       isSelected
-                                        ? 'bg-[#1E293B] border-blue-500 shadow-md shadow-blue-500/10'
-                                        : 'bg-[#1E293B]/60 border-slate-800 hover:border-slate-700'
+                                        ? 'bg-[var(--surface-muted)] border-2 border-[#4a6fa5]'
+                                        : 'bg-[var(--surface)] border border-[var(--border)] hover:border-slate-400'
                                     }`}
                                   >
                                     <div className="flex items-start justify-between gap-3">
                                       <div className="flex-1 space-y-1">
                                         <div className="flex items-center gap-2 flex-wrap">
-                                          <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                                          <span className="font-mono text-[10px] font-bold px-2 py-0.5 bg-[#4a6fa5]/10 text-[#4a6fa5] dark:text-[#6a90c5] border border-[#4a6fa5]/30">
                                             #{candidateIdx + 1}
                                           </span>
-                                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-800 text-indigo-300 border border-indigo-500/30">
+                                          <span className="font-mono text-[10px] font-bold px-2 py-0.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700">
                                             {q.topic || 'Document Concepts'}
                                           </span>
                                           <span
-                                            className={`text-[9px] font-bold px-2 py-0.5 rounded-md uppercase border ${
+                                            className={`font-mono text-[9px] font-bold px-2 py-0.5 uppercase border ${
                                               q.difficulty === 'EASY'
-                                                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                                                ? 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-500/30'
                                                 : q.difficulty === 'HARD'
-                                                ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
-                                                : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                                                ? 'bg-rose-500/10 text-rose-800 dark:text-rose-300 border-rose-500/30'
+                                                : 'bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-500/30'
                                             }`}
                                           >
                                             {q.difficulty || 'MEDIUM'}
                                           </span>
-                                          <span className="text-[9px] font-bold px-2 py-0.5 rounded-md uppercase bg-purple-500/20 text-purple-300 border border-purple-500/30">
+                                          <span className="font-mono text-[9px] font-bold px-2 py-0.5 uppercase bg-purple-500/10 text-purple-800 dark:text-purple-300 border border-purple-500/30">
                                             {q.bloomLevel || 'APPLY'}
                                           </span>
                                         </div>
 
-                                        <p className="text-xs font-semibold text-white leading-relaxed">
+                                        <p className="text-xs font-semibold text-slate-900 dark:text-white leading-relaxed font-sans">
                                           {q.questionText}
                                         </p>
                                       </div>
@@ -1927,10 +1962,10 @@ export default function FacultyAssessmentsPage() {
                                       <button
                                         type="button"
                                         onClick={() => toggleCandidateSelection(candidateIdx)}
-                                        className={`w-5 h-5 rounded-md flex items-center justify-center border-2 transition shrink-0 ${
+                                        className={`w-5 h-5 flex items-center justify-center border-2 transition shrink-0 ${
                                           isSelected
-                                            ? 'bg-blue-600 border-blue-600 text-white shadow-md'
-                                            : 'border-slate-500 bg-transparent hover:border-blue-400'
+                                            ? 'bg-[#4a6fa5] border-[#4a6fa5] text-white shadow-xs'
+                                            : 'border-slate-400 bg-transparent hover:border-[#4a6fa5]'
                                         }`}
                                       >
                                         {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
@@ -1939,8 +1974,8 @@ export default function FacultyAssessmentsPage() {
 
                                     {/* Ambiguity Alert Notice if answer was flagged */}
                                     {q.isAmbiguous && (
-                                      <div className="px-3 py-1.5 rounded-lg bg-amber-950/60 border border-amber-500/40 text-amber-300 text-[11px] flex items-center gap-1.5">
-                                        <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-amber-400" />
+                                      <div className="px-3 py-1.5 bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-300 text-[11px] font-mono flex items-center gap-1.5">
+                                        <AlertTriangle className="w-3.5 h-3.5 shrink-0 text-amber-500" />
                                         <span>
                                           Ambiguous source key: click any option below to confirm the intended correct answer.
                                         </span>
@@ -1955,25 +1990,25 @@ export default function FacultyAssessmentsPage() {
                                           <div
                                             key={optIdx}
                                             onClick={() => handleSetCandidateCorrectOption(candidateIdx, optIdx)}
-                                            className={`p-2 rounded-lg border text-left cursor-pointer transition flex items-start gap-2 ${
+                                            className={`p-2 border text-left cursor-pointer transition flex items-start gap-2 ${
                                               opt.isCorrect
-                                                ? 'bg-emerald-950/70 border-emerald-400 text-emerald-100 shadow-sm'
-                                                : 'bg-[#0F172A]/80 border-slate-700/80 hover:border-slate-600 text-slate-300'
+                                                ? 'bg-emerald-500/15 border-emerald-500 text-emerald-900 dark:text-emerald-200'
+                                                : 'bg-[var(--surface)] border-[var(--border)] hover:border-slate-400 text-slate-800 dark:text-slate-200'
                                             }`}
                                           >
                                             <span
-                                              className={`w-4 h-4 rounded text-[10px] font-black flex items-center justify-center shrink-0 ${
+                                              className={`w-4 h-4 text-[10px] font-mono font-black flex items-center justify-center shrink-0 ${
                                                 opt.isCorrect
-                                                  ? 'bg-emerald-400 text-emerald-950'
-                                                  : 'bg-slate-800 text-slate-400'
+                                                  ? 'bg-emerald-600 text-white'
+                                                  : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
                                               }`}
                                             >
                                               {letter}
                                             </span>
                                             <div className="min-w-0 flex-1">
-                                              <p className="text-[11px] leading-tight break-words">{opt.text}</p>
+                                              <p className="text-[11px] leading-tight break-words font-sans">{opt.text}</p>
                                               {opt.isCorrect && (
-                                                <span className="text-[9px] font-bold text-emerald-400 uppercase tracking-wide block mt-0.5">
+                                                <span className="font-mono text-[9px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide block mt-0.5">
                                                   ✓ Correct Answer
                                                 </span>
                                               )}
@@ -1984,8 +2019,8 @@ export default function FacultyAssessmentsPage() {
                                     </div>
 
                                     {q.explanation && (
-                                      <p className="text-[11px] text-slate-400 bg-[#0B0F19]/60 p-2 rounded-lg border border-slate-800 leading-snug">
-                                        <strong className="text-slate-300">Explanation:</strong> {q.explanation}
+                                      <p className="text-[11px] text-slate-600 dark:text-slate-400 bg-[var(--surface-muted)] p-2 border border-[var(--border)] leading-snug font-sans">
+                                        <strong className="text-slate-800 dark:text-slate-200">Explanation:</strong> {q.explanation}
                                       </p>
                                     )}
                                   </div>
@@ -2002,30 +2037,30 @@ export default function FacultyAssessmentsPage() {
                     <div className="space-y-3">
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                         <div>
-                          <label className="block text-sm font-bold text-white flex items-center gap-1.5">
-                            <BookOpen className="w-4 h-4 text-indigo-400" />
+                          <label className="block font-display text-sm uppercase text-slate-900 dark:text-white flex items-center gap-1.5">
+                            <BookOpen className="w-4 h-4 text-[#4a6fa5]" />
                             <span>Course Question Bank Repository</span>
                           </label>
-                          <span className="text-xs text-slate-400">
+                          <span className="text-xs text-slate-600 dark:text-slate-400 font-sans">
                             Approved curriculum questions for {courses.find((c) => c.id === selectedCourseId)?.name}
                           </span>
                         </div>
 
                         <div className="flex items-center gap-2">
-                          <span className="px-3 py-1 rounded-xl text-xs font-black bg-indigo-500/20 border border-indigo-500/40 text-indigo-300">
+                          <span className="px-2.5 py-1 text-xs font-mono font-bold bg-[#4a6fa5]/10 border border-[#4a6fa5]/30 text-[#4a6fa5] dark:text-[#6a90c5]">
                             {selectedQuestionIds.length} Selected
                           </span>
                           <button
                             type="button"
                             onClick={selectAllFiltered}
-                            className="px-3 py-1 text-xs font-bold text-indigo-400 hover:text-indigo-300 hover:bg-indigo-950/50 rounded-lg transition"
+                            className="px-2.5 py-1 text-xs font-mono font-bold uppercase text-[#4a6fa5] hover:underline transition"
                           >
                             Select All Filtered
                           </button>
                           <button
                             type="button"
                             onClick={deselectAllFiltered}
-                            className="px-3 py-1 text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition"
+                            className="px-2.5 py-1 text-xs font-mono font-bold uppercase text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition"
                           >
                             Deselect
                           </button>
@@ -2033,13 +2068,13 @@ export default function FacultyAssessmentsPage() {
                       </div>
 
                       {/* Filters Row: Topic, Search, Difficulty */}
-                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 bg-[#1E293B]/80 p-3 rounded-2xl border border-slate-700">
+                      <div className="grid grid-cols-1 sm:grid-cols-12 gap-2.5 bg-[var(--surface-muted)] p-3 border border-[var(--border)]">
                         {/* Topic Filter */}
                         <div className="sm:col-span-5">
                           <select
                             value={filterTopic}
                             onChange={(e) => setFilterTopic(e.target.value)}
-                            className="w-full p-2.5 text-xs bg-[#0F172A] border border-slate-600 rounded-xl text-white font-semibold focus:outline-none focus:border-indigo-500"
+                            className="w-full p-2 text-xs bg-[var(--surface)] border border-[var(--border)] text-slate-900 dark:text-white font-semibold focus:outline-none focus:border-[#4a6fa5]"
                           >
                             <option value="ALL">All Topics ({availableQuestions.length})</option>
                             {uniqueTopics.map((top) => {
@@ -2055,13 +2090,13 @@ export default function FacultyAssessmentsPage() {
 
                         {/* Search Bar */}
                         <div className="sm:col-span-4 relative">
-                          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                           <input
                             type="text"
                             value={questionSearch}
                             onChange={(e) => setQuestionSearch(e.target.value)}
                             placeholder="Search questions..."
-                            className="w-full pl-9 pr-3 py-2 text-xs bg-[#0F172A] border border-slate-600 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500"
+                            className="w-full pl-9 pr-3 py-2 text-xs bg-[var(--surface)] border border-[var(--border)] text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#4a6fa5]"
                           />
                         </div>
 
@@ -2070,7 +2105,7 @@ export default function FacultyAssessmentsPage() {
                           <select
                             value={filterDifficulty}
                             onChange={(e) => setFilterDifficulty(e.target.value)}
-                            className="w-full p-2.5 text-xs bg-[#0F172A] border border-slate-600 rounded-xl text-white font-semibold focus:outline-none focus:border-indigo-500"
+                            className="w-full p-2 text-xs bg-[var(--surface)] border border-[var(--border)] text-slate-900 dark:text-white font-semibold focus:outline-none focus:border-[#4a6fa5]"
                           >
                             <option value="ALL">All Levels</option>
                             <option value="EASY">Easy</option>
@@ -2081,14 +2116,14 @@ export default function FacultyAssessmentsPage() {
                       </div>
 
                       {/* Question List */}
-                      <div className="max-h-64 overflow-y-auto space-y-2.5 border border-slate-700 rounded-2xl p-3 bg-[#0F172A]/80">
+                      <div className="max-h-64 overflow-y-auto space-y-2 border border-[var(--border)] p-2.5 bg-[var(--surface)]">
                         {questionsLoading ? (
-                          <div className="p-10 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
-                            <Loader2 className="w-5 h-5 animate-spin text-indigo-400" />
+                          <div className="p-10 text-center text-xs font-mono text-slate-400 flex items-center justify-center gap-2">
+                            <Loader2 className="w-5 h-5 animate-spin text-[#4a6fa5]" />
                             <span>Loading approved questions...</span>
                           </div>
                         ) : filteredQuestions.length === 0 ? (
-                          <div className="p-10 text-center text-xs text-slate-400">
+                          <div className="p-10 text-center text-xs font-mono text-slate-500">
                             No questions found matching the selected criteria.
                           </div>
                         ) : (
@@ -2099,10 +2134,10 @@ export default function FacultyAssessmentsPage() {
                             return (
                               <div
                                 key={q.id}
-                                className={`rounded-2xl border transition-all overflow-hidden ${
+                                className={`border transition-all overflow-hidden ${
                                   isSelected
-                                    ? 'bg-[#1E293B] border-2 border-indigo-500 shadow-md shadow-indigo-500/10'
-                                    : 'bg-[#1E293B]/60 border border-slate-700/80 hover:border-slate-600'
+                                    ? 'bg-[var(--surface-muted)] border-2 border-[#4a6fa5] shadow-xs'
+                                    : 'bg-[var(--surface)] border border-[var(--border)] hover:border-slate-400'
                                 }`}
                               >
                                 <div
@@ -2112,36 +2147,36 @@ export default function FacultyAssessmentsPage() {
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                                       {isRAG && (
-                                        <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-blue-500/20 text-blue-300 border border-blue-500/40">
+                                        <span className="font-mono text-[9px] font-bold px-2 py-0.5 bg-blue-500/10 text-blue-800 dark:text-blue-300 border border-blue-500/30">
                                           📄 Document AI
                                         </span>
                                       )}
-                                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-slate-800 text-indigo-300 border border-indigo-500/30">
+                                      <span className="font-mono text-[9px] font-bold px-2 py-0.5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700">
                                         {q.topic?.name || 'General'}
                                       </span>
                                       <span
-                                        className={`text-[10px] font-bold px-2 py-0.5 rounded-md uppercase border ${
+                                        className={`font-mono text-[9px] font-bold px-2 py-0.5 uppercase border ${
                                           q.difficulty === 'EASY'
-                                            ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                                            ? 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-500/30'
                                             : q.difficulty === 'HARD'
-                                            ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
-                                            : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                                            ? 'bg-rose-500/10 text-rose-800 dark:text-rose-300 border-rose-500/30'
+                                            : 'bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-500/30'
                                         }`}
                                       >
                                         {q.difficulty}
                                       </span>
                                     </div>
-                                    <p className="text-xs text-white leading-relaxed font-semibold">
+                                    <p className="text-xs text-slate-900 dark:text-white leading-relaxed font-sans font-medium">
                                       {q.questionText}
                                     </p>
                                   </div>
 
                                   <div className="flex items-center gap-2 shrink-0 pt-0.5">
                                     <div
-                                      className={`w-5 h-5 rounded-md flex items-center justify-center border-2 transition ${
+                                      className={`w-5 h-5 flex items-center justify-center border-2 transition ${
                                         isSelected
-                                          ? 'bg-indigo-600 border-indigo-600 text-white shadow-md'
-                                          : 'border-slate-500 bg-transparent hover:border-indigo-400'
+                                          ? 'bg-[#4a6fa5] border-[#4a6fa5] text-white shadow-xs'
+                                          : 'border-slate-400 bg-transparent hover:border-[#4a6fa5]'
                                       }`}
                                     >
                                       {isSelected && <Check className="w-3.5 h-3.5 stroke-[3]" />}
@@ -2158,14 +2193,14 @@ export default function FacultyAssessmentsPage() {
 
                   {/* UNIFIED DRAFT INSPECTION DRAWER: Displays combined questions from both sources */}
                   {selectedQuestionIds.length > 0 && (
-                    <div className="p-3.5 bg-[#0B0F19] rounded-2xl border border-indigo-500/30 space-y-2">
+                    <div className="p-3.5 bg-[var(--surface-muted)] border border-[var(--border)] space-y-2">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                          <span className="text-xs font-bold text-white">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                          <span className="text-xs font-bold text-slate-900 dark:text-white font-mono">
                             Current Assessment Draft: {selectedQuestionIds.length} Questions Selected
                           </span>
-                          <span className="text-[11px] text-indigo-300 bg-indigo-950/60 px-2 py-0.5 rounded-md border border-indigo-500/30">
+                          <span className="font-mono text-[10px] text-[#4a6fa5] dark:text-[#6a90c5] bg-[#4a6fa5]/10 px-2 py-0.5 border border-[#4a6fa5]/30">
                             ~{(Number(newTotalMarks) / selectedQuestionIds.length).toFixed(1)} marks each ({newTotalMarks} marks total)
                           </span>
                         </div>
@@ -2173,14 +2208,14 @@ export default function FacultyAssessmentsPage() {
                         <button
                           type="button"
                           onClick={() => setShowDraftPreview((prev) => !prev)}
-                          className="text-xs font-bold text-indigo-400 hover:text-indigo-300 transition"
+                          className="text-xs font-mono font-bold uppercase text-[#4a6fa5] hover:underline transition"
                         >
                           {showDraftPreview ? 'Hide Draft Preview' : 'Review Drafted Questions'}
                         </button>
                       </div>
 
                       {showDraftPreview && (
-                        <div className="max-h-48 overflow-y-auto space-y-1.5 pt-2 border-t border-slate-800">
+                        <div className="max-h-48 overflow-y-auto space-y-1.5 pt-2 border-t border-[var(--border)]">
                           {selectedQuestionIds.map((qId, orderIdx) => {
                             const foundQ = availableQuestions.find((item) => item.id === qId);
                             if (!foundQ) return null;
@@ -2189,24 +2224,24 @@ export default function FacultyAssessmentsPage() {
                             return (
                               <div
                                 key={qId}
-                                className="flex items-center justify-between gap-2 p-2 bg-[#1E293B] rounded-xl border border-slate-700 text-xs"
+                                className="flex items-center justify-between gap-2 p-2 bg-[var(--surface)] border border-[var(--border)] text-xs"
                               >
                                 <div className="flex items-center gap-2 min-w-0">
-                                  <span className="w-5 h-5 rounded bg-slate-800 text-slate-300 text-[10px] font-bold flex items-center justify-center shrink-0">
+                                  <span className="w-5 h-5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-mono text-[10px] font-bold flex items-center justify-center shrink-0">
                                     {orderIdx + 1}
                                   </span>
                                   {isRag && (
-                                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30 shrink-0">
+                                    <span className="font-mono text-[9px] font-bold px-1.5 py-0.5 bg-blue-500/10 text-blue-800 dark:text-blue-300 border border-blue-500/30 shrink-0">
                                       RAG
                                     </span>
                                   )}
-                                  <span className="text-white truncate font-medium">{foundQ.questionText}</span>
+                                  <span className="text-slate-900 dark:text-white truncate font-medium font-sans">{foundQ.questionText}</span>
                                 </div>
 
                                 <button
                                   type="button"
                                   onClick={() => toggleQuestionSelection(qId)}
-                                  className="text-slate-400 hover:text-rose-400 p-1 transition shrink-0"
+                                  className="text-slate-500 hover:text-rose-500 p-1 transition shrink-0"
                                   title="Remove from draft"
                                 >
                                   <X className="w-3.5 h-3.5" />
@@ -2222,27 +2257,27 @@ export default function FacultyAssessmentsPage() {
               )}
 
               {/* Action buttons & Publish Status Selection */}
-              <div className="pt-4 border-t border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="pt-4 border-t border-[var(--border)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <span className="text-xs text-slate-300">
-                    Target: <strong className="text-white font-bold">{newDivision === 'DIV 1' ? 'Division A' : newDivision === 'DIV 2' ? 'Division B' : 'All Divisions'}</strong> • {examMode === 'CODING' ? (
-                      <strong className="text-cyan-400 font-bold">{authoredCodingProblems.length} Problems</strong>
+                  <span className="font-mono text-xs text-slate-700 dark:text-slate-300">
+                    Target: <strong className="text-slate-900 dark:text-white font-bold">{newDivision === 'DIV 1' ? 'Division A' : newDivision === 'DIV 2' ? 'Division B' : 'All Divisions'}</strong> • {examMode === 'CODING' ? (
+                      <strong className="text-[#e05033] font-bold">{authoredCodingProblems.length} Problems</strong>
                     ) : examMode === 'HYBRID' ? (
-                      <strong className="text-purple-400 font-bold">{selectedQuestionIds.length} MCQs + {authoredCodingProblems.length} Problems</strong>
+                      <strong className="text-purple-600 dark:text-purple-400 font-bold">{selectedQuestionIds.length} MCQs + {authoredCodingProblems.length} Problems</strong>
                     ) : (
-                      <strong className="text-indigo-400 font-bold">{selectedQuestionIds.length} MCQs</strong>
+                      <strong className="text-[#4a6fa5] font-bold">{selectedQuestionIds.length} MCQs</strong>
                     )}
                   </span>
 
                   {/* Draft vs Published Selector */}
-                  <div className="flex items-center p-0.5 bg-[#1E293B] rounded-lg border border-slate-700 text-[11px]">
+                  <div className="flex items-center p-0.5 bg-[var(--surface-muted)] border border-[var(--border)] font-mono text-[10px] font-bold uppercase">
                     <button
                       type="button"
                       onClick={() => setNewStatus('DRAFT')}
-                      className={`px-2.5 py-1 rounded-md font-bold transition ${
+                      className={`px-3 py-1 transition ${
                         newStatus === 'DRAFT'
-                          ? 'bg-slate-700 text-white shadow-sm'
-                          : 'text-slate-400 hover:text-slate-200'
+                          ? 'bg-[#1a2540] dark:bg-[#4a6fa5] text-white shadow-xs'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       Draft Mode
@@ -2250,10 +2285,10 @@ export default function FacultyAssessmentsPage() {
                     <button
                       type="button"
                       onClick={() => setNewStatus('PUBLISHED')}
-                      className={`px-2.5 py-1 rounded-md font-bold transition ${
+                      className={`px-3 py-1 transition ${
                         newStatus === 'PUBLISHED'
-                          ? 'bg-indigo-600 text-white shadow-sm'
-                          : 'text-slate-400 hover:text-slate-200'
+                          ? 'bg-[#059669] text-white shadow-xs'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                       }`}
                     >
                       Publish Now
@@ -2265,7 +2300,7 @@ export default function FacultyAssessmentsPage() {
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
-                    className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 font-semibold text-xs rounded-xl transition"
+                    className="px-4 py-2 border border-[var(--border)] bg-[var(--surface)] hover:bg-[var(--surface-muted)] text-slate-800 dark:text-slate-200 font-mono text-xs font-bold uppercase tracking-wider transition"
                   >
                     Cancel
                   </button>
@@ -2280,7 +2315,7 @@ export default function FacultyAssessmentsPage() {
                         ? selectedQuestionIds.length === 0 && authoredCodingProblems.length === 0
                         : selectedQuestionIds.length === 0)
                     }
-                    className="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-indigo-600/30 transition disabled:opacity-50 flex items-center gap-2"
+                    className="action-button bg-[#e05033] hover:bg-[#c93f24] text-white font-mono text-xs font-bold uppercase tracking-wider px-6 py-2 transition disabled:opacity-50 flex items-center gap-2"
                   >
                     {creating && <Loader2 className="w-4 h-4 animate-spin" />}
                     <span>{newStatus === 'DRAFT' ? 'Save Assessment Draft' : 'Publish Assessment'}</span>
