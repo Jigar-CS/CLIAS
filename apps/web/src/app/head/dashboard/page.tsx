@@ -88,7 +88,7 @@ export default function HeadDashboard() {
             <div className="readiness">
               <p className="mono text-[8px] uppercase tracking-wider text-[#6b7fa3]">INSTITUTIONAL INDEX</p>
               <strong className="font-display text-4xl text-[#1a2540] dark:text-[#f5f0e8]">
-                {summaryData?.institutionalMastery ?? 78}<span className="font-mono text-sm text-[#e05033]">%</span>
+                {summaryData?.institutionalMastery ?? 0}<span className="font-mono text-sm text-[#e05033]">%</span>
               </strong>
               <p className="mono text-[8px] text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">CHARUSAT CAMPUS BENCHMARK</p>
             </div>
@@ -98,22 +98,22 @@ export default function HeadDashboard() {
           <div className="metrics">
             <div className="metric">
               <div className="metric-top mono"><span>01</span><span className="text-[#e05033]">STUDENTS</span></div>
-              <div className="metric-value font-display text-2xl sm:text-3xl">{summaryData?.totalStudentsEnrolled ?? 248}</div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{summaryData?.totalStudentsEnrolled ?? 0}</div>
               <div className="metric-label mono">TOTAL ENROLLED</div>
             </div>
             <div className="metric">
               <div className="metric-top mono"><span>02</span><span className="text-[#4a6fa5]">DEPARTMENTS</span></div>
-              <div className="metric-value font-display text-2xl sm:text-3xl">{summaryData?.departmentCount ?? 4}</div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{summaryData?.departmentCount ?? 0}</div>
               <div className="metric-label mono">ACTIVE DEPARTMENTS</div>
             </div>
             <div className="metric">
               <div className="metric-top mono"><span>03</span><span>MASTERY</span></div>
-              <div className="metric-value font-display text-2xl sm:text-3xl">{summaryData?.institutionalMastery ?? 78}%</div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{summaryData?.institutionalMastery ?? 0}%</div>
               <div className="metric-label mono">KNOWLEDGE INDEX</div>
             </div>
             <div className="metric">
               <div className="metric-top mono"><span>04</span><span className="text-[#4a6fa5]">COURSES</span></div>
-              <div className="metric-value font-display text-2xl sm:text-3xl">{coursesList.length || 5}</div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{coursesList.length}</div>
               <div className="metric-label mono">ACTIVE COURSES</div>
             </div>
           </div>

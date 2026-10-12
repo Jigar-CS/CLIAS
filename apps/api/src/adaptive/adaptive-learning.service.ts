@@ -549,9 +549,24 @@ export class AdaptiveLearningService {
   /**
    * Retrieves topics due for spaced review for the student.
    */
-  async getDueSpacedRepetitionQueue(studentId: string): Promise<SpacedScheduleItem[]> {
+  async getDueSpacedRepetitionQueue(studentId: string, courseCode?: string): Promise<SpacedScheduleItem[]> {
     const schedules = await this.prisma.spacedRepetitionSchedule.findMany({
-      where: { studentId },
+      where: {
+        studentId,
+        ...(courseCode
+          ? {
+              topic: {
+                course: {
+                  OR: [
+                    { code: courseCode },
+                    { code: courseCode.toUpperCase() },
+                    { id: courseCode },
+                  ],
+                },
+              },
+            }
+          : {}),
+      },
       include: {
         topic: {
           include: { course: true },

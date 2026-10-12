@@ -140,7 +140,7 @@ export default function HodDashboard() {
             <div className="readiness">
               <p className="mono text-[8px] uppercase tracking-wider text-[#6b7fa3]">CO-PO ATTAINMENT</p>
               <strong className="font-display text-4xl text-[#1a2540] dark:text-[#f5f0e8]">
-                {obeData?.attainment ? `${Math.round(obeData.attainment)}` : '84'}<span className="font-mono text-sm text-[#e05033]">%</span>
+                {obeData?.attainment ? `${Math.round(obeData.attainment)}` : '0'}<span className="font-mono text-sm text-[#e05033]">%</span>
               </strong>
               <p className="mono text-[8px] text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">NBA CRITERIA 3 & 4</p>
             </div>
@@ -155,7 +155,7 @@ export default function HodDashboard() {
             </div>
             <div className="metric">
               <div className="metric-top mono"><span>02</span><span className="text-[#4a6fa5]">HEALTH</span></div>
-              <div className="metric-value font-display text-2xl sm:text-3xl">88%</div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{curriculumHealth?.averageMastery ? `${Math.round(curriculumHealth.averageMastery)}%` : '0%'}</div>
               <div className="metric-label mono">CURRICULUM MASTERY</div>
             </div>
             <div className="metric">

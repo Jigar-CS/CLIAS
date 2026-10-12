@@ -197,10 +197,10 @@ export default function StudentLeaderboardPage() {
             <div className="readiness">
               <p className="mono text-[8px] uppercase tracking-wider text-[#6b7fa3]">YOUR STANDING</p>
               <strong className="font-display text-4xl text-[#1a2540] dark:text-[#f5f0e8]">
-                #{standing?.rank || 4}<span className="font-mono text-sm text-[#e05033]">TH</span>
+                {standing?.rank ? `#${standing.rank}` : '--'}<span className="font-mono text-sm text-[#e05033]">{standing?.rank ? 'TH' : ''}</span>
               </strong>
               <p className="mono text-[8px] text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">
-                TOP {standing ? `${(100 - standing.percentile).toFixed(1)}%` : '5%'} IN BATCH
+                {standing ? `TOP ${(100 - standing.percentile).toFixed(1)}% IN BATCH` : 'NO PRACTICE DATA YET'}
               </p>
             </div>
           </div>
@@ -209,22 +209,22 @@ export default function StudentLeaderboardPage() {
           <div className="metrics">
             <div className="metric">
               <div className="metric-top mono"><span>01</span><span className="text-[#e05033]">RANK</span></div>
-              <div className="metric-value font-display text-2xl sm:text-3xl">#{standing?.rank || 4}</div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{standing?.rank ? `#${standing.rank}` : '--'}</div>
               <div className="metric-label mono">CURRENT POSITION</div>
             </div>
             <div className="metric">
               <div className="metric-top mono"><span>02</span><span className="text-[#4a6fa5]">SCORE</span></div>
-              <div className="metric-value font-display text-2xl sm:text-3xl">{standing?.score || 1840}</div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{standing?.score ?? 0}</div>
               <div className="metric-label mono">COMPOSITE POINTS</div>
             </div>
             <div className="metric">
               <div className="metric-top mono"><span>03</span><span>STREAK</span></div>
-              <div className="metric-value font-display text-2xl sm:text-3xl">{standing?.streakDays || 12} DAYS</div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{standing?.streakDays ?? 0} DAYS</div>
               <div className="metric-label mono">ACTIVE STREAK</div>
             </div>
             <div className="metric">
               <div className="metric-top mono"><span>04</span><span className="text-[#4a6fa5]">COHORT</span></div>
-              <div className="metric-value font-display text-2xl sm:text-3xl">{standing?.totalStudents || 248}</div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{standing?.totalStudents ?? 0}</div>
               <div className="metric-label mono">TOTAL COMPETITORS</div>
             </div>
           </div>

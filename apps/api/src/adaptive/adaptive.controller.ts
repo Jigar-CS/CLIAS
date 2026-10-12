@@ -127,8 +127,8 @@ export class AdaptiveController {
 
   @Get('spaced-queue')
   @Roles(UserRole.STUDENT)
-  async getSpacedQueue(@Req() req: any) {
-    return this.adaptiveService.getDueSpacedRepetitionQueue(resolveStudentId(req));
+  async getSpacedQueue(@Req() req: any, @Query('courseCode') courseCode?: string) {
+    return this.adaptiveService.getDueSpacedRepetitionQueue(resolveStudentId(req), courseCode);
   }
 
   @Get('misconceptions')

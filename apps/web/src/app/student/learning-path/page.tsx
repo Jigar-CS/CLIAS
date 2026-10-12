@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { useSidebar } from '@/lib/sidebar-context';
@@ -64,6 +64,20 @@ export default function StudentLearningPath() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedNode, setSelectedNode] = useState<KnowledgeGraphNode | null>(null);
+
+  const courseDueReviews = useMemo(() => {
+    if (!Array.isArray(spacedQueue)) return [];
+    return spacedQueue.filter((s: any) => {
+      const matchesCourse =
+        !s.courseCode ||
+        s.courseCode.toLowerCase() === selectedCourseCode.toLowerCase();
+      const isDue =
+        s.isOverdue === true ||
+        s.status === 'DUE' ||
+        (typeof s.daysRemainingOrOverdue === 'number' && s.daysRemainingOrOverdue <= 0);
+      return matchesCourse && isDue;
+    });
+  }, [spacedQueue, selectedCourseCode]);
 
   const handleCourseChange = (newCode: string) => {
     setSelectedCourseCode(newCode);
@@ -130,7 +144,7 @@ export default function StudentLearningPath() {
         api.get(`/analytics/student/me/knowledge-graph?courseCode=${encodeURIComponent(courseCode)}`).catch((e) => {
           throw e;
         }),
-        api.get('/adaptive/spaced-queue').catch(() => []),
+        api.get(`/adaptive/spaced-queue?courseCode=${encodeURIComponent(courseCode)}`).catch(() => []),
         api.get('/adaptive/misconceptions').catch(() => []),
       ]);
 
@@ -325,7 +339,11 @@ export default function StudentLearningPath() {
                     {graph?.unlockedTopicsCount || 0}
                     <span className="text-xs text-slate-600 dark:text-slate-400 font-medium ml-1.5">Available for drill</span>
                   </div>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium mt-2">Foundations validated by engine</p>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium mt-2">
+                    {(graph?.nodes.filter((n) => n.status === 'MASTERED').length || 0) > 0
+                      ? 'Foundations validated by engine'
+                      : 'Foundational topics ready for drill'}
+                  </p>
                 </div>
 
                 <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-xs">
@@ -334,10 +352,12 @@ export default function StudentLearningPath() {
                     <RotateCcw className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                   </div>
                   <div className="text-2xl font-black text-amber-600 dark:text-amber-400">
-                    {spacedQueue.length}
+                    {courseDueReviews.length}
                     <span className="text-xs text-slate-600 dark:text-slate-400 font-medium ml-1.5">Topics Due</span>
                   </div>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium mt-2">Ebbinghaus retention decay active</p>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium mt-2">
+                    {courseDueReviews.length > 0 ? 'Ebbinghaus retention decay active' : 'Prerequisites & retention healthy'}
+                  </p>
                 </div>
               </div>
 

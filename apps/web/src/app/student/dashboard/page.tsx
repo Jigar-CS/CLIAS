@@ -153,12 +153,20 @@ export default function StudentDashboard() {
                 : 'PRIORITY',
       }));
     }
-    return [
-      { name: 'Data Structures', percent: 86, status: 'STRONG' },
-      { name: 'Discrete Mathematics', percent: 74, status: 'STABLE' },
-      { name: 'Computer Networks', percent: 61, status: 'REVIEW' },
-      { name: 'Operating Systems', percent: 48, status: 'PRIORITY' },
-    ];
+    return [];
+  }, [summary?.topicMasteries]);
+
+  const skillMatrixRows = useMemo(() => {
+    if (!summary?.topicMasteries || summary.topicMasteries.length === 0) return [];
+    return summary.topicMasteries.slice(0, 4).map((tm: any) => {
+      const concept = Math.round(tm.masteryScore);
+      const app = Math.min(100, Math.round(tm.accuracy ?? tm.masteryScore * 0.9));
+      const problemSolving = Math.min(100, Math.max(0, Math.round(tm.masteryScore * 0.85 + (tm.attemptCount > 5 ? 8 : 0))));
+      return {
+        name: (tm.courseCode || tm.topicName.slice(0, 6)).toUpperCase(),
+        scores: [concept, app, problemSolving],
+      };
+    });
   }, [summary?.topicMasteries]);
 
   const recommendations = useMemo(() => {
@@ -167,14 +175,23 @@ export default function StudentDashboard() {
         `Review ${wt.topicName}`,
         `${wt.courseCode || 'CORE'} / TARGET 70%`,
         wt.topicId,
+        `/student/practice?topicId=${wt.topicId}`,
+      ]);
+    }
+    if (assignedAssessments && assignedAssessments.length > 0) {
+      return assignedAssessments.slice(0, 3).map((a: any) => [
+        `Attempt ${a.title}`,
+        `${a.courseCode} / ${a.durationMinutes} MIN`,
+        '',
+        '/student/assessments',
       ]);
     }
     return [
-      ['Review deadlock prevention', '12 MIN / HIGH IMPACT', ''],
-      ['Attempt DSA Sprint 04', '20 MIN / +3.2 MASTERY', ''],
-      ['Recall: TCP congestion', 'DUE TODAY', ''],
+      ['Take Initial Diagnostic Drill', 'CALIBRATE MASTERY PROFILE', '', '/student/practice'],
+      ['Browse Enrolled Courses', 'CURRICULUM TOPICS & SYLLABUS', '', '/student/courses'],
+      ['Explore Coding Lab', 'HANDS-ON ALGORITHMIC CHALLENGES', '', '/student/coding'],
     ];
-  }, [summary?.weakTopics]);
+  }, [summary?.weakTopics, assignedAssessments]);
 
   const loadDashboardData = async () => {
     try {
@@ -256,11 +273,19 @@ export default function StudentDashboard() {
             <div className="readiness">
               <p className="mono">LEARNING READINESS</p>
               <strong>
-                {summary ? Math.min(100, Math.round((summary.overallMastery || 0) * 0.85 + (summary.accuracy || 0) * 0.15)) : 0}
+                {summary && (summary.overallMastery > 0 || summary.accuracy > 0)
+                  ? Math.min(100, Math.round((summary.overallMastery || 0) * 0.85 + (summary.accuracy || 0) * 0.15))
+                  : 0}
                 <span>%</span>
               </strong>
               <p className="mono blue">
-                {(summary?.overallMastery ?? 0) >= 75 ? 'READY FOR ADVANCED DRILL' : (summary?.overallMastery ?? 0) >= 50 ? 'STABLE FOUNDATION' : 'READY FOR CHALLENGE'}
+                {(summary?.overallMastery ?? 0) >= 75
+                  ? 'READY FOR ADVANCED DRILL'
+                  : (summary?.overallMastery ?? 0) >= 50
+                    ? 'STABLE FOUNDATION'
+                    : (summary?.questionsPracticed ?? 0) > 0
+                      ? 'DEVELOPING FOUNDATION'
+                      : 'NEW LEARNER • NO SESSIONS YET'}
               </p>
             </div>
           </div>
@@ -270,40 +295,40 @@ export default function StudentDashboard() {
             <div className="metric">
               <div className="metric-top mono">
                 <span>01</span>
-                <span>{summary?.overallMastery > 0 ? `+${(summary.overallMastery * 0.05).toFixed(1)}%` : '+4.2%'}</span>
+                <span>{summary?.overallMastery > 0 ? `+${(summary.overallMastery * 0.05).toFixed(1)}%` : '0.0%'}</span>
               </div>
               <div className="metric-value">
-                {summary?.overallMastery > 0 ? `${summary.overallMastery}%` : '78.4%'}
+                {summary?.overallMastery != null ? `${summary.overallMastery}%` : '0%'}
               </div>
               <div className="metric-label mono">LEARNING MASTERY</div>
             </div>
             <div className="metric">
               <div className="metric-top mono">
                 <span>02</span>
-                <span>{summary?.accuracy > 0 ? `+${(summary.accuracy * 0.03).toFixed(1)}%` : '+2.8%'}</span>
+                <span>{summary?.accuracy > 0 ? `+${(summary.accuracy * 0.03).toFixed(1)}%` : '0.0%'}</span>
               </div>
               <div className="metric-value">
-                {summary?.accuracy > 0 ? `${summary.accuracy}%` : '84.1%'}
+                {summary?.accuracy != null ? `${summary.accuracy}%` : '0%'}
               </div>
               <div className="metric-label mono">ASSESSMENT ACCURACY</div>
             </div>
             <div className="metric">
               <div className="metric-top mono">
                 <span>03</span>
-                <span>+{summary?.questionsPracticed > 0 ? summary.questionsPracticed : '126'}</span>
+                <span>+{summary?.questionsPracticed ?? 0}</span>
               </div>
               <div className="metric-value">
-                {summary?.questionsPracticed > 0 ? summary.questionsPracticed.toLocaleString() : '1,284'}
+                {(summary?.questionsPracticed ?? 0).toLocaleString()}
               </div>
               <div className="metric-label mono">QUESTIONS PRACTICED</div>
             </div>
             <div className="metric">
               <div className="metric-top mono">
                 <span>04</span>
-                <span>BEST {Math.max(summary?.streakDays ?? 0, 19)}</span>
+                <span>BEST {summary?.streakDays ?? 0}</span>
               </div>
               <div className="metric-value">
-                {summary?.streakDays > 0 ? `${summary.streakDays} DAYS` : '12 DAYS'}
+                {summary?.streakDays ?? 0} DAYS
               </div>
               <div className="metric-label mono">CURRENT STREAK</div>
             </div>
@@ -314,21 +339,25 @@ export default function StudentDashboard() {
             <div className="priority-symbol">!</div>
             <div className="priority-content">
               <p className="mono">
-                {remediationNudge ? 'INSTRUCTOR-ASSIGNED / PRIORITY' : 'INSTRUCTOR-ASSIGNED / PRIORITY'}
+                {remediationNudge
+                  ? 'INSTRUCTOR-ASSIGNED / PRIORITY'
+                  : summary?.weakTopics && summary.weakTopics.length > 0
+                    ? 'ADAPTIVE RECOMMENDATION / WEAK AREA'
+                    : 'RECOMMENDED ACTION / GET STARTED'}
               </p>
               <h2 className="display">
                 {remediationNudge
-                  ? `REINFORCE ${(remediationNudge.meta?.topicName || 'PROCESS SYNCHRONIZATION').toUpperCase()}`
+                  ? `REINFORCE ${(remediationNudge.meta?.topicName || 'ASSIGNED TOPIC').toUpperCase()}`
                   : summary?.weakTopics && summary.weakTopics.length > 0
-                    ? `REINFORCE ${(summary.weakTopics[0].topicName || 'PROCESS SYNCHRONIZATION').toUpperCase()}`
-                    : 'REINFORCE PROCESS SYNCHRONIZATION'}
+                    ? `REINFORCE ${(summary.weakTopics[0].topicName || 'CONCEPT').toUpperCase()}`
+                    : 'CALIBRATE YOUR KNOWLEDGE PROFILE'}
               </h2>
               <p>
                 {remediationNudge
-                  ? `${remediationNudge.meta?.facultyName || 'Prof. Mehta'} assigned an adaptive drill for ${remediationNudge.meta?.topicName || 'this topic'} based on your last diagnostic.`
+                  ? `${remediationNudge.meta?.facultyName || 'Instructor'} assigned an adaptive drill for ${remediationNudge.meta?.topicName || 'this topic'} based on your recent performance.`
                   : summary?.weakTopics && summary.weakTopics.length > 0
-                    ? `Prof. Mehta assigned an 8-question adaptive drill on ${summary.weakTopics[0].topicName} based on your last diagnostic.`
-                    : 'Prof. Mehta assigned an 8-question adaptive drill based on your last diagnostic.'}
+                    ? `Adaptive engine identified ${summary.weakTopics[0].topicName} as having low mastery (${summary.weakTopics[0].masteryScore}%). Reinforce this topic with a diagnostic drill.`
+                    : 'Start your first diagnostic practice session to generate personalized Bayesian knowledge tracing and topic recommendations.'}
               </p>
             </div>
             <Link
@@ -336,7 +365,7 @@ export default function StudentDashboard() {
               className="action-button bg-[#e05033] hover:bg-[#c8432b] text-white flex items-center shrink-0 cursor-pointer"
               style={{ textDecoration: 'none' }}
             >
-              <span>START PRACTICE</span>
+              <span>{summary?.questionsPracticed > 0 ? 'START PRACTICE' : 'BEGIN DIAGNOSTIC'}</span>
               <ArrowRight className="w-4 h-4 ml-4" />
             </Link>
           </div>
@@ -446,21 +475,27 @@ export default function StudentDashboard() {
                   <p className="mono">KNOWLEDGE MODEL / LIVE</p>
                   <h2 className="display">TOPIC MASTERY</h2>
                 </div>
-                <span className="panel-meta mono coral">AVG {summary?.overallMastery ?? 67}%</span>
+                <span className="panel-meta mono coral">AVG {summary?.overallMastery ?? 0}%</span>
               </header>
               <div className="topic-list">
-                {displayTopics.map((topic: any) => (
-                  <div className="topic-row" key={topic.name}>
-                    <div className="topic-info">
-                      <span>{topic.name}</span>
-                      <strong>{topic.percent}%</strong>
+                {displayTopics.length > 0 ? (
+                  displayTopics.map((topic: any) => (
+                    <div className="topic-row" key={topic.name}>
+                      <div className="topic-info">
+                        <span>{topic.name}</span>
+                        <strong>{topic.percent}%</strong>
+                      </div>
+                      <div className="topic-bar">
+                        <span style={{ width: `${topic.percent}%` }} />
+                      </div>
+                      <div className="topic-status">{topic.status}</div>
                     </div>
-                    <div className="topic-bar">
-                      <span style={{ width: `${topic.percent}%` }} />
-                    </div>
-                    <div className="topic-status">{topic.status}</div>
+                  ))
+                ) : (
+                  <div className="p-8 text-center text-xs text-[#4a6fa5] dark:text-[#6a90c5] font-mono">
+                    NO TOPIC MASTERY DATA YET &bull; COMPLETE PRACTICE SESSIONS TO POPULATE
                   </div>
-                ))}
+                )}
               </div>
             </section>
 
@@ -473,43 +508,45 @@ export default function StudentDashboard() {
                 </div>
                 <span className="panel-meta mono blue">UPDATED REAL-TIME</span>
               </header>
-              <table className="skill-table">
-                <thead>
-                  <tr>
-                    <th />
-                    <th>CONCEPT</th>
-                    <th>APPLICATION</th>
-                    <th>PROBLEM SOLVING</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {[
-                    ['DSA', 88, 76, 64],
-                    ['OS', 76, 64, 51],
-                    ['CN', 64, 51, 88],
-                  ].map((row) => (
-                    <tr key={row[0] as string}>
-                      <td>{row[0]}</td>
-                      {(row.slice(1) as number[]).map((v, i) => (
-                        <td
-                          key={i}
-                          className={
-                            Number(v) > 80
-                              ? 'heat-strong'
-                              : Number(v) > 70
-                                ? 'heat-medium'
-                                : Number(v) > 60
-                                  ? 'heat-low'
-                                  : 'heat-priority'
-                          }
-                        >
-                          {v}
-                        </td>
-                      ))}
+              {skillMatrixRows.length > 0 ? (
+                <table className="skill-table">
+                  <thead>
+                    <tr>
+                      <th />
+                      <th>CONCEPT</th>
+                      <th>APPLICATION</th>
+                      <th>PROBLEM SOLVING</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {skillMatrixRows.map((row) => (
+                      <tr key={row.name}>
+                        <td>{row.name}</td>
+                        {row.scores.map((v, i) => (
+                          <td
+                            key={i}
+                            className={
+                              Number(v) >= 80
+                                ? 'heat-strong'
+                                : Number(v) >= 70
+                                  ? 'heat-medium'
+                                  : Number(v) >= 55
+                                    ? 'heat-low'
+                                    : 'heat-priority'
+                            }
+                          >
+                            {v}%
+                          </td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div className="p-8 text-center text-xs text-[#4a6fa5] dark:text-[#6a90c5] font-mono">
+                  NO COGNITIVE SKILL TELEMETRY YET &bull; ATTEMPT DIAGNOSTIC DRILLS TO BENCHMARK SKILL DIMENSIONS
+                </div>
+              )}
             </section>
 
             {/* Panel 4: AI RECOMMENDATIONS / NEXT BEST ACTIONS */}
@@ -519,12 +556,12 @@ export default function StudentDashboard() {
                   <p className="mono">AI RECOMMENDATIONS</p>
                   <h2 className="display">NEXT BEST ACTIONS</h2>
                 </div>
-                <span className="panel-meta mono blue">03 ITEMS</span>
+                <span className="panel-meta mono blue">{recommendations.length.toString().padStart(2, '0')} ITEMS</span>
               </header>
-              {recommendations.map(([name, meta, topicId], i) => (
+              {recommendations.map(([name, meta, topicId, actionUrl], i) => (
                 <Link
                   key={name}
-                  href={topicId ? `/student/practice?topicId=${topicId}` : '/student/practice'}
+                  href={actionUrl || (topicId ? `/student/practice?topicId=${topicId}` : '/student/practice')}
                   className="recommendation cursor-pointer hover:bg-[rgba(74,111,165,0.08)] transition flex items-center gap-4"
                 >
                   <span className="mono">0{i + 1}</span>

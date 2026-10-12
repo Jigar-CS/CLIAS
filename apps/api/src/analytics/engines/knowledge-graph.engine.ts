@@ -337,12 +337,11 @@ export class KnowledgeGraphEngine {
           bktProbability: 0.2,
         };
 
-      if (prereqCheck.isReady) {
+      if (prereqCheck.isReady && prereqCheck.status !== 'MASTERED') {
         unlockedCount++;
-      } else {
+      } else if (!prereqCheck.isReady) {
         blockedCount++;
       }
-      totalReadiness += prereqCheck.readinessScore;
 
       const directPrereqs = relevantDeps
         .filter((d) => this.canonicalizeSlug(d.targetSlug) === this.canonicalizeSlug(t.slug))
@@ -384,8 +383,14 @@ export class KnowledgeGraphEngine {
       }
     }
 
+    // Dynamic curriculum readiness: average actual syllabus mastery across all course topics
+    const totalMastery = topics.reduce((sum, t) => {
+      const entry = masteryLookup[t.slug] || masteryLookup[t.id];
+      return sum + (entry ? entry.masteryScore : 0);
+    }, 0);
+
     const overallCurriculumReadiness =
-      topics.length > 0 ? Math.round(totalReadiness / topics.length) : 0;
+      topics.length > 0 ? Math.round(totalMastery / topics.length) : 0;
 
     return {
       courseCode,

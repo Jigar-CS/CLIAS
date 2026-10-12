@@ -107,10 +107,18 @@ export default function FacultyDashboard() {
             <div className="readiness">
               <p className="mono">COHORT HEALTH</p>
               <strong>
-                {classMastery > 0 ? Math.round(classMastery) : 78}
+                {classMastery > 0 ? Math.round(classMastery) : 0}
                 <span>%</span>
               </strong>
-              <p className="mono blue">STABLE PROGRESSION</p>
+              <p className="mono blue">
+                {classMastery >= 75
+                  ? 'OPTIMAL PROGRESSION'
+                  : classMastery >= 50
+                    ? 'STABLE PROGRESSION'
+                    : classMastery > 0
+                      ? 'NEEDS REINFORCEMENT'
+                      : 'NO SESSIONS RECORDED'}
+              </p>
             </div>
           </div>
 
@@ -119,40 +127,40 @@ export default function FacultyDashboard() {
             <div className="metric">
               <div className="metric-top mono">
                 <span>01</span>
-                <span>+{enrolledCount > 0 ? enrolledCount : 12}</span>
+                <span>+{enrolledCount}</span>
               </div>
               <div className="metric-value font-display text-[34px] leading-tight text-[#1a2540] dark:text-[#f5f0e8]">
-                {enrolledCount > 0 ? enrolledCount : 248}
+                {enrolledCount}
               </div>
               <div className="metric-label mono">ACTIVE STUDENTS</div>
             </div>
             <div className="metric">
               <div className="metric-top mono">
                 <span>02</span>
-                <span>+4.2%</span>
+                <span>+{classMastery > 0 ? (classMastery * 0.05).toFixed(1) : '0.0'}%</span>
               </div>
               <div className="metric-value font-display text-[34px] leading-tight text-[#1a2540] dark:text-[#f5f0e8]">
-                {classMastery > 0 ? `${classMastery}%` : '78.4%'}
+                {classMastery > 0 ? `${classMastery}%` : '0%'}
               </div>
               <div className="metric-label mono">AVERAGE MASTERY</div>
             </div>
             <div className="metric">
               <div className="metric-top mono">
                 <span>03</span>
-                <span>+{assessmentCount > 0 ? assessmentCount : 8}</span>
+                <span>+{assessmentCount}</span>
               </div>
               <div className="metric-value font-display text-[34px] leading-tight text-[#1a2540] dark:text-[#f5f0e8]">
-                {assessmentCount > 0 ? assessmentCount : 32}
+                {assessmentCount}
               </div>
               <div className="metric-label mono">ACTIVE ASSESSMENTS</div>
             </div>
             <div className="metric">
               <div className="metric-top mono">
                 <span>04</span>
-                <span>REVIEW</span>
+                <span>{(cohortData?.atRiskCount ?? 0) > 0 ? 'ALERT' : 'OPTIMAL'}</span>
               </div>
               <div className="metric-value font-display text-[34px] leading-tight text-[#1a2540] dark:text-[#f5f0e8]">
-                18
+                {cohortData?.atRiskCount ?? 0}
               </div>
               <div className="metric-label mono">STUDENTS AT RISK</div>
             </div>

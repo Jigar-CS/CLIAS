@@ -352,10 +352,10 @@ export default function FacultyClassAnalyticsPage() {
             <div className="readiness">
               <p className="mono text-[8px] uppercase tracking-wider text-[#6b7fa3]">COHORT MASTERY</p>
               <strong className="font-display text-4xl text-[#1a2540] dark:text-[#f5f0e8]">
-                {summaryData?.averageMastery ? `${Math.round(summaryData.averageMastery)}` : '78'}<span className="font-mono text-sm text-[#e05033]">%</span>
+                {summaryData?.averageMastery ? `${Math.round(summaryData.averageMastery)}` : '0'}<span className="font-mono text-sm text-[#e05033]">%</span>
               </strong>
               <p className="mono text-[8px] text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">
-                {summaryData?.totalStudents || 248} STUDENTS ENROLLED
+                {summaryData?.totalStudents ?? 0} STUDENTS ENROLLED
               </p>
             </div>
           </div>
@@ -364,17 +364,17 @@ export default function FacultyClassAnalyticsPage() {
           <div className="metrics">
             <div className="metric">
               <div className="metric-top mono"><span>01</span><span className="text-[#e05033]">ACTIVE</span></div>
-              <div className="metric-value font-display text-2xl sm:text-3xl">{summaryData?.totalStudents || 248}</div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{summaryData?.totalStudents ?? 0}</div>
               <div className="metric-label mono">TOTAL STUDENTS</div>
             </div>
             <div className="metric">
               <div className="metric-top mono"><span>02</span><span className="text-[#4a6fa5]">MASTERY</span></div>
-              <div className="metric-value font-display text-2xl sm:text-3xl">{summaryData?.averageMastery ? `${Math.round(summaryData.averageMastery)}%` : '78.4%'}</div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{summaryData?.averageMastery ? `${Math.round(summaryData.averageMastery)}%` : '0%'}</div>
               <div className="metric-label mono">AVERAGE MASTERY</div>
             </div>
             <div className="metric">
               <div className="metric-top mono"><span>03</span><span>BOTTLENECKS</span></div>
-              <div className="metric-value font-display text-2xl sm:text-3xl">{summaryData?.bottleneckTopics?.length || 2}</div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{summaryData?.bottleneckTopics?.length ?? 0}</div>
               <div className="metric-label mono">INTERVENTION TOPICS</div>
             </div>
             <div className="metric">

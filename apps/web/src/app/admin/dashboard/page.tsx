@@ -98,17 +98,17 @@ export default function AdminDashboardPage() {
           <div className="metrics">
             <div className="metric">
               <div className="metric-top mono"><span>01</span><span className="text-[#e05033]">ROSTER</span></div>
-              <div className="metric-value font-display text-2xl sm:text-3xl">{stats ? stats.totalAuthorizedStudents?.toString() : '248'}</div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{stats ? (stats.totalAuthorizedStudents ?? 0).toString() : '0'}</div>
               <div className="metric-label mono">AUTHORIZED STUDENTS</div>
             </div>
             <div className="metric">
               <div className="metric-top mono"><span>02</span><span className="text-[#4a6fa5]">ACTIVE</span></div>
-              <div className="metric-value font-display text-2xl sm:text-3xl">{stats ? stats.activatedStudents?.toString() : '210'}</div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{stats ? (stats.activatedStudents ?? 0).toString() : '0'}</div>
               <div className="metric-label mono">ACTIVATED ACCOUNTS</div>
             </div>
             <div className="metric">
               <div className="metric-top mono"><span>03</span><span>FACULTY</span></div>
-              <div className="metric-value font-display text-2xl sm:text-3xl">{stats ? stats.totalFaculty?.toString() : '18'}</div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{stats ? (stats.totalFaculty ?? 0).toString() : '0'}</div>
               <div className="metric-label mono">INSTRUCTORS</div>
             </div>
             <div className="metric">

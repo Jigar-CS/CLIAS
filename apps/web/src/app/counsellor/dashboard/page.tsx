@@ -175,7 +175,7 @@ export default function CounsellorDashboard() {
           <div className="metrics">
             <div className="metric">
               <div className="metric-top mono"><span>01</span><span className="text-[#e05033]">MENTEES</span></div>
-              <div className="metric-value font-display text-2xl sm:text-3xl">{menteesSummary?.totalAssignedMentees || 32}</div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{menteesSummary?.totalAssignedMentees ?? 0}</div>
               <div className="metric-label mono">ASSIGNED STUDENTS</div>
             </div>
             <div className="metric">
@@ -185,7 +185,7 @@ export default function CounsellorDashboard() {
             </div>
             <div className="metric">
               <div className="metric-top mono"><span>03</span><span>MASTERY</span></div>
-              <div className="metric-value font-display text-2xl sm:text-3xl">{menteesSummary?.avgMastery ? `${Math.round(menteesSummary.avgMastery)}%` : '74%'}</div>
+              <div className="metric-value font-display text-2xl sm:text-3xl">{menteesSummary?.avgMastery ? `${Math.round(menteesSummary.avgMastery)}%` : '0%'}</div>
               <div className="metric-label mono">COHORT AVERAGE</div>
             </div>
             <div className="metric">
