@@ -729,6 +729,43 @@ async function main() {
     data: { userId: studentUser.id },
   });
 
+  // Additional active students: Priya Sharma & Aarav Desai
+  const additionalActiveStudents = [
+    { num: '24CS002', email: 'priya@charusat.edu.in' },
+    { num: '24CS003', email: 'aarav@charusat.edu.in' },
+  ];
+
+  for (const s of additionalActiveStudents) {
+    const authRecord = await prisma.authorizedStudent.findUnique({ where: { enrollmentNumber: s.num } });
+    if (authRecord) {
+      const u = await prisma.user.create({
+        data: {
+          email: s.email,
+          passwordHash,
+          role: UserRole.STUDENT,
+          status: UserStatus.ACTIVE,
+          emailVerified: true,
+        },
+      });
+      const prof = await prisma.studentProfile.create({
+        data: {
+          userId: u.id,
+          authorizedStudentId: authRecord.id,
+        },
+      });
+      await prisma.authorizedStudent.update({
+        where: { id: authRecord.id },
+        data: { activated: true, userId: u.id },
+      });
+      await prisma.counsellorAssignment.create({
+        data: {
+          counsellorId: counsellorUser.id,
+          studentId: prof.id,
+        },
+      });
+    }
+  }
+
   // Link counsellor assignment to student
   await prisma.counsellorAssignment.create({
     data: {
