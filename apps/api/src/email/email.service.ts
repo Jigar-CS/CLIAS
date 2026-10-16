@@ -53,22 +53,46 @@ export class NodemailerEmailService implements EmailService {
       );
     }
 
-    this.transporter = nodemailer.createTransport({
-      host,
-      port,
-      secure,
-      pool: true,
-      maxConnections: 5,
-      maxMessages: 100,
-      auth: user && pass ? { user, pass } : undefined,
-      tls: {
-        rejectUnauthorized: false, // Prevents self-signed / local TLS certificate errors
-      },
-    });
+    const isGmail = host.includes('gmail') || user?.includes('@gmail.com') || user?.includes('charusat.edu.in');
+
+    this.transporter = isGmail
+      ? nodemailer.createTransport({
+          service: 'gmail',
+          auth: user && pass ? { user, pass } : undefined,
+          connectionTimeout: 10000,
+          greetingTimeout: 10000,
+          socketTimeout: 15000,
+          tls: {
+            rejectUnauthorized: false,
+          },
+        })
+      : nodemailer.createTransport({
+          host,
+          port,
+          secure,
+          auth: user && pass ? { user, pass } : undefined,
+          connectionTimeout: 10000,
+          greetingTimeout: 10000,
+          socketTimeout: 15000,
+          tls: {
+            rejectUnauthorized: false,
+          },
+        });
 
     this.logger.log(
-      `📧 Nodemailer transporter initialized for host: ${host}:${port} (SSL/TLS: ${secure ? 'Yes' : 'No'}, Sender: ${this.fromAddress})`,
+      `📧 Nodemailer transporter initialized for ${isGmail ? 'Gmail Service' : `${host}:${port}`} (Sender: ${this.fromAddress})`,
     );
+
+    // Verify SMTP connection on startup
+    if (user && pass) {
+      this.transporter.verify((error, success) => {
+        if (error) {
+          this.logger.error(`❌ SMTP Server connection test failed: ${error.message}`);
+        } else {
+          this.logger.log('✅ SMTP Server connection verified and ready to send emails!');
+        }
+      });
+    }
   }
 
   /**
