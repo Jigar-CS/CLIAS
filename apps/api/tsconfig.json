@@ -21,5 +21,7 @@
       "@clias/shared-types": ["../../packages/shared-types/src/index.ts"],
       "@clias/config": ["../../packages/config/src/index.ts"]
     }
-  }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "test", "**/*spec.ts", "prisma", "scripts"]
 }

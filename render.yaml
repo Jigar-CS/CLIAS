@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: clias-backend-api
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: npm install && npx prisma generate --schema=./apps/api/prisma/schema.prisma && npm --workspace=apps/api run build
+    startCommand: npm --workspace=apps/api run start:prod
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: API_PORT
+        value: 10000
+      - key: API_PREFIX
+        value: api/v1
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 7d
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 30d
+      - key: EMAIL_SERVICE_DRIVER
+        value: development
+      - key: CORS_ORIGIN
+        value: "*"

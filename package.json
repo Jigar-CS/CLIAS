@@ -11,7 +11,7 @@
     "dev:api": "npm --workspace=apps/api run dev",
     "dev:web": "npm --workspace=apps/web run dev",
     "dev": "npm run dev:api",
-    "build:all": "npm --workspaces run build",
+    "build:all": "npm --workspaces --if-present run build",
     "test": "npm --workspace=apps/api run test",
     "db:migrate": "npm --workspace=apps/api run db:migrate",
     "db:seed": "npm --workspace=apps/api run db:seed",
