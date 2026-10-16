@@ -4,7 +4,7 @@ services:
     runtime: node
     plan: free
     region: singapore
-    buildCommand: npm install && npx prisma generate --schema=./apps/api/prisma/schema.prisma && npm --workspace=apps/api run build
+    buildCommand: npm install --include=dev && npx prisma generate --schema=./apps/api/prisma/schema.prisma && npm --workspace=apps/api run build
     startCommand: npm --workspace=apps/api run start:prod
     envVars:
       - key: NODE_ENV
