@@ -44,6 +44,12 @@ interface AssessmentItem {
   passed: boolean;
   isExpired?: boolean;
   expiresAt?: string;
+  mySubmissions?: Array<{
+    id?: string;
+    percentage?: number;
+    score?: number;
+    status?: string;
+  }>;
 }
 
 export default function StudentAssessmentsPage() {
@@ -83,13 +89,17 @@ export default function StudentAssessmentsPage() {
   const courses = Array.from(new Set(assessments.map((a) => a.courseCode)));
   const filtered = filterCourse === 'ALL' ? assessments : assessments.filter((a) => a.courseCode === filterCourse);
 
-  const evaluatedSubmissions = assessments
-    .flatMap((a) => a.mySubmissions || [])
-    .filter((s) => typeof s.percentage === 'number');
+  const evaluatedAssessments = assessments.filter(
+    (a) => typeof a.bestPercentage === 'number' && a.bestPercentage !== null,
+  );
 
-  const avgExamScore = evaluatedSubmissions.length > 0
-    ? Math.round(evaluatedSubmissions.reduce((acc, s) => acc + s.percentage, 0) / evaluatedSubmissions.length)
-    : 0;
+  const avgExamScore =
+    evaluatedAssessments.length > 0
+      ? Math.round(
+          evaluatedAssessments.reduce((acc, a) => acc + (a.bestPercentage || 0), 0) /
+            evaluatedAssessments.length,
+        )
+      : 0;
 
   return (
     <div className="min-h-screen bg-transparent text-[#1a2540] dark:text-[#e8edf5] flex font-sans relative z-10">
