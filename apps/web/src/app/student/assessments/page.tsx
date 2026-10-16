@@ -83,17 +83,13 @@ export default function StudentAssessmentsPage() {
   const courses = Array.from(new Set(assessments.map((a) => a.courseCode)));
   const filtered = filterCourse === 'ALL' ? assessments : assessments.filter((a) => a.courseCode === filterCourse);
 
-  const completedAssessments = assessments.filter(
-    (a) => typeof a.bestPercentage === 'number' && a.bestPercentage !== null,
-  );
+  const evaluatedSubmissions = assessments
+    .flatMap((a) => a.mySubmissions || [])
+    .filter((s) => typeof s.percentage === 'number');
 
-  const avgExamScore =
-    completedAssessments.length > 0
-      ? Math.round(
-          completedAssessments.reduce((acc, a) => acc + (a.bestPercentage || 0), 0) /
-            completedAssessments.length,
-        )
-      : 0;
+  const avgExamScore = evaluatedSubmissions.length > 0
+    ? Math.round(evaluatedSubmissions.reduce((acc, s) => acc + s.percentage, 0) / evaluatedSubmissions.length)
+    : 0;
 
   return (
     <div className="min-h-screen bg-transparent text-[#1a2540] dark:text-[#e8edf5] flex font-sans relative z-10">
@@ -210,19 +206,18 @@ export default function StudentAssessmentsPage() {
                           </span>
                           {item.division && (
                             <span
-                              className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                                item.division === 'DIV 1'
+                              className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${item.division === 'DIV 1'
                                   ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30'
                                   : item.division === 'DIV 2'
-                                  ? 'bg-purple-50 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30'
-                                  : 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30'
-                              }`}
+                                    ? 'bg-purple-50 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30'
+                                    : 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30'
+                                }`}
                             >
                               {item.division === 'DIV 1'
                                 ? 'Division A'
                                 : item.division === 'DIV 2'
-                                ? 'Division B'
-                                : 'All Divisions'}
+                                  ? 'Division B'
+                                  : 'All Divisions'}
                             </span>
                           )}
                           {item.isExpired && (

@@ -7,6 +7,7 @@ async function bootstrap() {
   const logger = new Logger('CLIAS-Bootstrap');
 
   const app = await NestFactory.create(AppModule, {
+    bodyParser: false,
     // Buffer logs until app starts
     bufferLogs: true,
     // Disable verbose NestJS startup logs in production
@@ -65,4 +66,7 @@ async function bootstrap() {
     `🏫 University: ${process.env.UNIVERSITY_NAME || 'CHARUSAT'} (@${process.env.UNIVERSITY_EMAIL_DOMAIN || 'charusat.edu.in'})`,
   );
 }
-bootstrap();
+bootstrap().catch((err) => {
+  console.error('❌ FATAL ERROR DURING SERVER STARTUP:', err);
+  process.exit(1);
+});

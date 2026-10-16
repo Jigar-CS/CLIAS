@@ -26,7 +26,7 @@ export interface SkillGapAnalysisResult {
 export class PlacementService {
   private readonly logger = new Logger('PlacementService');
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Retrieves all active industry career benchmarks.
@@ -185,9 +185,18 @@ export class PlacementService {
     const avgMockScore =
       mockTestsTaken > 0
         ? Math.round(
-            (submissions.reduce((acc, s) => acc + (s.percentage || 0), 0) / mockTestsTaken) * 10,
-          ) / 10
+          (submissions.reduce((acc, s) => acc + (s.percentage || 0), 0) / mockTestsTaken) * 10,
+        ) / 10
         : 0.0;
+
+    // Calculate baseline curriculum mastery across all completed topics
+    const activeTopicScores = masteries
+      .map((m) => m.masteryScore ?? 0)
+      .filter((s) => typeof s === 'number' && s > 0);
+    const avgMasteryAcrossAllTopics =
+      activeTopicScores.length > 0
+        ? activeTopicScores.reduce((acc, v) => acc + v, 0) / activeTopicScores.length
+        : 0;
 
     interface BenchmarkSkillItem {
       topicSlug?: string;
@@ -278,7 +287,15 @@ export class PlacementService {
         }
       }
 
-      // If this specific competency has not been practiced yet, authentic mastery is 0.0
+      // 3. Curriculum baseline credit if student has demonstrated overall mastery or exam capability
+      if ((studentMastery === null || studentMastery === 0) && (avgMasteryAcrossAllTopics > 0 || avgMockScore > 0)) {
+        const baselineCredit = Math.max(
+          avgMasteryAcrossAllTopics > 0 ? avgMasteryAcrossAllTopics * 0.65 : 0,
+          avgMockScore > 0 ? avgMockScore * 0.5 : 0,
+        );
+        studentMastery = Math.round(baselineCredit * 10) / 10;
+      }
+
       const finalMastery = studentMastery !== null ? Math.round(studentMastery * 10) / 10 : 0.0;
       const gap = Math.max(0, Math.round((requiredMastery - finalMastery) * 10) / 10);
       totalWeight += requiredMastery * weight;
@@ -303,16 +320,29 @@ export class PlacementService {
       }
     }
 
-    // Authentic Placement Readiness: Exactly the weighted percentage of role benchmark competencies mastered
-    const readinessScore =
-      totalWeight > 0 ? Math.round((earnedWeight / totalWeight) * 1000) / 10 : 0.0;
+    const rawSkillReadiness =
+      totalWeight > 0 ? (earnedWeight / totalWeight) * 100 : 0.0;
+
+    // Synthesize verified competency mastery with assessment / mock exam performance
+    let calculatedReadiness = 0.0;
+    if (mockTestsTaken > 0 && rawSkillReadiness > 0) {
+      calculatedReadiness = Math.round((rawSkillReadiness * 0.7 + avgMockScore * 0.3) * 10) / 10;
+    } else if (rawSkillReadiness > 0) {
+      calculatedReadiness = Math.round(rawSkillReadiness * 10) / 10;
+    } else if (mockTestsTaken > 0) {
+      calculatedReadiness = Math.round((avgMockScore * 0.65) * 10) / 10;
+    } else {
+      calculatedReadiness = 0.0;
+    }
+
+    const readinessScore = Math.min(100.0, Math.max(0.0, calculatedReadiness));
 
     const hiringBarStatus =
       readinessScore >= (benchmark.targetMastery || 80.0)
         ? 'MEETS_BAR'
         : readinessScore >= 55.0
-        ? 'NEAR_BAR'
-        : 'DEVELOPING';
+          ? 'NEAR_BAR'
+          : 'DEVELOPING';
 
     // Build dynamic personalized roadmap
     const personalizedRoadmap: string[] = [];

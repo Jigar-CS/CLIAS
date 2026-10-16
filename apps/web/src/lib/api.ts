@@ -34,8 +34,6 @@ export async function fetchApi<T = any>(endpoint: string, options: RequestInit =
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const url = `${getBaseUrl()}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
-
   const isAiOrLongRunning =
     endpoint.includes('/ai') ||
     endpoint.includes('/generate') ||
@@ -45,6 +43,11 @@ export async function fetchApi<T = any>(endpoint: string, options: RequestInit =
     endpoint.includes('/extract') ||
     endpoint.includes('/documents');
   const timeoutMs = (options as any)?.timeout || (isAiOrLongRunning ? 90000 : 25000);
+
+  // For long-running AI, RAG, and document extraction payloads, connect directly to NestJS API
+  // to avoid Next.js dev proxy socket resets and buffering timeouts.
+  const targetBase = isAiOrLongRunning ? BASE_URL : getBaseUrl();
+  const url = `${targetBase}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`;
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -60,9 +63,26 @@ export async function fetchApi<T = any>(endpoint: string, options: RequestInit =
     const data = await res.json().catch(() => null);
 
     if (!res.ok) {
-      const message =
-        data?.message ||
-        (Array.isArray(data?.errors) ? data.errors.join(', ') : 'An error occurred during request.');
+      let message = 'An error occurred during request.';
+      if (typeof data?.message === 'string' && data.message.trim().length > 0) {
+        message = data.message;
+      } else if (Array.isArray(data?.message) && data.message.length > 0) {
+        message = data.message.join('; ');
+      } else if (Array.isArray(data?.errors) && data.errors.length > 0) {
+        message = data.errors.join(', ');
+      } else if (typeof data?.error === 'string' && data.error.trim().length > 0) {
+        message = data.error;
+      } else if (res.status === 413) {
+        message = 'The uploaded document exceeds the allowable request size (limit: 25 MB).';
+      } else if (res.status === 403) {
+        message = 'Access restricted: You do not have permission to perform this action.';
+      } else if (res.status === 404) {
+        message = `Requested resource was not found (${res.status}).`;
+      } else if (res.status === 502 || res.status === 504) {
+        message = 'The server is temporarily unavailable or timed out. Please try again.';
+      } else if (res.status >= 500) {
+        message = `Server encountered an internal error (${res.status}). Please check server logs.`;
+      }
       throw new ApiError(res.status, message, data);
     }
 

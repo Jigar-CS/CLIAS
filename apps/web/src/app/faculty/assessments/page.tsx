@@ -437,7 +437,7 @@ export default function FacultyAssessmentsPage() {
           fileBase64,
           text: textContent,
           fileName: ragFile.name,
-          courseId: selectedCourseId,
+          courseId: user?.courseId || selectedCourseId || undefined,
         },
         { timeout: 90000 } as any,
       );
@@ -464,7 +464,13 @@ export default function FacultyAssessmentsPage() {
       }
     } catch (err: any) {
       console.error('Error extracting questions:', err);
-      setRagExtractError(err.message || 'Failed to extract questions from uploaded document.');
+      const errMsg =
+        typeof err?.message === 'string'
+          ? err.message
+          : Array.isArray(err?.message)
+          ? err.message.join('; ')
+          : 'Failed to extract questions from uploaded document.';
+      setRagExtractError(errMsg);
       setRagExtractProgress(null);
     } finally {
       setRagExtracting(false);
