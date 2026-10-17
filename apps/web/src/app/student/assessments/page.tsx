@@ -18,6 +18,7 @@ import {
   ChevronRight,
   BookOpen,
   Trophy,
+  GraduationCap,
 } from 'lucide-react';
 import { AssessmentLeaderboardModal } from '@/components/AssessmentLeaderboardModal';
 
@@ -30,6 +31,7 @@ interface AssessmentItem {
   courseName: string;
   type: string;
   division?: string;
+  batch?: string;
   status: string;
   durationMinutes: number;
   totalMarks: number;
@@ -214,6 +216,17 @@ export default function StudentAssessmentsPage() {
                           <span className="px-2 py-0.5 rounded-md text-xs font-mono font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
                             {item.type}
                           </span>
+                          {item.batch && item.batch !== 'ALL' ? (
+                            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-blue-50 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30 flex items-center gap-1">
+                              <GraduationCap className="w-3 h-3" />
+                              Batch &apos;{item.batch}
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 flex items-center gap-1">
+                              <GraduationCap className="w-3 h-3" />
+                              All Batches
+                            </span>
+                          )}
                           {item.division && (
                             <span
                               className={`px-2 py-0.5 rounded-full text-xs font-bold ${item.division === 'DIV 1'

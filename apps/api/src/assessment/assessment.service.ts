@@ -35,6 +35,7 @@ export interface CreateAssessmentDto {
   scheduledStartTime?: string;
   scheduledEndTime?: string;
   division?: string;
+  batch?: string;
   questionIds?: string[];
   codingProblems?: CreateCodingProblemDto[];
   codingProblemIds?: string[];
@@ -49,6 +50,7 @@ export interface UpdateAssessmentDto {
   totalMarks?: number;
   passingMarks?: number;
   division?: string;
+  batch?: string;
   allowedAttempts?: number;
   scheduledStartTime?: string | Date;
   scheduledEndTime?: string | Date;
@@ -356,6 +358,7 @@ export class AssessmentService {
           type: dto.type || AssessmentType.QUIZ,
           status: dto.status || AssessmentStatus.DRAFT,
           division: targetDivision,
+          batch: dto.batch || 'ALL',
           durationMinutes,
           totalMarks,
           passingMarks: Number(dto.passingMarks) > 0 ? Number(dto.passingMarks) : 40.0,
@@ -411,18 +414,30 @@ export class AssessmentService {
   private async notifyAssignedStudents(assessment: any) {
     try {
       const targetDivision = assessment.division || 'ALL';
+      const targetBatch = assessment.batch || 'ALL';
       const norm = normalizeDivision(targetDivision);
-      let divisionFilter: any = {};
+      const conditions: any[] = [];
+
       if (norm !== 'ALL') {
         const allowed = norm === 'CS Div 1'
           ? ['CS Div 1', 'DIV 1', 'A', '1', 'Division A', 'Division 1', 'DIV A']
           : ['CS Div 2', 'DIV 2', 'B', '2', 'Division B', 'Division 2', 'DIV B'];
-        divisionFilter = {
+        conditions.push({
           authorizedStudent: {
             division: { in: allowed },
           },
-        };
+        });
       }
+
+      if (targetBatch && targetBatch !== 'ALL') {
+        conditions.push({
+          authorizedStudent: {
+            enrollmentNumber: { startsWith: targetBatch },
+          },
+        });
+      }
+
+      const divisionFilter = conditions.length > 0 ? { AND: conditions } : {};
 
       const targetStudents = await this.prisma.studentProfile.findMany({
         where: divisionFilter,
@@ -436,14 +451,15 @@ export class AssessmentService {
           : norm === 'CS Div 2'
           ? 'Division B (DIV 2)'
           : 'All Divisions';
+        const batchLabel = targetBatch && targetBatch !== 'ALL' ? `Batch '${targetBatch}` : 'All Batches';
 
         await this.prisma.studentNotification.createMany({
           data: targetStudents.map((s) => ({
             studentId: s.id,
             title: `New Assessment Assigned: ${assessment.title}`,
-            message: `A new ${assessment.type ? assessment.type.toString().toLowerCase() : 'assessment'} (${assessment.code}) has been allocated to ${divisionLabel}. Duration: ${assessment.durationMinutes} mins.`,
+            message: `A new ${assessment.type ? assessment.type.toString().toLowerCase() : 'assessment'} (${assessment.code}) has been allocated to ${batchLabel} (${divisionLabel}). Duration: ${assessment.durationMinutes} mins.`,
             type: 'ASSESSMENT_ASSIGNED',
-            metadata: JSON.stringify({ assessmentId: assessment.id, division: targetDivision }),
+            metadata: JSON.stringify({ assessmentId: assessment.id, division: targetDivision, batch: targetBatch }),
           })),
         });
       }
@@ -528,6 +544,7 @@ export class AssessmentService {
     if (dto.totalMarks !== undefined) dataToUpdate.totalMarks = Number(dto.totalMarks);
     if (dto.passingMarks !== undefined) dataToUpdate.passingMarks = Number(dto.passingMarks);
     if (dto.division !== undefined) dataToUpdate.division = dto.division;
+    if (dto.batch !== undefined) dataToUpdate.batch = dto.batch;
     if (dto.allowedAttempts !== undefined) dataToUpdate.allowedAttempts = Number(dto.allowedAttempts);
     if (dto.status !== undefined) dataToUpdate.status = dto.status;
 
@@ -591,6 +608,7 @@ export class AssessmentService {
   async getStudentAssessments(studentProfileId: string, courseId?: string, userRole?: UserRole) {
     // Check if the requester is a student with an assigned division
     let studentDivision: string | null = null;
+    let studentBatch: string | null = null;
     let resolvedStudentProfileId: string = studentProfileId;
     if (studentProfileId) {
       const student = await this.prisma.studentProfile.findFirst({
@@ -606,6 +624,9 @@ export class AssessmentService {
         resolvedStudentProfileId = student.id;
         if (student.authorizedStudent?.division) {
           studentDivision = student.authorizedStudent.division;
+        }
+        if (student.authorizedStudent?.enrollmentNumber) {
+          studentBatch = student.authorizedStudent.enrollmentNumber.slice(0, 2);
         }
       }
     }
@@ -647,6 +668,17 @@ export class AssessmentService {
               ],
             }
           : {}),
+        ...(!isFacultyOrAdmin && studentBatch
+          ? {
+              OR: [
+                { batch: 'ALL' },
+                { batch: null },
+                { batch: '' },
+                { batch: studentBatch },
+                { batch: { contains: studentBatch } },
+              ],
+            }
+          : {}),
       },
       include: {
         course: { select: { code: true, name: true } },
@@ -684,6 +716,7 @@ export class AssessmentService {
         description: a.description,
         code: a.code,
         division: a.division || 'ALL',
+        batch: a.batch || 'ALL',
         courseCode: a.course.code,
         courseName: a.course.name,
         type: a.type,
@@ -779,6 +812,16 @@ export class AssessmentService {
         const currentLabel = normalizeDivision(studentDiv) === 'DIV 1' ? 'Division A (DIV 1)' : 'Division B (DIV 2)';
         throw new ForbiddenException(
           `This assessment is restricted to ${targetLabel}. Your account is registered under ${currentLabel}.`,
+        );
+      }
+    }
+
+    // Verify batch eligibility if restricted
+    if (assessment.batch && assessment.batch !== 'ALL') {
+      const studentBatch = student?.authorizedStudent?.enrollmentNumber?.slice(0, 2);
+      if (studentBatch && assessment.batch !== studentBatch && !assessment.batch.includes(studentBatch)) {
+        throw new ForbiddenException(
+          `This assessment is restricted to Batch '${assessment.batch}'. Your account is registered under Batch '${studentBatch}'.`,
         );
       }
     }

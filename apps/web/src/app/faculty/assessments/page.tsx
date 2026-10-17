@@ -46,8 +46,142 @@ import {
   BrainCircuit,
   Send,
   RotateCcw,
+  GraduationCap,
 } from 'lucide-react';
 import { AssessmentLeaderboardModal } from '@/components/AssessmentLeaderboardModal';
+
+interface DepartmentBatchMeta {
+  instituteCode: string;
+  instituteName: string;
+  departmentCode: string;
+  departmentName: string;
+  rollPrefix: string;
+  totalStudents: number;
+  batches: Array<{
+    id: string;
+    name: string;
+    semesterLabel: string;
+    badge: string;
+    gradYear: string;
+    count: number;
+    rollRange: string;
+    description: string;
+  }>;
+}
+
+function getDepartmentBatchConfig(course?: any): DepartmentBatchMeta {
+  const instCode =
+    course?.department?.institute?.code?.toUpperCase() ||
+    (course?.code?.toUpperCase().startsWith('D') ? 'DEPSTAR' : 'CSPIT');
+  const deptCode = course?.department?.code?.toUpperCase() || '';
+  const courseCode = course?.code?.toUpperCase() || '';
+
+  let rollPrefix = 'CS';
+  let departmentName = 'Computer Science & Engineering';
+  let instituteName = 'CSPIT';
+
+  if (
+    instCode === 'DEPSTAR' ||
+    courseCode.startsWith('DCS') ||
+    courseCode.startsWith('DCE') ||
+    courseCode.startsWith('DIT') ||
+    deptCode.startsWith('D_')
+  ) {
+    instituteName = 'DEPSTAR';
+    if (deptCode.includes('CSE') || courseCode.startsWith('DCS')) {
+      rollPrefix = 'DCS';
+      departmentName = 'Computer Science & Engineering (DEPSTAR)';
+    } else if (deptCode.includes('CE') || courseCode.startsWith('DCE')) {
+      rollPrefix = 'DCE';
+      departmentName = 'Computer Engineering (DEPSTAR)';
+    } else if (deptCode.includes('IT') || courseCode.startsWith('DIT')) {
+      rollPrefix = 'DIT';
+      departmentName = 'Information Technology (DEPSTAR)';
+    } else {
+      rollPrefix = 'DCS';
+      departmentName = 'Computer Science & Engineering (DEPSTAR)';
+    }
+  } else {
+    instituteName = 'CSPIT';
+    if (deptCode === 'AIML' || courseCode.startsWith('AI')) {
+      rollPrefix = 'AIML';
+      departmentName = 'Artificial Intelligence & Machine Learning';
+    } else if (deptCode === 'IT' || courseCode.startsWith('IT')) {
+      rollPrefix = 'IT';
+      departmentName = 'Information Technology';
+    } else if (deptCode === 'CE' || courseCode.startsWith('CE')) {
+      rollPrefix = 'CE';
+      departmentName = 'Computer Engineering';
+    } else {
+      rollPrefix = 'CS';
+      departmentName = 'Computer Science & Engineering';
+    }
+  }
+
+  return {
+    instituteCode: instituteName,
+    instituteName:
+      instituteName === 'DEPSTAR'
+        ? 'Devang Patel Institute of Advance Technology and Research (DEPSTAR)'
+        : 'Chandubhai S Patel Institute of Technology (CSPIT)',
+    departmentCode: deptCode || rollPrefix,
+    departmentName,
+    rollPrefix,
+    totalStudents: 140,
+    batches: [
+      {
+        id: 'ALL',
+        name: 'All Batches',
+        semesterLabel: 'All 4 Semesters',
+        badge: 'ALL BATCHES',
+        gradYear: 'Batches 2023 - 2026',
+        count: 140,
+        rollRange: `All 140 ${departmentName} Students`,
+        description: `Open to all ${rollPrefix} students across 1st, 2nd, 4th, & 6th Semesters.`,
+      },
+      {
+        id: '24',
+        name: "Batch '24",
+        semesterLabel: 'Semester 4',
+        badge: 'SEM 4',
+        gradYear: 'Class of 2028',
+        count: 50,
+        rollRange: `24${rollPrefix}001 – 24${rollPrefix}050`,
+        description: `Core 4th Semester cohort (50 Students, Div A & B).`,
+      },
+      {
+        id: '23',
+        name: "Batch '23",
+        semesterLabel: 'Semester 6',
+        badge: 'SEM 6',
+        gradYear: 'Class of 2027',
+        count: 30,
+        rollRange: `23${rollPrefix}001 – 23${rollPrefix}030`,
+        description: `Senior 6th Semester cohort (30 Students).`,
+      },
+      {
+        id: '25',
+        name: "Batch '25",
+        semesterLabel: 'Semester 2',
+        badge: 'SEM 2',
+        gradYear: 'Class of 2029',
+        count: 30,
+        rollRange: `25${rollPrefix}001 – 25${rollPrefix}030`,
+        description: `Freshman 2nd Semester cohort (30 Students).`,
+      },
+      {
+        id: '26',
+        name: "Batch '26",
+        semesterLabel: 'Semester 1',
+        badge: 'SEM 1',
+        gradYear: 'Class of 2030',
+        count: 30,
+        rollRange: `26${rollPrefix}001 – 26${rollPrefix}030`,
+        description: `Incoming 1st Semester cohort (30 Students).`,
+      },
+    ],
+  };
+}
 
 export default function FacultyAssessmentsPage() {
   const { user, loading: authLoading } = useAuth();
@@ -103,6 +237,7 @@ export default function FacultyAssessmentsPage() {
   const [newCode, setNewCode] = useState('');
   const [newType, setNewType] = useState('QUIZ');
   const [newDivision, setNewDivision] = useState<'ALL' | 'DIV 1' | 'DIV 2'>('ALL');
+  const [newBatch, setNewBatch] = useState<string>('ALL');
   const [newDuration, setNewDuration] = useState(30);
   const [newTotalMarks, setNewTotalMarks] = useState(100);
   const [newPassingMarks, setNewPassingMarks] = useState(40);
@@ -140,10 +275,14 @@ export default function FacultyAssessmentsPage() {
   const [editPassingMarks, setEditPassingMarks] = useState(40);
   const [editTotalMarks, setEditTotalMarks] = useState(100);
   const [editDivision, setEditDivision] = useState<'ALL' | 'DIV 1' | 'DIV 2'>('ALL');
+  const [editBatch, setEditBatch] = useState<string>('ALL');
   const [editAllowedAttempts, setEditAllowedAttempts] = useState(2);
   const [editStatus, setEditStatus] = useState<string>('PUBLISHED');
   const [editExtendMinutes, setEditExtendMinutes] = useState<number>(0);
   const [savingEdit, setSavingEdit] = useState(false);
+
+  const selectedCourse = courses.find((c) => c.id === selectedCourseId);
+  const deptBatchConfig = getDepartmentBatchConfig(selectedCourse);
 
   const openEditModal = (assessment: any) => {
     setEditingAssessment(assessment);
@@ -153,6 +292,7 @@ export default function FacultyAssessmentsPage() {
     setEditPassingMarks(assessment.passingMarks || 40);
     setEditTotalMarks(assessment.totalMarks || 100);
     setEditDivision(assessment.division || 'ALL');
+    setEditBatch(assessment.batch || 'ALL');
     setEditAllowedAttempts(assessment.allowedAttempts || 2);
     setEditStatus(assessment.status || 'PUBLISHED');
     setEditExtendMinutes(0);
@@ -172,6 +312,7 @@ export default function FacultyAssessmentsPage() {
         passingMarks: Number(editPassingMarks),
         totalMarks: Number(editTotalMarks),
         division: editDivision,
+        batch: editBatch,
         allowedAttempts: Number(editAllowedAttempts),
         status: editStatus,
         extendMinutes: editExtendMinutes > 0 ? Number(editExtendMinutes) : undefined,
@@ -941,6 +1082,7 @@ export default function FacultyAssessmentsPage() {
         courseId: selectedCourseId,
         type: newType,
         division: newDivision,
+        batch: newBatch,
         durationMinutes: Number(newDuration),
         totalMarks: Number(newTotalMarks),
         passingMarks: Number(newPassingMarks),
@@ -953,6 +1095,8 @@ export default function FacultyAssessmentsPage() {
       setIsModalOpen(false);
       setNewTitle('');
       setNewCode('');
+      setNewBatch('ALL');
+      setNewDivision('ALL');
       setAuthoredCodingProblems([]);
       setSelectedQuestionIds([]);
       setRagFile(null);
@@ -1091,6 +1235,16 @@ export default function FacultyAssessmentsPage() {
                             Coding Exam
                           </span>
                         )}
+                        <span
+                          className={`px-2 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider flex items-center gap-1 ${
+                            a.batch && a.batch !== 'ALL'
+                              ? 'bg-blue-500/10 text-blue-800 dark:text-blue-300 border border-blue-500/30'
+                              : 'bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700'
+                          }`}
+                        >
+                          <GraduationCap className="w-3 h-3" />
+                          {a.batch && a.batch !== 'ALL' ? `Batch '${a.batch}` : 'All Batches'}
+                        </span>
                         <span
                           className={`px-2 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider ${
                             a.division === 'CS Div 1' || a.division === 'DIV 1'
@@ -1417,12 +1571,67 @@ export default function FacultyAssessmentsPage() {
                 </div>
               </div>
 
+              {/* Target Student Batch Allocation */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block font-mono text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <GraduationCap className="w-4 h-4 text-[#4a6fa5] dark:text-[#6a90c5]" />
+                    Target Student Batch Allocation ({deptBatchConfig.instituteCode} • {deptBatchConfig.departmentName})
+                  </label>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">
+                    Roll Prefix: <strong className="font-mono text-[#4a6fa5] dark:text-[#6a90c5]">{deptBatchConfig.rollPrefix}</strong> • {deptBatchConfig.totalStudents} Department Students
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+                  {deptBatchConfig.batches.map((b) => {
+                    const isSelected = newBatch === b.id;
+                    return (
+                      <button
+                        key={b.id}
+                        type="button"
+                        onClick={() => setNewBatch(b.id)}
+                        className={`p-3 border text-left transition-all relative flex flex-col justify-between ${
+                          isSelected
+                            ? 'bg-[var(--surface-muted)] border-2 border-[#4a6fa5] shadow-xs'
+                            : 'bg-[var(--surface)] border border-[var(--border)] hover:border-[#4a6fa5]'
+                        }`}
+                      >
+                        <div>
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-display text-xs font-bold uppercase text-slate-900 dark:text-white">
+                              {b.name}
+                            </span>
+                            <span
+                              className={`font-mono text-[8px] font-bold px-1.5 py-0.5 border ${
+                                isSelected
+                                  ? 'bg-[#4a6fa5]/20 text-[#4a6fa5] dark:text-[#6a90c5] border-[#4a6fa5]/40'
+                                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-300 dark:border-slate-700'
+                              }`}
+                            >
+                              {b.badge}
+                            </span>
+                          </div>
+                          <div className="text-[10px] font-mono text-slate-600 dark:text-slate-400 font-semibold mb-1 truncate">
+                            {b.rollRange}
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between pt-1 border-t border-[var(--border)] mt-1 text-[9px]">
+                          <span className="text-slate-500 dark:text-slate-400">{b.semesterLabel}</span>
+                          <span className="font-mono font-bold text-slate-900 dark:text-white">{b.count} Stud.</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* Target Division Allocation */}
               <div>
                 <label className="block font-mono text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-2 flex items-center justify-between">
                   <span className="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
                     <Users className="w-4 h-4 text-[#4a6fa5]" />
-                    Target Student Allocation (Division)
+                    Target Section / Division ({deptBatchConfig.rollPrefix})
                   </span>
                   <span className="text-[10px] text-slate-500 dark:text-slate-400 font-normal">
                     Reflected directly in assigned students' portals
@@ -1446,7 +1655,11 @@ export default function FacultyAssessmentsPage() {
                       </span>
                     </div>
                     <p className="text-[11px] text-slate-600 dark:text-slate-400 font-sans leading-snug">
-                      Roll 24CS001 – 24CS065
+                      {newBatch === '24'
+                        ? `Roll 24${deptBatchConfig.rollPrefix}001 – 24${deptBatchConfig.rollPrefix}025`
+                        : newBatch !== 'ALL'
+                        ? `Roll ${newBatch}${deptBatchConfig.rollPrefix}001 – ${newBatch}${deptBatchConfig.rollPrefix}015`
+                        : `Division A (${deptBatchConfig.rollPrefix} Cohort)`}
                     </p>
                   </button>
 
@@ -1467,7 +1680,11 @@ export default function FacultyAssessmentsPage() {
                       </span>
                     </div>
                     <p className="text-[11px] text-slate-600 dark:text-slate-400 font-sans leading-snug">
-                      Roll 24CS066 & above
+                      {newBatch === '24'
+                        ? `Roll 24${deptBatchConfig.rollPrefix}026 – 24${deptBatchConfig.rollPrefix}050`
+                        : newBatch !== 'ALL'
+                        ? `Roll ${newBatch}${deptBatchConfig.rollPrefix}016 – ${newBatch}${deptBatchConfig.rollPrefix}030`
+                        : `Division B (${deptBatchConfig.rollPrefix} Cohort)`}
                     </p>
                   </button>
 
@@ -1488,7 +1705,9 @@ export default function FacultyAssessmentsPage() {
                       </span>
                     </div>
                     <p className="text-[11px] text-slate-600 dark:text-slate-400 font-sans leading-snug">
-                      All enrolled students
+                      {newBatch === 'ALL'
+                        ? `All 140 ${deptBatchConfig.departmentName} students`
+                        : `Entire Batch '${newBatch} (${deptBatchConfig.batches.find((b) => b.id === newBatch)?.count || 0} students)`}
                     </p>
                   </button>
                 </div>
@@ -3389,8 +3608,8 @@ export default function FacultyAssessmentsPage() {
                 </div>
               </div>
 
-              {/* Status & Division */}
-              <div className="grid grid-cols-2 gap-4">
+              {/* Status, Batch & Division */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-200 mb-1.5">Status</label>
                   <select
@@ -3406,7 +3625,27 @@ export default function FacultyAssessmentsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-200 mb-1.5">Division</label>
+                  <label className="block text-xs font-bold text-slate-200 mb-1.5 flex items-center gap-1">
+                    <GraduationCap className="w-3.5 h-3.5 text-indigo-400" />
+                    Target Batch ({deptBatchConfig.rollPrefix})
+                  </label>
+                  <select
+                    value={editBatch}
+                    onChange={(e) => setEditBatch(e.target.value)}
+                    className="w-full p-3 text-xs bg-[#1E293B] border border-slate-600 rounded-xl text-white font-medium focus:outline-none focus:border-indigo-500"
+                  >
+                    {deptBatchConfig.batches.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.name} ({b.count} Stud. • {b.semesterLabel})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-200 mb-1.5 flex items-center gap-1">
+                    <Users className="w-3.5 h-3.5 text-indigo-400" />
+                    Section / Division
+                  </label>
                   <select
                     value={editDivision}
                     onChange={(e) => setEditDivision(e.target.value as any)}
