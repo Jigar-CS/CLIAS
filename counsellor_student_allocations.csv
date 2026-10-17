@@ -1,0 +1,11 @@
+Counsellor Name,Counsellor Email,Department,Assigned Student IDs / Range / Names
+Universal Demo Counsellor,counsellor@charusat.edu.in,CSPIT - Computer Science & Engineering,24CS001-24CS025
+Dr. Rajesh Patel,counsellor1.cspit.cse@charusat.edu.in,CSPIT - Computer Science & Engineering,24CS026-24CS050
+Prof. Sneha Joshi,counsellor2.cspit.cse@charusat.edu.in,CSPIT - Computer Science & Engineering,23CS001-23CS030
+Dr. Amit Dave,counsellor3.cspit.cse@charusat.edu.in,CSPIT - Computer Science & Engineering,"25CS001-25CS015, 26CS001-26CS015"
+Dr. Hardik Vyas,counsellor1.cspit.it@charusat.edu.in,CSPIT - Information Technology,24IT001-24IT025
+Prof. Krunal Shah,counsellor1.cspit.ce@charusat.edu.in,CSPIT - Computer Engineering,24CE001-24CE025
+Dr. Neha Parikh,counsellor1.cspit.aiml@charusat.edu.in,CSPIT - Artificial Intelligence & Machine Learning,24AIML001-24AIML025
+Dr. Chirag Bhatt,counsellor1.depstar.dcse@charusat.edu.in,DEPSTAR - Computer Science & Engineering,24DCS001-24DCS025
+Prof. Bhavesh Patel,counsellor1.depstar.dce@charusat.edu.in,DEPSTAR - Computer Engineering,24DCE001-24DCE025
+Dr. Nilesh Modi,counsellor1.depstar.dit@charusat.edu.in,DEPSTAR - Information Technology,24DIT001-24DIT025
