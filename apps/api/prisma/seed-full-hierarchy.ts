@@ -10,7 +10,18 @@ import * as bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
-// Realistic Indian Student Names Pool
+// In-memory cache for bcrypt password hashes to ensure ultra-fast execution over cloud network
+const passwordHashCache = new Map<string, string>();
+async function getPasswordHash(plain: string): Promise<string> {
+  let hash = passwordHashCache.get(plain);
+  if (!hash) {
+    hash = await bcrypt.hash(plain, 10);
+    passwordHashCache.set(plain, hash);
+  }
+  return hash;
+}
+
+// Realistic Indian Student & Faculty Names Pool
 const FIRST_NAMES = [
   'Aarav', 'Vivaan', 'Aditya', 'Vihaan', 'Arjun', 'Sai', 'Reyansh', 'Ayaan', 'Krishna', 'Ishaan',
   'Dhruv', 'Kabir', 'Rohan', 'Jay', 'Devansh', 'Harshil', 'Manan', 'Om', 'Sahil', 'Utkarsh',
@@ -156,7 +167,7 @@ const BATCHES = [
 async function main() {
   console.log('🏛️ Starting Comprehensive Multi-Institute Multi-Department Seeding...');
 
-  // 0. Ensure multi-course assignments table exists
+  // 0. Ensure multi-course assignments and user_profiles tables exist
   await prisma.$queryRawUnsafe(`
     CREATE TABLE IF NOT EXISTS faculty_course_assignments (
       id VARCHAR(191) PRIMARY KEY,
@@ -169,8 +180,29 @@ async function main() {
     )
   `);
 
+  await prisma.$queryRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS user_profiles (
+      userId VARCHAR(191) PRIMARY KEY,
+      fullName VARCHAR(191),
+      phoneNumber VARCHAR(50),
+      avatarUrl VARCHAR(500),
+      bio TEXT,
+      department VARCHAR(191),
+      designation VARCHAR(191),
+      officeLocation VARCHAR(191),
+      specialization TEXT,
+      githubUrl VARCHAR(255),
+      linkedinUrl VARCHAR(255),
+      portfolioUrl VARCHAR(255),
+      skills TEXT,
+      preferences TEXT,
+      createdAt DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3),
+      updatedAt DATETIME(3) DEFAULT CURRENT_TIMESTAMP(3)
+    )
+  `);
+
   // Password hashes
-  const staffPasswordHash = await bcrypt.hash('clias123', 10);
+  const staffPasswordHash = await getPasswordHash('clias123');
 
   // 1. Ensure Institutes
   const cspit = await prisma.institute.upsert({
@@ -189,7 +221,7 @@ async function main() {
   console.log('✅ Institutes ready: CSPIT & DEPSTAR');
 
   // 2. Ensure Super Admin
-  await prisma.user.upsert({
+  const adminUser = await prisma.user.upsert({
     where: { email: 'admin@charusat.edu.in' },
     update: { passwordHash: staffPasswordHash, status: UserStatus.ACTIVE, role: UserRole.SUPER_ADMIN },
     create: {
@@ -200,21 +232,31 @@ async function main() {
       emailVerified: true,
     },
   });
+
+  await prisma.$executeRawUnsafe(
+    `INSERT INTO user_profiles (userId, fullName, department, designation, officeLocation, createdAt, updatedAt)
+     VALUES (?, 'System Super Administrator', 'Central Administration', 'Super Administrator', 'Admin Block 101', NOW(), NOW())
+     ON DUPLICATE KEY UPDATE fullName = VALUES(fullName), designation = VALUES(designation)`,
+    adminUser.id,
+  );
   console.log('👑 Super Admin ready: admin@charusat.edu.in (clias123)');
 
   // Clear previous counsellor assignments so user can manually test assigning via upload
   const clearedAssignments = await prisma.counsellorAssignment.deleteMany();
-  console.log(`🧹 Reset ${clearedAssignments.count} existing counsellor assignments for fresh test!`);
+  console.log(`🧹 Reset ${clearedAssignments.count} existing counsellor assignments to 0 for fresh testing!`);
 
   let totalStudentsCreated = 0;
   let totalStaffCreated = 0;
   let totalCoursesCreated = 0;
-
   let nameCounter = 0;
 
   // 3. Iterate through each Department
   for (const deptConfig of DEPARTMENTS_CONFIG) {
     const inst = institutesMap[deptConfig.instituteCode as keyof typeof institutesMap];
+
+    console.log(`\n============================================================`);
+    console.log(`🏢 Department: ${deptConfig.instituteCode} - ${deptConfig.deptName}`);
+    console.log(`============================================================`);
 
     // Department
     const department = await prisma.department.upsert({
@@ -233,7 +275,7 @@ async function main() {
     });
 
     // Program
-    const program = await prisma.program.upsert({
+    await prisma.program.upsert({
       where: {
         departmentId_code: {
           departmentId: department.id,
@@ -269,7 +311,7 @@ async function main() {
         create: { courseId: course.id, slug: 'fundamentals', name: 'Core Fundamentals' },
       });
 
-      const t2 = await prisma.topic.upsert({
+      await prisma.topic.upsert({
         where: { courseId_slug: { courseId: course.id, slug: 'advanced-concepts' } },
         update: { name: 'Advanced Concepts' },
         create: { courseId: course.id, slug: 'advanced-concepts', name: 'Advanced Concepts' },
@@ -308,7 +350,7 @@ async function main() {
 
     // HOD
     const hodEmail = `hod.${instSlug}.${deptSlug}@charusat.edu.in`;
-    await prisma.user.upsert({
+    const hodUser = await prisma.user.upsert({
       where: { email: hodEmail },
       update: { passwordHash: staffPasswordHash, status: UserStatus.ACTIVE, role: UserRole.HOD },
       create: {
@@ -321,18 +363,24 @@ async function main() {
     });
     totalStaffCreated++;
 
-    const hodUser = await prisma.user.findUnique({ where: { email: hodEmail } });
-    if (hodUser) {
-      await prisma.facultyProfile.upsert({
-        where: { userId: hodUser.id },
-        update: { departmentId: department.id },
-        create: {
-          userId: hodUser.id,
-          departmentId: department.id,
-          employeeCode: `EMP_${hodEmail.split('@')[0].replace(/[^a-zA-Z0-9]/g, '_')}`,
-        },
-      });
-    }
+    await prisma.facultyProfile.upsert({
+      where: { userId: hodUser.id },
+      update: { departmentId: department.id },
+      create: {
+        userId: hodUser.id,
+        departmentId: department.id,
+        employeeCode: `EMP_${hodEmail.split('@')[0].replace(/[^a-zA-Z0-9]/g, '_')}`,
+      },
+    });
+
+    await prisma.$executeRawUnsafe(
+      `INSERT INTO user_profiles (userId, fullName, department, designation, officeLocation, createdAt, updatedAt)
+       VALUES (?, ?, ?, 'Head of Department', 'HOD Office Wing', NOW(), NOW())
+       ON DUPLICATE KEY UPDATE fullName = VALUES(fullName), department = VALUES(department), designation = 'Head of Department'`,
+      hodUser.id,
+      `Dr. HOD (${deptConfig.instituteCode} ${deptConfig.deptCode})`,
+      deptConfig.deptName,
+    );
 
     // Preserve default HOD alias for CSPIT CSE
     if (deptConfig.deptCode === 'CSE' && deptConfig.instituteCode === 'CSPIT') {
@@ -356,12 +404,19 @@ async function main() {
           employeeCode: 'EMP_HOD_DEFAULT_CSE',
         },
       });
+      await prisma.$executeRawUnsafe(
+        `INSERT INTO user_profiles (userId, fullName, department, designation, officeLocation, createdAt, updatedAt)
+         VALUES (?, 'Dr. HOD (CSPIT CSE)', ?, 'Head of Department', 'HOD Cabin A-101', NOW(), NOW())
+         ON DUPLICATE KEY UPDATE fullName = VALUES(fullName)`,
+        defaultHod.id,
+        deptConfig.deptName,
+      );
     }
 
     // 3 Dedicated Counsellors
     for (let cIdx = 1; cIdx <= 3; cIdx++) {
       const counsellorEmail = `counsellor${cIdx}.${instSlug}.${deptSlug}@charusat.edu.in`;
-      await prisma.user.upsert({
+      const cUser = await prisma.user.upsert({
         where: { email: counsellorEmail },
         update: { passwordHash: staffPasswordHash, status: UserStatus.ACTIVE, role: UserRole.COUNSELLOR },
         create: {
@@ -374,9 +429,18 @@ async function main() {
       });
       totalStaffCreated++;
 
+      await prisma.$executeRawUnsafe(
+        `INSERT INTO user_profiles (userId, fullName, department, designation, officeLocation, createdAt, updatedAt)
+         VALUES (?, ?, ?, 'Academic Counsellor', 'Counselling Cell', NOW(), NOW())
+         ON DUPLICATE KEY UPDATE fullName = VALUES(fullName), department = VALUES(department), designation = 'Academic Counsellor'`,
+        cUser.id,
+        `Prof. Counsellor ${cIdx} (${deptConfig.deptCode})`,
+        deptConfig.deptName,
+      );
+
       // Preserve default counsellor@charusat.edu.in alias for CSPIT CSE counsellor 1
       if (cIdx === 1 && deptConfig.deptCode === 'CSE' && deptConfig.instituteCode === 'CSPIT') {
-        await prisma.user.upsert({
+        const defC = await prisma.user.upsert({
           where: { email: 'counsellor@charusat.edu.in' },
           update: { passwordHash: staffPasswordHash, status: UserStatus.ACTIVE, role: UserRole.COUNSELLOR },
           create: {
@@ -387,6 +451,13 @@ async function main() {
             emailVerified: true,
           },
         });
+        await prisma.$executeRawUnsafe(
+          `INSERT INTO user_profiles (userId, fullName, department, designation, officeLocation, createdAt, updatedAt)
+           VALUES (?, 'Prof. Lead Counsellor (CSPIT CSE)', ?, 'Academic Counsellor', 'Counselling Cell Room 12', NOW(), NOW())
+           ON DUPLICATE KEY UPDATE fullName = VALUES(fullName)`,
+          defC.id,
+          deptConfig.deptName,
+        );
       }
     }
 
@@ -394,6 +465,7 @@ async function main() {
     for (let fIdx = 0; fIdx < 6; fIdx++) {
       const assignedCourse = createdCourses[fIdx];
       const facultyNum = fIdx + 1;
+      const isDualCounsellor = facultyNum <= 2; // Faculty 1 & Faculty 2 are dual role
       const facultyEmail = `faculty${facultyNum}.${instSlug}.${deptSlug}@charusat.edu.in`;
 
       const facultyUser = await prisma.user.upsert({
@@ -409,7 +481,7 @@ async function main() {
       });
 
       // Faculty Profile linked to this course
-      await prisma.facultyProfile.upsert({
+      const facProfile = await prisma.facultyProfile.upsert({
         where: { userId: facultyUser.id },
         update: {
           departmentId: department.id,
@@ -423,6 +495,27 @@ async function main() {
           employeeCode: `EMP_${deptConfig.deptCode}_${String(facultyNum).padStart(3, '0')}`,
         },
       });
+
+      // Sync multi-course assignment row
+      await prisma.$executeRawUnsafe(
+        `INSERT IGNORE INTO faculty_course_assignments (id, facultyId, courseId, assignedAt)
+         VALUES (?, ?, ?, NOW())`,
+        `fca_${facProfile.id}_${assignedCourse.id}`,
+        facProfile.id,
+        assignedCourse.id,
+      );
+
+      const designation = isDualCounsellor ? 'Assistant Professor & Counsellor' : 'Assistant Professor';
+      await prisma.$executeRawUnsafe(
+        `INSERT INTO user_profiles (userId, fullName, department, designation, specialization, officeLocation, createdAt, updatedAt)
+         VALUES (?, ?, ?, ?, ?, 'Faculty Chamber', NOW(), NOW())
+         ON DUPLICATE KEY UPDATE fullName = VALUES(fullName), department = VALUES(department), designation = VALUES(designation), specialization = VALUES(specialization)`,
+        facultyUser.id,
+        `Prof. Faculty ${facultyNum} (${assignedCourse.code})`,
+        deptConfig.deptName,
+        designation,
+        `${assignedCourse.code} - ${assignedCourse.name}`,
+      );
 
       totalStaffCreated++;
 
@@ -439,136 +532,187 @@ async function main() {
             emailVerified: true,
           },
         });
-        await prisma.facultyProfile.upsert({
+        const dharaProf = await prisma.facultyProfile.upsert({
           where: { userId: dharaUser.id },
           update: { departmentId: department.id, courseId: assignedCourse.id, employeeCode: 'EMP_CSE_042' },
           create: { userId: dharaUser.id, departmentId: department.id, courseId: assignedCourse.id, employeeCode: 'EMP_CSE_042' },
         });
+        await prisma.$executeRawUnsafe(
+          `INSERT IGNORE INTO faculty_course_assignments (id, facultyId, courseId, assignedAt)
+           VALUES (?, ?, ?, NOW())`,
+          `fca_${dharaProf.id}_${assignedCourse.id}`,
+          dharaProf.id,
+          assignedCourse.id,
+        );
+        await prisma.$executeRawUnsafe(
+          `INSERT INTO user_profiles (userId, fullName, department, designation, specialization, officeLocation, createdAt, updatedAt)
+           VALUES (?, 'Prof. Dhara Solanki', ?, 'Assistant Professor & Counsellor', 'CS301 - Data Structures and Algorithms', 'Room 204 CSE Dept', NOW(), NOW())
+           ON DUPLICATE KEY UPDATE fullName = VALUES(fullName), designation = VALUES(designation)`,
+          dharaUser.id,
+          deptConfig.deptName,
+        );
       }
     }
 
     // 6. Students across 4 years (24: 50 students, 23: 30 students, 25: 30 students, 26: 30 students)
-    console.log(`👨‍🎓 Seeding students for ${deptConfig.instituteCode} - ${deptConfig.deptCode}...`);
+    console.log(`👨‍🎓 Seeding 140 students for ${deptConfig.instituteCode} - ${deptConfig.deptCode}...`);
 
     for (const batch of BATCHES) {
+      const batchTasks = [];
       for (let sNum = 1; sNum <= batch.count; sNum++) {
         const pad = String(sNum).padStart(3, '0');
         const rollNum = `${batch.yearPrefix}${deptConfig.rollPrefix}${pad}`;
         const email = `${batch.yearPrefix}${deptConfig.emailPrefix}${pad}@charusat.edu.in`;
-
         nameCounter++;
         const { fullName, firstName } = generateStudentName(nameCounter);
-        const passPlain = `${firstName.toLowerCase()}@2006`;
-        const studentPassHash = await bcrypt.hash(passPlain, 10);
-
-        // AuthorizedStudent
-        const authStudent = await prisma.authorizedStudent.upsert({
-          where: { enrollmentNumber: rollNum },
-          update: {
-            name: fullName,
-            email,
-            institute: deptConfig.instituteCode,
-            department: deptConfig.deptName,
-            programName: `B.Tech ${deptConfig.deptName}`,
-            semester: batch.sem,
-            division: sNum <= 25 ? `${deptConfig.rollPrefix} Div 1` : `${deptConfig.rollPrefix} Div 2`,
-            graduationYear: batch.gradYear,
-            activated: true,
-          },
-          create: {
-            enrollmentNumber: rollNum,
-            name: fullName,
-            email,
-            institute: deptConfig.instituteCode,
-            department: deptConfig.deptName,
-            programName: `B.Tech ${deptConfig.deptName}`,
-            semester: batch.sem,
-            division: sNum <= 25 ? `${deptConfig.rollPrefix} Div 1` : `${deptConfig.rollPrefix} Div 2`,
-            graduationYear: batch.gradYear,
-            activated: true,
-          },
+        batchTasks.push({
+          rollNum,
+          email,
+          fullName,
+          firstName,
+          sem: batch.sem,
+          div: sNum <= 25 ? `${deptConfig.rollPrefix} Div 1` : `${deptConfig.rollPrefix} Div 2`,
+          gradYear: batch.gradYear,
         });
-
-        // Student User
-        const sUser = await prisma.user.upsert({
-          where: { email },
-          update: { passwordHash: studentPassHash, status: UserStatus.ACTIVE },
-          create: {
-            email,
-            passwordHash: studentPassHash,
-            role: UserRole.STUDENT,
-            status: UserStatus.ACTIVE,
-            emailVerified: true,
-          },
-        });
-
-        // Student Profile
-        let profile = await prisma.studentProfile.findFirst({
-          where: {
-            OR: [
-              { userId: sUser.id },
-              { authorizedStudentId: authStudent.id },
-            ],
-          },
-        });
-
-        if (profile) {
-          await prisma.studentProfile.update({
-            where: { id: profile.id },
-            data: { userId: sUser.id, authorizedStudentId: authStudent.id },
-          });
-        } else {
-          await prisma.studentProfile.create({
-            data: {
-              userId: sUser.id,
-              authorizedStudentId: authStudent.id,
-            },
-          });
-        }
-
-        // Link userId on authorizedStudent
-        if (authStudent.userId !== sUser.id) {
-          await prisma.authorizedStudent.update({
-            where: { id: authStudent.id },
-            data: { userId: sUser.id },
-          });
-        }
-
-        totalStudentsCreated++;
       }
+
+      // Concurrency of 5 per chunk for smooth and fast TiDB execution
+      const CHUNK_SIZE = 5;
+      for (let i = 0; i < batchTasks.length; i += CHUNK_SIZE) {
+        const chunk = batchTasks.slice(i, i + CHUNK_SIZE);
+        await Promise.all(
+          chunk.map(async (st) => {
+            const passPlain = `${st.firstName.toLowerCase()}@2006`;
+            const studentPassHash = await getPasswordHash(passPlain);
+
+            // 1. User
+            const sUser = await prisma.user.upsert({
+              where: { email: st.email },
+              update: { passwordHash: studentPassHash, status: UserStatus.ACTIVE, role: UserRole.STUDENT },
+              create: {
+                email: st.email,
+                passwordHash: studentPassHash,
+                role: UserRole.STUDENT,
+                status: UserStatus.ACTIVE,
+                emailVerified: true,
+              },
+            });
+
+            // 2. AuthorizedStudent with userId linked
+            const authStudent = await prisma.authorizedStudent.upsert({
+              where: { enrollmentNumber: st.rollNum },
+              update: {
+                name: st.fullName,
+                email: st.email,
+                institute: deptConfig.instituteCode,
+                department: deptConfig.deptName,
+                programName: `B.Tech ${deptConfig.deptName}`,
+                semester: st.sem,
+                division: st.div,
+                graduationYear: st.gradYear,
+                activated: true,
+                userId: sUser.id,
+              },
+              create: {
+                enrollmentNumber: st.rollNum,
+                name: st.fullName,
+                email: st.email,
+                institute: deptConfig.instituteCode,
+                department: deptConfig.deptName,
+                programName: `B.Tech ${deptConfig.deptName}`,
+                semester: st.sem,
+                division: st.div,
+                graduationYear: st.gradYear,
+                activated: true,
+                userId: sUser.id,
+              },
+            });
+
+            // 3. StudentProfile
+            await prisma.studentProfile.upsert({
+              where: { userId: sUser.id },
+              update: { authorizedStudentId: authStudent.id },
+              create: {
+                userId: sUser.id,
+                authorizedStudentId: authStudent.id,
+              },
+            });
+
+            // 4. user_profiles
+            await prisma.$executeRawUnsafe(
+              `INSERT INTO user_profiles (userId, fullName, department, designation, createdAt, updatedAt)
+               VALUES (?, ?, ?, 'Student', NOW(), NOW())
+               ON DUPLICATE KEY UPDATE fullName = VALUES(fullName), department = VALUES(department)`,
+              sUser.id,
+              st.fullName,
+              deptConfig.deptName,
+            );
+          }),
+        );
+      }
+      totalStudentsCreated += batch.count;
+      console.log(`   ✓ Batch ${batch.yearPrefix} completed (${batch.count} students)`);
     }
   }
 
-  // Preserve primary demo student account student@charusat.edu.in mapped to 24CS001
-  const demoAuth = await prisma.authorizedStudent.findUnique({ where: { enrollmentNumber: '24CS001' } });
-  if (demoAuth) {
-    const demoPassHash = await bcrypt.hash('rahul@2006', 10);
-    const demoUser = await prisma.user.upsert({
-      where: { email: 'student@charusat.edu.in' },
-      update: { passwordHash: demoPassHash, status: UserStatus.ACTIVE, role: UserRole.STUDENT },
-      create: {
-        email: 'student@charusat.edu.in',
-        passwordHash: demoPassHash,
-        role: UserRole.STUDENT,
-        status: UserStatus.ACTIVE,
-        emailVerified: true,
-      },
-    });
+  // Preserve primary demo student account student@charusat.edu.in
+  const demoPassHash = await getPasswordHash('rahul@2006');
+  const demoUser = await prisma.user.upsert({
+    where: { email: 'student@charusat.edu.in' },
+    update: { passwordHash: demoPassHash, status: UserStatus.ACTIVE, role: UserRole.STUDENT },
+    create: {
+      email: 'student@charusat.edu.in',
+      passwordHash: demoPassHash,
+      role: UserRole.STUDENT,
+      status: UserStatus.ACTIVE,
+      emailVerified: true,
+    },
+  });
 
-    const existingDemoProfile = await prisma.studentProfile.findFirst({
-      where: { OR: [{ userId: demoUser.id }, { authorizedStudentId: demoAuth.id }] },
-    });
-    if (existingDemoProfile) {
-      await prisma.studentProfile.update({
-        where: { id: existingDemoProfile.id },
-        data: { userId: demoUser.id, authorizedStudentId: demoAuth.id },
-      });
-    } else {
-      await prisma.studentProfile.create({
-        data: { userId: demoUser.id, authorizedStudentId: demoAuth.id },
-      });
-    }
-  }
+  const demoAuth = await prisma.authorizedStudent.upsert({
+    where: { enrollmentNumber: '24CS000' },
+    update: {
+      name: 'Rahul Patel (Demo Student)',
+      email: 'student@charusat.edu.in',
+      institute: 'CSPIT',
+      department: 'Computer Science and Engineering',
+      programName: 'B.Tech Computer Science and Engineering',
+      semester: 4,
+      division: 'CS Div 1',
+      graduationYear: 2028,
+      activated: true,
+      userId: demoUser.id,
+    },
+    create: {
+      enrollmentNumber: '24CS000',
+      name: 'Rahul Patel (Demo Student)',
+      email: 'student@charusat.edu.in',
+      institute: 'CSPIT',
+      department: 'Computer Science and Engineering',
+      programName: 'B.Tech Computer Science and Engineering',
+      semester: 4,
+      division: 'CS Div 1',
+      graduationYear: 2028,
+      activated: true,
+      userId: demoUser.id,
+    },
+  });
+
+  await prisma.studentProfile.upsert({
+    where: { userId: demoUser.id },
+    update: { authorizedStudentId: demoAuth.id },
+    create: {
+      userId: demoUser.id,
+      authorizedStudentId: demoAuth.id,
+    },
+  });
+
+  await prisma.$executeRawUnsafe(
+    `INSERT INTO user_profiles (userId, fullName, department, designation, createdAt, updatedAt)
+     VALUES (?, 'Rahul Patel (Demo Student)', 'Computer Science and Engineering', 'Student', NOW(), NOW())
+     ON DUPLICATE KEY UPDATE fullName = VALUES(fullName)`,
+    demoUser.id,
+  );
 
   console.log('\n============================================================');
   console.log('🎉 SEEDING COMPLETE WITH PROPER RBAC & MULTI-INSTITUTE DATA!');
