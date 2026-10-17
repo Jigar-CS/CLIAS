@@ -103,6 +103,89 @@ interface SubmissionRecord {
   };
 }
 
+function renderFormattedInline(content: string) {
+  const parts = content.split(/(`[^`]+`|\*\*[^*]+\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('`') && part.endsWith('`') && part.length >= 2) {
+      return (
+        <code
+          key={i}
+          className="mx-0.5 px-1.5 py-0.5 rounded font-mono text-xs bg-[var(--secondary)]/10 text-slate-900 dark:text-blue-300 border border-[var(--grid-line)]"
+        >
+          {part.slice(1, -1)}
+        </code>
+      );
+    }
+    if (part.startsWith('**') && part.endsWith('**') && part.length >= 4) {
+      return (
+        <strong key={i} className="font-semibold text-slate-900 dark:text-slate-100">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    return part;
+  });
+}
+
+function RichProblemDescription({ text }: { text: string }) {
+  if (!text) return null;
+
+  // If description has examples embedded at the end, slice it off so it doesn't duplicate with the structured Example Test Cases
+  const exampleMatch = text.search(/\n\s*(\*\*Example\s*\d+:?|Example\s*\d+:?)/i);
+  const narrativeText = exampleMatch !== -1 ? text.slice(0, exampleMatch).trim() : text.trim();
+
+  // Split by code fences ```
+  const sections = narrativeText.split(/```/g);
+
+  return (
+    <div className="space-y-3 font-sans text-sm leading-relaxed text-slate-800 dark:text-slate-200">
+      {sections.map((section, idx) => {
+        // If odd index, it's inside a code block
+        if (idx % 2 === 1) {
+          const trimmed = section.trim();
+          return (
+            <pre
+              key={idx}
+              className="p-3 my-2 rounded bg-[var(--secondary)]/5 dark:bg-slate-900/60 border border-[var(--grid-line)] font-mono text-xs leading-relaxed overflow-x-auto text-slate-800 dark:text-slate-200"
+            >
+              {trimmed}
+            </pre>
+          );
+        }
+
+        // Even index: regular text paragraphs
+        const paragraphs = section.split(/\n\s*\n/);
+        return (
+          <React.Fragment key={idx}>
+            {paragraphs.map((para, pIdx) => {
+              const trimmedPara = para.trim();
+              if (!trimmedPara) return null;
+
+              // Check if bulleted list
+              if (trimmedPara.startsWith('- ') || trimmedPara.startsWith('* ')) {
+                const items = trimmedPara.split(/\n[-*]\s+/).filter(Boolean);
+                return (
+                  <ul key={pIdx} className="space-y-1 pl-4 list-disc text-sm text-slate-700 dark:text-slate-300">
+                    {items.map((item, iIdx) => (
+                      <li key={iIdx}>{renderFormattedInline(item.replace(/^[-*]\s+/, ''))}</li>
+                    ))}
+                  </ul>
+                );
+              }
+
+              return (
+                <p key={pIdx} className="text-sm leading-relaxed text-slate-800 dark:text-slate-200 font-sans">
+                  {renderFormattedInline(trimmedPara)}
+                </p>
+              );
+            })}
+          </React.Fragment>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function ProblemEditorPage() {
   const { slug } = useParams();
   const router = useRouter();
@@ -118,6 +201,7 @@ export default function ProblemEditorPage() {
   const [verdict, setVerdict] = useState<ExecutionVerdict | null>(null);
   const [selectedTestTab, setSelectedTestTab] = useState<number>(0);
   const [showHints, setShowHints] = useState<boolean>(false);
+  const [copiedCaseIdx, setCopiedCaseIdx] = useState<number | null>(null);
 
   // Submission history & inspection state
   const [leftTab, setLeftTab] = useState<'problem' | 'submissions'>('problem');
@@ -322,16 +406,16 @@ export default function ProblemEditorPage() {
                       setLeftTab('submissions');
                       if (problem) loadSubmissions(problem.id);
                     }}
-                    className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
+                    className={`font-mono text-xs uppercase tracking-wider px-3 py-1.5 border transition-all flex items-center gap-1.5 ${
                       leftTab === 'submissions'
-                        ? 'bg-blue-600 text-white shadow-xs'
-                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                        ? 'bg-[var(--primary)] text-white border-[var(--primary)]'
+                        : 'border-[var(--grid-line)] text-slate-600 dark:text-slate-400 hover:text-inherit'
                     }`}
                   >
                     <Clock className="w-3.5 h-3.5" />
-                    Submissions
+                    SUBMISSIONS
                     {submissions.length > 0 && (
-                      <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-slate-950/80 text-blue-300 border border-blue-500/30">
+                      <span className="ml-1 px-1.5 py-0.2 rounded-full text-[10px] bg-[rgba(74,111,165,0.15)] dark:bg-slate-900 text-[var(--primary)] border border-[var(--grid-line)] font-bold">
                         {submissions.length}
                       </span>
                     )}
@@ -341,26 +425,26 @@ export default function ProblemEditorPage() {
                 {leftTab === 'submissions' ? (
                   <div className="space-y-4">
                     {/* Scope & Filter Controls */}
-                    <div className="flex flex-col gap-2 pb-2 border-b border-slate-800">
-                      <div className="flex items-center justify-between gap-2">
+                    <div className="flex flex-col gap-2 pb-3 border-b border-[var(--grid-line)]">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
                         {/* Scope Switcher: This Problem vs All Problems */}
-                        <div className="flex items-center gap-1 bg-slate-950/80 p-0.5 rounded-lg border border-slate-800">
+                        <div className="flex items-center gap-1 bg-[var(--secondary)]/10 p-0.5 border border-[var(--grid-line)]">
                           <button
                             onClick={() => setSubmissionScope('problem')}
-                            className={`text-[11px] px-2.5 py-1 rounded-md font-semibold transition-all ${
+                            className={`font-mono text-xs uppercase tracking-wider px-2.5 py-1 border transition-all ${
                               submissionScope === 'problem'
-                                ? 'bg-blue-600 text-white shadow-xs'
-                                : 'text-slate-400 hover:text-slate-200'
+                                ? 'bg-[var(--primary)] text-white border-[var(--primary)]'
+                                : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-inherit'
                             }`}
                           >
                             This Problem ({submissions.length})
                           </button>
                           <button
                             onClick={() => setSubmissionScope('all')}
-                            className={`text-[11px] px-2.5 py-1 rounded-md font-semibold transition-all ${
+                            className={`font-mono text-xs uppercase tracking-wider px-2.5 py-1 border transition-all ${
                               submissionScope === 'all'
-                                ? 'bg-blue-600 text-white shadow-xs'
-                                : 'text-slate-400 hover:text-slate-200'
+                                ? 'bg-[var(--primary)] text-white border-[var(--primary)]'
+                                : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-inherit'
                             }`}
                           >
                             All Problems ({allSubmissions.length})
@@ -373,10 +457,10 @@ export default function ProblemEditorPage() {
                             <button
                               key={f}
                               onClick={() => setSubmissionFilter(f)}
-                              className={`text-[11px] px-2 py-0.5 rounded-md font-semibold transition-all ${
+                              className={`font-mono text-xs uppercase tracking-wider px-2.5 py-1 border transition-all ${
                                 submissionFilter === f
-                                  ? 'bg-slate-800 text-white border border-slate-700'
-                                  : 'text-slate-400 hover:text-slate-200'
+                                  ? 'bg-slate-800 dark:bg-slate-700 text-white border-slate-700'
+                                  : 'border-[var(--grid-line)] text-slate-600 dark:text-slate-400 hover:text-inherit'
                               }`}
                             >
                               {f === 'ALL' ? 'All' : f === 'ACCEPTED' ? 'Pass' : 'Fail'}
@@ -387,15 +471,15 @@ export default function ProblemEditorPage() {
                     </div>
 
                     {loadingSubmissions ? (
-                      <div className="py-12 text-center text-xs text-slate-400 flex items-center justify-center gap-2">
-                        <Cpu className="w-4 h-4 animate-spin text-blue-400" />
+                      <div className="py-12 text-center text-xs font-mono text-slate-600 dark:text-slate-400 flex items-center justify-center gap-2">
+                        <Cpu className="w-4 h-4 animate-spin text-[var(--primary)]" />
                         Loading previous submissions...
                       </div>
                     ) : filteredSubmissions.length === 0 ? (
-                      <div className="py-12 text-center text-xs text-slate-400 space-y-2">
-                        <Clock className="w-8 h-8 mx-auto text-slate-600" />
-                        <p className="font-semibold text-slate-300">No submissions found</p>
-                        <p className="text-[11px] text-slate-500">
+                      <div className="py-12 text-center text-xs text-slate-600 dark:text-slate-400 space-y-2">
+                        <Clock className="w-8 h-8 mx-auto text-slate-400 dark:text-slate-600" />
+                        <p className="font-semibold text-slate-800 dark:text-slate-200">No submissions found</p>
+                        <p className="text-xs text-slate-600 dark:text-slate-400">
                           {submissionScope === 'problem'
                             ? 'Submit your solution using the editor on the right to test it against judge test cases.'
                             : 'You have not submitted any solutions in the arena yet.'}
@@ -408,51 +492,51 @@ export default function ProblemEditorPage() {
                           return (
                             <div
                               key={sub.id}
-                              className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-slate-700 transition-all space-y-2"
+                              className="p-3.5 border border-[var(--grid-line)] bg-[var(--secondary)]/10 dark:bg-slate-950/60 hover:border-[var(--primary)] transition-all space-y-2"
                             >
                               <div className="flex items-center justify-between gap-2">
                                 <div className="flex items-center gap-2">
                                   <span
-                                    className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                                    className={`px-2 py-0.5 text-[10px] font-mono font-bold border ${
                                       isPass
-                                        ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30'
+                                        ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
                                         : sub.status === 'COMPILATION_ERROR'
-                                        ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
-                                        : 'bg-rose-500/20 text-rose-400 border-rose-500/30'
+                                        ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                                        : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30'
                                     }`}
                                   >
                                     {sub.status.replace(/_/g, ' ')}
                                   </span>
-                                  <span className="text-[11px] font-bold text-blue-400">
+                                  <span className="font-mono text-xs font-bold text-[var(--primary)]">
                                     Score: {sub.score ?? 0}%
                                   </span>
                                 </div>
-                                <span className="text-[10px] text-slate-500 font-mono">
+                                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
                                   {new Date(sub.createdAt).toLocaleDateString()} {new Date(sub.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 </span>
                               </div>
 
                               {sub.problem?.title && submissionScope === 'all' && (
-                                <div className="text-xs font-semibold text-slate-300 truncate">
+                                <div className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
                                   {sub.problem.title}
                                 </div>
                               )}
 
-                              <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1 border-t border-slate-900">
+                              <div className="flex items-center justify-between text-xs text-slate-600 dark:text-slate-400 pt-2 border-t border-[var(--grid-line)] font-mono">
                                 <div className="flex items-center gap-3">
-                                  <span className="text-slate-300 font-mono">{sub.language}</span>
+                                  <span className="text-slate-800 dark:text-slate-200 font-bold">{sub.language}</span>
                                   <span>
                                     {sub.testCasesPassed ?? 0}/{sub.totalTestCases ?? 0} Passed
                                   </span>
                                   <span className="flex items-center gap-1">
-                                    <Clock className="w-3 h-3 text-slate-500" />
+                                    <Clock className="w-3 h-3 text-slate-400" />
                                     {sub.executionTimeMs}ms
                                   </span>
                                 </div>
 
                                 <button
                                   onClick={() => setInspectedSubmission(sub)}
-                                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-400 hover:text-blue-300 transition-colors"
+                                  className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--primary)] hover:underline transition-colors"
                                 >
                                   <Eye className="w-3.5 h-3.5" />
                                   Inspect Code
@@ -463,24 +547,56 @@ export default function ProblemEditorPage() {
                         })}
                       </div>
                     )}
-                  </div>
-                ) : (
-                  <>
-                    <div>
-                      <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
-                        {submissions.some((s) => s.status === 'ACCEPTED') && (
-                          <span title="Solved - Correctly Submitted" className="inline-flex items-center text-emerald-400 shrink-0">
-                            <CheckCircle2 className="w-6 h-6 text-emerald-400" />
+                  </div>                 ) : (
+                  <div className="space-y-5">
+                    {/* Problem Header */}
+                    <div className="space-y-2 pb-4 border-b border-[var(--grid-line)]">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span
+                            className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                              problem.difficulty === 'EASY'
+                                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                                : problem.difficulty === 'MEDIUM'
+                                ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                                : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                            }`}
+                          >
+                            {problem.difficulty}
                           </span>
-                        )}
-                        <span>{problem.title}</span>
+
+                          {submissions.some((s) => s.status === 'ACCEPTED') && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                              Solved
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Specs */}
+                        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                          <span className="flex items-center gap-1" title="Execution time limit">
+                            <Clock className="w-3.5 h-3.5" />
+                            1.0s
+                          </span>
+                          <span>•</span>
+                          <span className="flex items-center gap-1" title="Memory limit">
+                            <Cpu className="w-3.5 h-3.5" />
+                            256MB
+                          </span>
+                        </div>
+                      </div>
+
+                      <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 font-sans tracking-tight">
+                        {problem.title}
                       </h1>
+
                       {problem.tags && (
-                        <div className="flex flex-wrap gap-1.5 mt-2">
+                        <div className="flex flex-wrap items-center gap-1.5 pt-1">
                           {problem.tags.split(',').map((t, idx) => (
                             <span
                               key={idx}
-                              className="text-[10px] font-medium bg-slate-800 text-slate-400 px-2 py-0.5 rounded border border-slate-700/60"
+                              className="text-[11px] font-sans px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700/60"
                             >
                               {t.trim()}
                             </span>
@@ -489,75 +605,157 @@ export default function ProblemEditorPage() {
                       )}
                     </div>
 
-                    {/* Description Text */}
-                    <div className="text-slate-300 text-xs leading-relaxed space-y-3 whitespace-pre-line font-normal">
-                      {problem.description}
+                    {/* Rich Formatted Problem Narrative */}
+                    <div>
+                      <RichProblemDescription text={problem.description} />
                     </div>
 
-                    {/* Sample Testcases */}
-                    <div className="space-y-3 pt-4 border-t border-slate-800">
-                      <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-                        Example Test Cases
-                      </h3>
-                      {problem.testCases.map((tc, idx) => (
-                        <div
-                          key={tc.id}
-                          className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1.5 font-mono text-[11px]"
-                        >
-                          <div className="text-slate-400 text-[10px] uppercase font-bold font-sans">
-                            Example {idx + 1}:
-                          </div>
-                          <div>
-                            <span className="text-slate-400">Input: </span>
-                            <span className="text-blue-300">{tc.input}</span>
-                          </div>
-                          <div>
-                            <span className="text-slate-400">Output: </span>
-                            <span className="text-emerald-300">{tc.expectedOutput}</span>
-                          </div>
-                          {tc.explanation && (
-                            <div className="text-slate-400 font-sans text-[10px] pt-1 border-t border-slate-800/80">
-                              {tc.explanation}
-                            </div>
-                          )}
+                    {/* Example Test Cases */}
+                    {problem.testCases && problem.testCases.length > 0 && (
+                      <div className="space-y-3 pt-4 border-t border-[var(--grid-line)]">
+                        <div className="flex items-center justify-between">
+                          <h3 className="font-sans text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                            Examples
+                          </h3>
+                          <span className="text-xs text-slate-400">
+                            {problem.testCases.length} sample {problem.testCases.length === 1 ? 'case' : 'cases'}
+                          </span>
                         </div>
-                      ))}
-                    </div>
+
+                        <div className="space-y-3">
+                          {problem.testCases.map((tc, idx) => (
+                            <div key={tc.id} className="space-y-1.5">
+                              <div className="flex items-center justify-between">
+                                <span className="font-sans text-xs font-semibold text-slate-800 dark:text-slate-200">
+                                  Example {idx + 1}:
+                                </span>
+                                <button
+                                  onClick={() => {
+                                    navigator.clipboard.writeText(tc.input);
+                                    setCopiedCaseIdx(idx);
+                                    setTimeout(() => setCopiedCaseIdx(null), 2000);
+                                  }}
+                                  className="inline-flex items-center gap-1 text-[11px] text-slate-500 hover:text-slate-900 dark:hover:text-slate-200 transition-colors"
+                                  title="Copy test input"
+                                >
+                                  {copiedCaseIdx === idx ? (
+                                    <>
+                                      <Check className="w-3 h-3 text-emerald-500" />
+                                      <span className="text-emerald-600 dark:text-emerald-400 font-medium">Copied</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Copy className="w-3 h-3" />
+                                      <span>Copy</span>
+                                    </>
+                                  )}
+                                </button>
+                              </div>
+
+                              <div className="p-3 rounded bg-slate-50 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 font-mono text-xs leading-relaxed space-y-1 text-slate-800 dark:text-slate-200">
+                                <div>
+                                  <span className="font-sans font-semibold text-slate-700 dark:text-slate-300 mr-2 select-none">
+                                    Input:
+                                  </span>
+                                  <span className="select-all text-slate-900 dark:text-slate-100 font-medium">
+                                    {tc.input}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="font-sans font-semibold text-slate-700 dark:text-slate-300 mr-2 select-none">
+                                    Output:
+                                  </span>
+                                  <span className="select-all font-semibold text-slate-900 dark:text-slate-100">
+                                    {tc.expectedOutput}
+                                  </span>
+                                </div>
+                                {tc.explanation && (
+                                  <div className="pt-1 text-xs">
+                                    <span className="font-sans font-semibold text-slate-700 dark:text-slate-300 mr-2 select-none">
+                                      Explanation:
+                                    </span>
+                                    <span className="font-sans text-slate-600 dark:text-slate-400">
+                                      {tc.explanation}
+                                    </span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Constraints */}
-                    <div className="space-y-2 pt-4 border-t border-slate-800">
-                      <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Constraints</h3>
-                      <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 text-slate-400 font-mono text-[11px] whitespace-pre-line">
-                        {problem.constraints}
-                      </div>
-                    </div>
+                    {problem.constraints && (
+                      <div className="space-y-2 pt-4 border-t border-[var(--grid-line)]">
+                        <h3 className="font-sans text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                          Constraints
+                        </h3>
 
-                    {/* Hints Accordion */}
+                        <ul className="space-y-1.5 pl-4 list-disc text-xs text-slate-700 dark:text-slate-300">
+                          {problem.constraints
+                            .split('\n')
+                            .filter((c) => c.trim().length > 0)
+                            .map((constraint, cIdx) => (
+                              <li key={cIdx} className="leading-relaxed">
+                                <code className="font-mono text-xs px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 text-slate-800 dark:text-slate-200">
+                                  {constraint.replace(/^[-*•]\s*/, '').trim()}
+                                </code>
+                              </li>
+                            ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Hints */}
                     {problem.hints && (
-                      <div className="pt-2">
+                      <div className="pt-4 border-t border-[var(--grid-line)]">
                         <button
                           onClick={() => setShowHints(!showHints)}
-                          className="w-full flex items-center justify-between p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-xs font-semibold text-indigo-300 hover:bg-slate-800/50 transition-colors"
+                          className="w-full flex items-center justify-between px-3 py-2 rounded border border-slate-200/80 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40 hover:bg-slate-100 dark:hover:bg-slate-900/70 text-xs text-slate-700 dark:text-slate-300 transition-colors"
                         >
-                          <span className="flex items-center gap-1.5">
-                            <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-                            Algorithmic Hints & Approach
+                          <span className="flex items-center gap-2 font-medium">
+                            <Sparkles className="w-3.5 h-3.5 text-[var(--primary)]" />
+                            <span>Hints</span>
                           </span>
-                          {showHints ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                          <span className="flex items-center gap-1 text-[11px] text-slate-500">
+                            <span>{showHints ? 'Hide' : 'Show'}</span>
+                            {showHints ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                          </span>
                         </button>
                         {showHints && (
-                          <div className="mt-2 p-3.5 rounded-xl bg-indigo-950/20 border border-indigo-500/20 text-xs text-slate-300 space-y-2 animate-fadeIn">
-                            {JSON.parse(problem.hints).map((hint: string, hIdx: number) => (
-                              <div key={hIdx} className="flex items-start gap-2">
-                                <span className="text-indigo-400 font-bold">•</span>
-                                <span className="leading-relaxed">{hint}</span>
-                              </div>
-                            ))}
+                          <div className="mt-2 space-y-2">
+                            {(() => {
+                              try {
+                                const parsed = JSON.parse(problem.hints);
+                                const hintsArray = Array.isArray(parsed) ? parsed : [problem.hints];
+                                return hintsArray.map((hint: string, hIdx: number) => (
+                                  <div
+                                    key={hIdx}
+                                    className="p-3 rounded border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 text-xs text-slate-700 dark:text-slate-300 flex items-start gap-2.5"
+                                  >
+                                    <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-[var(--primary)]/10 text-[var(--primary)] shrink-0">
+                                      Hint {hIdx + 1}
+                                    </span>
+                                    <div className="leading-relaxed">
+                                      {renderFormattedInline(hint)}
+                                    </div>
+                                  </div>
+                                ));
+                              } catch {
+                                return (
+                                  <div className="p-3 rounded border border-slate-200/80 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 text-xs text-slate-700 dark:text-slate-300">
+                                    {renderFormattedInline(problem.hints)}
+                                  </div>
+                                );
+                              }
+                            })()}
                           </div>
                         )}
                       </div>
                     )}
-                  </>
+                  </div>
                 )}
               </div>
 
@@ -594,7 +792,7 @@ export default function ProblemEditorPage() {
                     <button
                       onClick={handleRunCode}
                       disabled={executing}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 font-mono text-xs uppercase tracking-wider border border-[var(--grid-line)] hover:bg-[var(--secondary)]/10 transition-all"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 font-mono text-xs uppercase tracking-wider border border-[var(--grid-line)] hover:bg-[var(--secondary)]/10 transition-all font-semibold"
                     >
                       <Play className="w-3.5 h-3.5 text-blue-500" />
                       RUN TESTCASES
@@ -603,7 +801,7 @@ export default function ProblemEditorPage() {
                     <button
                       onClick={handleSubmitCode}
                       disabled={executing}
-                      className="inline-flex items-center gap-1.5 px-4 py-1.5 font-mono text-xs uppercase tracking-wider bg-[var(--primary)] text-white border border-[var(--primary)] hover:opacity-90 transition-all disabled:opacity-50"
+                      className="inline-flex items-center gap-1.5 px-4 py-1.5 font-mono text-xs uppercase tracking-wider bg-[var(--primary)] text-white border border-[var(--primary)] hover:opacity-90 transition-all disabled:opacity-50 font-bold"
                     >
                       <Send className="w-3.5 h-3.5" />
                       SUBMIT SOLUTION →
@@ -612,13 +810,13 @@ export default function ProblemEditorPage() {
                 </div>
 
                 {/* Code Textarea Editor */}
-                <div className="panel p-4 font-mono text-xs leading-relaxed">
+                <div className="panel p-4 font-mono text-sm leading-relaxed">
                   <textarea
                     value={sourceCode}
                     onChange={(e) => setSourceCode(e.target.value)}
                     rows={17}
                     spellCheck={false}
-                    className="w-full bg-transparent resize-y outline-none font-mono text-xs leading-relaxed text-inherit"
+                    className="w-full bg-transparent resize-y outline-none font-mono text-sm leading-relaxed text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                     placeholder="// Write your algorithmic solution here..."
                   />
                 </div>
@@ -628,7 +826,7 @@ export default function ProblemEditorPage() {
                   <div className="flex items-center justify-between border-b border-[var(--grid-line)] pb-3">
                     <div className="flex items-center gap-2">
                       <Terminal className="w-4 h-4 text-emerald-500" />
-                      <span className="font-mono text-xs uppercase tracking-wider">
+                      <span className="font-mono text-xs uppercase tracking-wider font-semibold">
                         JUDGE EXECUTION CONSOLE
                       </span>
                     </div>
@@ -652,11 +850,11 @@ export default function ProblemEditorPage() {
                             Score: {verdict.score}%
                           </span>
                         )}
-                        <span className="text-[11px] text-slate-400">
+                        <span className="text-[11px] font-mono text-slate-700 dark:text-slate-300 font-semibold">
                           {verdict.testCasesPassed}/{verdict.totalTestCases} Passed
                         </span>
-                        <span className="text-[11px] text-slate-400 flex items-center gap-1">
-                          <Clock className="w-3 h-3" />
+                        <span className="text-[11px] font-mono text-slate-700 dark:text-slate-300 font-semibold flex items-center gap-1">
+                          <Clock className="w-3 h-3 text-slate-500 dark:text-slate-400" />
                           {verdict.executionTimeMs}ms
                         </span>
                       </div>
@@ -664,34 +862,34 @@ export default function ProblemEditorPage() {
                   </div>
 
                   {executing ? (
-                    <div className="py-8 text-center text-slate-400 text-xs flex items-center justify-center gap-2">
-                      <Cpu className="w-4 h-4 animate-spin text-blue-400" />
+                    <div className="py-8 text-center text-slate-600 dark:text-slate-400 font-mono text-xs flex items-center justify-center gap-2">
+                      <Cpu className="w-4 h-4 animate-spin text-[var(--primary)]" />
                       Sandboxing code and evaluating test assertions...
                     </div>
                   ) : !verdict ? (
-                    <div className="py-6 text-center text-slate-400 text-xs">
-                      Click <strong className="text-slate-300">Run Code</strong> to validate against sample cases, or <strong className="text-emerald-400">Submit</strong> for full judge grading.
+                    <div className="py-6 text-center text-slate-600 dark:text-slate-400 font-mono text-xs">
+                      Click <strong className="text-slate-900 dark:text-slate-200">RUN TESTCASES</strong> to validate against sample cases, or <strong className="text-emerald-600 dark:text-emerald-400">SUBMIT SOLUTION</strong> for full judge grading.
                     </div>
                   ) : (
                     <div className="space-y-4">
                       {/* Test Case Tab Selector */}
                       {testList.length > 0 && (
-                        <div className="flex items-center gap-1.5 border-b border-slate-800 pb-2">
+                        <div className="flex items-center gap-1.5 border-b border-[var(--grid-line)] pb-2">
                           {testList.map((t, idx) => (
                             <button
                               key={idx}
                               onClick={() => setSelectedTestTab(idx)}
-                              className={`text-xs font-semibold px-3 py-1 rounded-md flex items-center gap-1.5 transition-all ${selectedTestTab === idx
-                                  ? 'bg-slate-800 text-white'
-                                  : 'text-slate-400 hover:text-slate-200'
+                              className={`font-mono text-xs uppercase tracking-wider px-3 py-1 border flex items-center gap-1.5 transition-all ${selectedTestTab === idx
+                                  ? 'bg-[var(--primary)] text-white border-[var(--primary)]'
+                                  : 'border-[var(--grid-line)] text-slate-600 dark:text-slate-400 hover:text-inherit'
                                 }`}
                             >
                               {t.status === 'PASSED' ? (
-                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
                               ) : (
-                                <XCircle className="w-3.5 h-3.5 text-rose-400" />
+                                <XCircle className="w-3.5 h-3.5 text-rose-500" />
                               )}
-                              Case {idx + 1}
+                              CASE {idx + 1}
                             </button>
                           ))}
                         </div>
@@ -699,7 +897,7 @@ export default function ProblemEditorPage() {
 
                       {/* Selected Test Case Details */}
                       {testList[selectedTestTab] && (
-                        <div className="p-3.5 panel text-xs font-mono space-y-2">
+                        <div className="p-4 border border-[var(--grid-line)] bg-[var(--secondary)]/10 dark:bg-slate-950/60 font-mono text-xs space-y-2.5">
                           <div>
                             <span className="text-slate-700 dark:text-slate-300 font-bold">INPUT: </span>
                             <span className="text-inherit">
@@ -801,8 +999,8 @@ export default function ProblemEditorPage() {
                   READ-ONLY VIEW. Closing this modal preserves your current working draft in the editor.
                 </div>
 
-                <div className="panel p-4 font-mono text-xs leading-relaxed max-h-[380px] overflow-y-auto">
-                  <pre className="whitespace-pre-wrap select-text font-mono text-xs text-inherit">
+                <div className="panel p-4 font-mono text-sm leading-relaxed max-h-[380px] overflow-y-auto">
+                  <pre className="whitespace-pre-wrap select-text font-mono text-sm text-slate-900 dark:text-slate-100">
                     {inspectedSubmission.sourceCode || '// No source code recorded'}
                   </pre>
                 </div>
