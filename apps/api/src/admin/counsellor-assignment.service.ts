@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UserRole, UserStatus } from '@prisma/client';
+import { randomUUID } from 'crypto';
 import * as bcrypt from 'bcryptjs';
 import * as XLSX from 'xlsx';
 
@@ -82,7 +83,8 @@ export class CounsellorAssignmentService {
 
       // Check if row 0 or 1 contains headers
       let headerRowIdx = -1;
-      let counsellorColIdx = -1;
+      let counsellorEmailColIdx = -1;
+      let counsellorNameColIdx = -1;
       let studentsColIdx = -1;
 
       for (let r = 0; r < Math.min(5, rows.length); r++) {
@@ -92,14 +94,17 @@ export class CounsellorAssignmentService {
         for (let c = 0; c < row.length; c++) {
           const val = String(row[c] || '').toLowerCase().trim();
           if (
-            val.includes('counsellor') ||
-            val.includes('counselor') ||
-            val.includes('mentor') ||
-            val.includes('faculty') ||
-            val.includes('teacher')
+            (val.includes('counsellor') || val.includes('counselor') || val.includes('mentor') || val.includes('faculty')) &&
+            (val.includes('email') || val.includes('mail'))
           ) {
-            counsellorColIdx = c;
+            counsellorEmailColIdx = c;
+          } else if (
+            (val.includes('counsellor') || val.includes('counselor') || val.includes('mentor') || val.includes('faculty') || val.includes('teacher')) &&
+            !val.includes('phone') && !val.includes('contact') && !val.includes('mobile') && !val.includes('dept')
+          ) {
+            counsellorNameColIdx = c;
           }
+
           if (
             val.includes('student') ||
             val.includes('enrollment') ||
@@ -111,11 +116,14 @@ export class CounsellorAssignmentService {
           }
         }
 
-        if (counsellorColIdx !== -1 && studentsColIdx !== -1 && counsellorColIdx !== studentsColIdx) {
+        const effectiveCounsellorCol = counsellorEmailColIdx !== -1 ? counsellorEmailColIdx : counsellorNameColIdx;
+        if (effectiveCounsellorCol !== -1 && studentsColIdx !== -1 && effectiveCounsellorCol !== studentsColIdx) {
           headerRowIdx = r;
           break;
         }
       }
+
+      const counsellorColIdx = counsellorEmailColIdx !== -1 ? counsellorEmailColIdx : counsellorNameColIdx;
 
       if (headerRowIdx !== -1 && counsellorColIdx !== -1 && studentsColIdx !== -1) {
         // Tabular column layout
@@ -123,7 +131,10 @@ export class CounsellorAssignmentService {
           const row = rows[r];
           if (!Array.isArray(row)) continue;
 
-          const counsellorVal = String(row[counsellorColIdx] || '').trim();
+          // Prefer email, fallback to name
+          const counsellorVal = String(
+            row[counsellorColIdx] || (counsellorNameColIdx !== -1 ? row[counsellorNameColIdx] : '') || '',
+          ).trim();
           const studentsVal = String(row[studentsColIdx] || '').trim();
 
           if (counsellorVal && studentsVal) {
@@ -333,63 +344,193 @@ export class CounsellorAssignmentService {
     const counsellorsMapped = new Set<string>();
     const studentsMapped = new Set<string>();
 
+    // 1. Expand student tokens for each pair and collect all tokens
+    const pairMappings: Array<{
+      counsellorQuery: string;
+      tokens: string[];
+    }> = [];
+
+    const allTokenSet = new Set<string>();
+
     for (const pair of pairs) {
-      const counsellorUser = await this.resolveCounsellor(pair.counsellorQuery);
-      if (!counsellorUser) {
-        unmatchedCounsellors.push(pair.counsellorQuery);
-        continue;
+      const studentTokens = this.expandStudentsQuery(pair.studentsQuery);
+      pairMappings.push({
+        counsellorQuery: pair.counsellorQuery,
+        tokens: studentTokens,
+      });
+      studentTokens.forEach((t) => allTokenSet.add(t.trim()));
+    }
+
+    // 2. Pre-resolve unique counsellors into a Map
+    const uniqueCounsellorQueries = Array.from(new Set(pairs.map((p) => p.counsellorQuery.trim())));
+    const counsellorMap = new Map<string, any>();
+
+    for (const cQuery of uniqueCounsellorQueries) {
+      const counsellorUser = await this.resolveCounsellor(cQuery);
+      if (counsellorUser) {
+        counsellorMap.set(cQuery.toLowerCase(), counsellorUser);
+      } else {
+        unmatchedCounsellors.push(cQuery);
+      }
+    }
+
+    // 3. Bulk fetch AuthorizedStudents matching any of the tokens
+    const allTokensArr = Array.from(allTokenSet);
+    const upperTokens = allTokensArr.map((t) => t.toUpperCase());
+    const lowerTokens = allTokensArr.map((t) => t.toLowerCase());
+
+    const foundAuthStudents = await this.prisma.authorizedStudent.findMany({
+      where: {
+        OR: [
+          { enrollmentNumber: { in: upperTokens } },
+          { email: { in: lowerTokens } },
+          { name: { in: allTokensArr } },
+        ],
+      },
+      include: {
+        studentProfile: true,
+      },
+    });
+
+    const studentByEnrollment = new Map<string, any>();
+    const studentByEmail = new Map<string, any>();
+    const studentByName = new Map<string, any>();
+
+    for (const s of foundAuthStudents) {
+      if (s.enrollmentNumber) studentByEnrollment.set(s.enrollmentNumber.toUpperCase(), s);
+      if (s.email) studentByEmail.set(s.email.toLowerCase(), s);
+      if (s.name) studentByName.set(s.name.toLowerCase(), s);
+    }
+
+    // Precomputed password hash for rapid auto-provisioning
+    const defaultPasswordHash = '$2a$10$6lnQ3RkKKNFC2N9Fg3D.p.3ARP3JQUwRTa74JLU1sR7pFTmCusKFq';
+
+    // Helper to find or provision student profile rapidly from memory or single fallback
+    const resolveFastStudent = async (token: string): Promise<any | null> => {
+      const clean = token.trim();
+      const cleanUpper = clean.toUpperCase();
+      const cleanLower = clean.toLowerCase();
+
+      let authStudent =
+        studentByEnrollment.get(cleanUpper) ||
+        studentByEmail.get(cleanLower) ||
+        studentByName.get(cleanLower);
+
+      if (!authStudent) {
+        return await this.resolveStudent(token);
       }
 
-      counsellorsMapped.add(counsellorUser.id);
-      const studentTokens = this.expandStudentsQuery(pair.studentsQuery);
+      if (authStudent.studentProfile) {
+        return authStudent.studentProfile;
+      }
 
-      for (const token of studentTokens) {
-        const studentProfile = await this.resolveStudent(token);
+      // Provision profile if not existing
+      let studentUser = await this.prisma.user.findUnique({
+        where: { email: authStudent.email },
+      });
+
+      if (!studentUser) {
+        studentUser = await this.prisma.user.create({
+          data: {
+            email: authStudent.email,
+            passwordHash: defaultPasswordHash,
+            role: UserRole.STUDENT,
+            status: UserStatus.ACTIVE,
+            emailVerified: true,
+          },
+        });
+      }
+
+      const newProfile = await this.prisma.studentProfile.create({
+        data: {
+          userId: studentUser.id,
+          authorizedStudentId: authStudent.id,
+        },
+      });
+
+      authStudent.studentProfile = newProfile;
+      return newProfile;
+    };
+
+    // 4. Build assignment records and match pairs
+    const assignmentsToInsert: Array<{ counsellorId: string; studentId: string }> = [];
+    const assignmentMetadataList: Array<{
+      counsellor: any;
+      studentProfileId: string;
+      token: string;
+    }> = [];
+
+    for (const mapping of pairMappings) {
+      const counsellorUser = counsellorMap.get(mapping.counsellorQuery.toLowerCase());
+      if (!counsellorUser) continue;
+
+      counsellorsMapped.add(counsellorUser.id);
+
+      for (const token of mapping.tokens) {
+        const studentProfile = await resolveFastStudent(token);
         if (!studentProfile) {
           unmatchedStudents.push(`${token} (for ${counsellorUser.email})`);
           continue;
         }
 
-        // Upsert assignment
-        const assignment = await this.prisma.counsellorAssignment.upsert({
-          where: {
-            counsellorId_studentId: {
-              counsellorId: counsellorUser.id,
-              studentId: studentProfile.id,
-            },
-          },
-          update: {
-            assignedAt: new Date(),
-          },
-          create: {
-            counsellorId: counsellorUser.id,
-            studentId: studentProfile.id,
-          },
-          include: {
-            student: {
-              include: {
-                authorizedStudent: true,
-              },
-            },
-          },
-        });
-
         studentsMapped.add(studentProfile.id);
-        createdAssignments.push({
-          id: assignment.id,
+        assignmentsToInsert.push({
           counsellorId: counsellorUser.id,
-          counsellorName: counsellorUser.email.split('@')[0],
-          counsellorEmail: counsellorUser.email,
           studentId: studentProfile.id,
-          enrollmentNumber: assignment.student.authorizedStudent.enrollmentNumber,
-          studentName: assignment.student.authorizedStudent.name,
-          division: assignment.student.authorizedStudent.division,
-          semester: assignment.student.authorizedStudent.semester,
+        });
+        assignmentMetadataList.push({
+          counsellor: counsellorUser,
+          studentProfileId: studentProfile.id,
+          token,
         });
       }
     }
 
-    // Sort assignments ID-wise
+    // 5. Bulk insert assignments using createMany with skipDuplicates: true
+    if (assignmentsToInsert.length > 0) {
+      await this.prisma.counsellorAssignment.createMany({
+        data: assignmentsToInsert.map((a) => ({
+          id: randomUUID(),
+          counsellorId: a.counsellorId,
+          studentId: a.studentId,
+          assignedAt: new Date(),
+        })),
+        skipDuplicates: true,
+      });
+    }
+
+    // 6. Bulk resolve created assignments metadata for response
+    const assignedProfiles = await this.prisma.studentProfile.findMany({
+      where: {
+        id: { in: Array.from(studentsMapped) },
+      },
+      include: {
+        authorizedStudent: true,
+      },
+    });
+
+    const profileMap = new Map<string, any>();
+    assignedProfiles.forEach((p) => profileMap.set(p.id, p));
+
+    for (const meta of assignmentMetadataList) {
+      const prof = profileMap.get(meta.studentProfileId);
+      const auth = prof?.authorizedStudent;
+      if (auth) {
+        createdAssignments.push({
+          id: `${meta.counsellor.id}-${meta.studentProfileId}`,
+          counsellorId: meta.counsellor.id,
+          counsellorName: meta.counsellor.email.split('@')[0],
+          counsellorEmail: meta.counsellor.email,
+          studentId: meta.studentProfileId,
+          enrollmentNumber: auth.enrollmentNumber,
+          studentName: auth.name,
+          division: auth.division,
+          semester: auth.semester,
+        });
+      }
+    }
+
+    // Sort assignments enrollment number-wise
     createdAssignments.sort((a, b) =>
       (a.enrollmentNumber || '').localeCompare(b.enrollmentNumber || '', undefined, {
         numeric: true,
@@ -433,11 +574,21 @@ export class CounsellorAssignmentService {
 
     // Check if query is contained in email or employeeCode
     const cleanLower = clean.toLowerCase();
-    user = candidates.find(
-      (c) =>
-        c.email.toLowerCase().includes(cleanLower) ||
-        cleanLower.includes(c.email.split('@')[0].toLowerCase()),
-    );
+    const cleanSlug = cleanLower.replace(/[^a-z0-9]/g, '');
+    const cleanWords = cleanLower.split(/\s+/).filter((w) => w.length >= 2);
+
+    user = candidates.find((c) => {
+      const emailLower = c.email.toLowerCase();
+      const emailLocal = emailLower.split('@')[0];
+      const emailSlug = emailLocal.replace(/[^a-z0-9]/g, '');
+
+      return (
+        emailLower === cleanLower ||
+        emailLower.includes(cleanLower) ||
+        (cleanSlug.length >= 3 && (emailSlug.includes(cleanSlug) || cleanSlug.includes(emailSlug))) ||
+        (cleanWords.length >= 2 && cleanWords.every((w) => emailSlug.includes(w)))
+      );
+    });
 
     if (user) return user;
 

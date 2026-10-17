@@ -41,8 +41,11 @@ export async function fetchApi<T = any>(endpoint: string, options: RequestInit =
     endpoint.includes('/submit') ||
     endpoint.includes('/rag') ||
     endpoint.includes('/extract') ||
-    endpoint.includes('/documents');
-  const timeoutMs = (options as any)?.timeout || (isAiOrLongRunning ? 90000 : 25000);
+    endpoint.includes('/documents') ||
+    endpoint.includes('/counsellor-assignments') ||
+    endpoint.includes('/assignments') ||
+    endpoint.includes('/upload');
+  const timeoutMs = (options as any)?.timeout || (isAiOrLongRunning ? 120000 : 35000);
 
   // For long-running AI, RAG, and document extraction payloads, connect directly to NestJS API
   // to avoid Next.js dev proxy socket resets and buffering timeouts.

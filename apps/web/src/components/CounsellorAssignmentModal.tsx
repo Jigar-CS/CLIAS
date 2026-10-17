@@ -113,10 +113,14 @@ export function CounsellorAssignmentModal({
 
       const base64Data = await fileDataPromise;
 
-      const res: any = await api.post('/admin/counsellor-assignments/upload', {
-        fileBase64: base64Data,
-        fileName: file.name,
-      });
+      const res: any = await api.post(
+        '/admin/counsellor-assignments/upload',
+        {
+          fileBase64: base64Data,
+          fileName: file.name,
+        },
+        { timeout: 120000 } as any,
+      );
 
       setResult(res);
       if (onSuccess) onSuccess();
