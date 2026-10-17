@@ -280,13 +280,51 @@ export class CodingService {
    * Resolves StudentProfile id from raw ID or User ID.
    */
   private async resolveStudentProfileId(identifier: string): Promise<string> {
+    if (!identifier) {
+      throw new BadRequestException('Student identifier is required.');
+    }
+
     const profile = await this.prisma.studentProfile.findFirst({
       where: {
         OR: [{ id: identifier }, { userId: identifier }],
       },
     });
 
-    return profile ? profile.id : identifier;
+    if (profile) return profile.id;
+
+    // Check if identifier belongs to a User, and if so, auto-find or provision student profile
+    const user = await this.prisma.user.findUnique({
+      where: { id: identifier },
+      include: { studentProfile: true },
+    });
+
+    if (user?.studentProfile) {
+      return user.studentProfile.id;
+    }
+
+    if (user) {
+      const authorized = await this.prisma.authorizedStudent.findFirst({
+        where: { email: user.email },
+      });
+      if (authorized) {
+        try {
+          const created = await this.prisma.studentProfile.create({
+            data: {
+              userId: user.id,
+              authorizedStudentId: authorized.id,
+            },
+          });
+          return created.id;
+        } catch {
+          const retry = await this.prisma.studentProfile.findFirst({
+            where: { userId: user.id },
+          });
+          if (retry) return retry.id;
+        }
+      }
+    }
+
+    return identifier;
   }
 
   /**
@@ -467,6 +505,8 @@ export class CodingService {
    * Supports filtering by problem ID or slug.
    */
   async getStudentSubmissions(rawStudentId: string, problemIdOrSlug?: string) {
+    if (!rawStudentId) return [];
+
     const studentProfile = await this.prisma.studentProfile.findFirst({
       where: {
         OR: [{ id: rawStudentId }, { userId: rawStudentId }],
@@ -519,6 +559,10 @@ export class CodingService {
    * Enforces strict ownership checks to ensure a student can only view their own submissions.
    */
   async getSubmissionById(rawStudentId: string, submissionId: string) {
+    if (!rawStudentId) {
+      throw new ForbiddenException('Unauthorized to view this submission.');
+    }
+
     const studentProfile = await this.prisma.studentProfile.findFirst({
       where: {
         OR: [{ id: rawStudentId }, { userId: rawStudentId }],
@@ -730,9 +774,9 @@ CRITICAL RULES FOR AUTOMATED CODE JUDGE:
 }`;
 
     const models = [
-      'openai/gpt-oss-120b',
-      'openai/gpt-oss-20b',
-      'qwen/qwen3.8-27b',
+      'llama-3.3-70b-versatile',
+      'llama-3.1-8b-instant',
+      'mixtral-8x7b-32768',
     ];
 
     for (const model of models) {

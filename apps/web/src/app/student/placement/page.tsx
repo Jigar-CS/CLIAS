@@ -147,7 +147,7 @@ export default function StudentPlacementPage() {
           {/* Gleam-Spark Page Intro */}
           <div className="page-intro">
             <div>
-              <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-[9px] uppercase mb-2">
+              <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-xs font-semibold uppercase mb-2">
                 LEARNING INTELLIGENCE / CAREER READINESS / 01
               </p>
               <h1 className="page-title font-display text-5xl sm:text-6xl text-[#1a2540] dark:text-[#f5f0e8] uppercase tracking-tight">
@@ -155,11 +155,11 @@ export default function StudentPlacementPage() {
               </h1>
             </div>
             <div className="readiness">
-              <p className="mono text-[8px] uppercase tracking-wider text-[#6b7fa3]">BENCHMARK SCORE</p>
+              <p className="mono text-xs font-semibold uppercase tracking-wider text-[#6b7fa3]">BENCHMARK SCORE</p>
               <strong className="font-display text-4xl text-[#1a2540] dark:text-[#f5f0e8]">
                 {analysis?.readinessScore !== undefined && analysis?.readinessScore !== null ? Math.round(analysis.readinessScore) : 0}<span className="font-mono text-sm text-[#e05033]">%</span>
               </strong>
-              <p className="mono text-[8px] text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">TIER-1 HIRING BAR</p>
+              <p className="mono text-xs font-semibold text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">TIER-1 HIRING BAR</p>
             </div>
           </div>
 
@@ -191,7 +191,7 @@ export default function StudentPlacementPage() {
           <div className="priority-band">
             <div className="priority-symbol">!</div>
             <div className="priority-content">
-              <p className="mono text-[#e05033] text-[9px]">CAMPUS RECRUITMENT BENCHMARK</p>
+              <p className="mono text-[#e05033] text-xs font-bold">CAMPUS RECRUITMENT BENCHMARK</p>
               <h2 className="font-display text-xl uppercase tracking-wide">COGNITIVE SKILL GAP ANALYSIS</h2>
               <p className="text-xs text-[#8ba0c0] font-sans">
                 Real-time benchmarking comparing your course knowledge against campus placement technical rounds.
@@ -203,7 +203,7 @@ export default function StudentPlacementPage() {
                   key={r.roleType}
                   onClick={() => handleRoleChange(r.roleType)}
                   disabled={updatingRole}
-                  className={`text-[10px] font-mono px-3 py-1.5 uppercase transition ${
+                  className={`text-xs font-mono font-bold px-3 py-1.5 uppercase transition ${
                     selectedRole === r.roleType
                       ? 'bg-[#e05033] text-white'
                       : 'bg-[#1a2540] text-[#8ba0c0] hover:text-white border border-[rgba(106,144,197,0.3)]'
@@ -300,7 +300,7 @@ export default function StudentPlacementPage() {
                     </span>
                     <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Tier-1 & Campus Placement Norms</p>
                   </div>
-                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 text-[11px] text-slate-600 dark:text-slate-300 line-clamp-1">
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 text-xs text-slate-600 dark:text-slate-300 line-clamp-1">
                     Partners: {activeBenchmark?.hiringPartners || 'Tier-1 Recruiters'}
                   </div>
                 </div>
@@ -384,7 +384,7 @@ export default function StudentPlacementPage() {
                             </td>
                             <td className="py-3.5 px-3">
                               <span
-                                className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                                className={`px-2 py-0.5 rounded-full text-xs font-bold border ${
                                   item.priority === 'HIGH'
                                     ? 'bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/30'
                                     : item.priority === 'MEDIUM'
@@ -419,12 +419,12 @@ export default function StudentPlacementPage() {
                             <td className="py-3.5 px-3 text-slate-600 dark:text-slate-300">{item.required}%</td>
                             <td className="py-3.5 px-3 text-emerald-600 dark:text-emerald-400 font-bold">Passed</td>
                             <td className="py-3.5 px-3">
-                              <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30">
+                              <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30">
                                 Verified
                               </span>
                             </td>
                             <td className="py-3.5 px-3 text-right">
-                              <span className="text-[11px] text-slate-500 dark:text-slate-400 font-normal">Hiring Ready</span>
+                              <span className="text-xs text-slate-500 dark:text-slate-400 font-normal">Hiring Ready</span>
                             </td>
                           </tr>
                         ))}
@@ -497,7 +497,7 @@ export default function StudentPlacementPage() {
                       >
                         <div>
                           <div className="flex items-center justify-between mb-2">
-                            <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30">
+                            <span className="text-xs font-bold px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-500/30">
                               {mock.companyProfile}
                             </span>
                             <span className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">

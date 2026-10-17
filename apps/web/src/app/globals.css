@@ -703,8 +703,16 @@ html.dark .bg-red-50 {
   color: var(--primary);
 }
 
+.readiness .mono {
+  font-size: 12px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--foreground);
+}
+
 .readiness .blue {
-  font-size: 8px;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .metrics {
@@ -727,10 +735,11 @@ html.dark .bg-red-50 {
 .metric-top {
   display: flex;
   justify-content: space-between;
-  font-size: 8px;
+  font-size: 13px;
+  font-weight: 700;
   letter-spacing: .5px;
   color: var(--secondary);
-  margin-bottom: 25px;
+  margin-bottom: 22px;
 }
 
 .metric-top span:last-child {
@@ -745,7 +754,8 @@ html.dark .bg-red-50 {
 }
 
 .metric-label {
-  font-size: 8px;
+  font-size: 12px;
+  font-weight: 700;
   color: var(--secondary);
   letter-spacing: 1px;
 }
@@ -795,7 +805,8 @@ html.dark .priority-band {
 
 .priority-content .mono {
   color: var(--primary);
-  font-size: 8px;
+  font-size: 12px;
+  font-weight: 700;
   margin-bottom: 8px;
 }
 
@@ -808,7 +819,7 @@ html.dark .priority-band {
 
 .priority-content p {
   color: var(--muted-foreground);
-  font-size: 12px;
+  font-size: 13px;
   margin-top: 6px;
 }
 
@@ -835,9 +846,10 @@ html.dark .priority-band {
 }
 
 .panel-head .mono {
-  font-size: 8px;
+  font-size: 12px;
+  font-weight: 700;
   color: var(--secondary);
-  margin-bottom: 9px;
+  margin-bottom: 7px;
   letter-spacing: 1px;
 }
 
@@ -848,7 +860,8 @@ html.dark .priority-band {
 }
 
 .panel-head .panel-meta {
-  font-size: 8px;
+  font-size: 12px;
+  font-weight: 700;
   letter-spacing: .5px;
 }
 
@@ -857,7 +870,8 @@ html.dark .priority-band {
   background: transparent;
   padding: 7px 10px;
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: 11px;
+  font-weight: 600;
   text-transform: uppercase;
   color: var(--foreground);
 }
@@ -878,13 +892,15 @@ html.dark .priority-band {
 .topic-info {
   display: flex;
   justify-content: space-between;
-  font-size: 11px;
+  font-size: 13px;
+  font-weight: 600;
   margin-bottom: 10px;
 }
 
 .topic-info strong {
-  font-size: 11px;
+  font-size: 13px;
   font-family: var(--font-mono);
+  font-weight: 700;
 }
 
 .topic-bar {
@@ -901,7 +917,8 @@ html.dark .priority-band {
 .topic-status {
   text-align: right;
   font-family: var(--font-mono);
-  font-size: 8px;
+  font-size: 11px;
+  font-weight: 700;
   color: var(--primary);
   margin-top: 5px;
   text-transform: uppercase;
@@ -912,27 +929,31 @@ html.dark .priority-band {
   padding: 25px 15px 30px;
   border-spacing: 4px;
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 12px;
 }
 
 .skill-table th {
-  font-size: 7px;
-  font-weight: 600;
-  padding-bottom: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  padding-bottom: 8px;
   color: var(--muted-foreground);
   text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .skill-table td {
   text-align: center;
-  height: 35px;
+  height: 38px;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .skill-table td:first-child {
   background: none;
   text-align: left;
-  width: 90px;
-  font-weight: 600;
+  width: 120px;
+  font-weight: 700;
+  font-size: 12px;
 }
 
 .heat-strong { background: var(--heat-strong); color: var(--background); }
@@ -966,21 +987,23 @@ html.dark .priority-band {
 
 .recommendation .mono {
   color: var(--primary);
-  font-size: 9px;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .recommendation-text {
   text-align: left;
   flex: 1;
-  font-size: 11px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
 }
 
 .recommendation-text small {
   display: block;
   color: var(--secondary);
   font-family: var(--font-mono);
-  font-size: 7px;
+  font-size: 11px;
+  font-weight: 600;
   margin-top: 6px;
   text-transform: uppercase;
 }
@@ -1029,7 +1052,8 @@ html.dark .course {
 }
 
 .course .mono {
-  font-size: 8px;
+  font-size: 12px;
+  font-weight: 600;
   color: var(--secondary);
   letter-spacing: 1.2px;
   margin-bottom: 8px;
@@ -1121,7 +1145,8 @@ html.dark .answer {
 
 .data-table th {
   text-align: left;
-  font: 9px var(--font-mono);
+  font: 11px/1.4 var(--font-mono);
+  font-weight: 700;
   color: var(--secondary);
   padding: 18px;
   border-bottom: 1px solid var(--strong-border);
@@ -1157,7 +1182,8 @@ html.dark .answer {
 }
 
 .field-label {
-  font: 9px var(--font-mono);
+  font: 12px/1.4 var(--font-mono);
+  font-weight: 600;
   display: grid;
   gap: 10px;
   color: var(--secondary);

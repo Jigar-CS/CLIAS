@@ -557,7 +557,7 @@ export default function PracticePage() {
           {/* Gleam-Spark Page Intro */}
           <div className="page-intro">
             <div>
-              <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-[9px] uppercase mb-2">
+              <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-xs font-semibold uppercase mb-2">
                 LEARNING INTELLIGENCE / PRACTICE ARENA / 01
               </p>
               <h1 className="page-title font-display text-5xl sm:text-6xl text-[#1a2540] dark:text-[#f5f0e8] uppercase tracking-tight">
@@ -565,11 +565,11 @@ export default function PracticePage() {
               </h1>
             </div>
             <div className="readiness">
-              <p className="mono text-[8px] uppercase tracking-wider text-[#6b7fa3]">ADAPTIVE ENGINE</p>
+              <p className="mono text-xs font-semibold uppercase tracking-wider text-[#6b7fa3]">ADAPTIVE ENGINE</p>
               <strong className="font-display text-4xl text-[#1a2540] dark:text-[#f5f0e8]">
                 IRT<span className="font-mono text-sm text-[#e05033]">+BKT</span>
               </strong>
-              <p className="mono text-[8px] text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">REAL-TIME CALIBRATION</p>
+              <p className="mono text-xs font-semibold text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">REAL-TIME CALIBRATION</p>
             </div>
           </div>
 
@@ -601,9 +601,9 @@ export default function PracticePage() {
           <div className="priority-band">
             <div className="priority-symbol">!</div>
             <div className="priority-content">
-              <p className="mono text-[#e05033] text-[9px]">RECOMMENDED PRACTICE FOCUS / ADAPTIVE</p>
+              <p className="mono text-[#e05033] text-xs font-bold">RECOMMENDED PRACTICE FOCUS / ADAPTIVE</p>
               <h2 className="font-display text-xl uppercase tracking-wide">REINFORCE TARGETED WEAK CONCEPTS</h2>
-              <p className="text-xs text-[#8ba0c0] font-sans">
+              <p className="text-xs sm:text-sm text-[#8ba0c0] font-sans">
                 Personalized conceptual drills dynamically calibrate difficulty after every attempt using Item Response Theory.
               </p>
             </div>
@@ -626,7 +626,7 @@ export default function PracticePage() {
               <div className="flex items-center justify-between pb-3 border-b border-[var(--border)]">
                 <Link
                   href={`/student/learning-path?courseCode=${selectedCourse?.code || 'CS301'}`}
-                  className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-[#4a6fa5] dark:text-[#6a90c5] hover:text-[#e05033] transition"
+                  className="inline-flex items-center gap-1.5 font-mono text-xs font-semibold uppercase tracking-wider text-[#4a6fa5] dark:text-[#6a90c5] hover:text-[#e05033] transition"
                 >
                   <ArrowLeft className="w-3.5 h-3.5" />
                   <span>Return to Learning Path</span>
@@ -673,11 +673,11 @@ export default function PracticePage() {
                           >
                             <div>
                               <div className="font-semibold text-slate-900 dark:text-white">{prereq.prerequisiteName}</div>
-                              <div className="text-[10px] text-slate-500">
+                              <div className="text-xs text-slate-500">
                                 Current: <strong className="text-amber-600">{prereq.currentMastery}%</strong> / Req: {prereq.requiredMastery}%
                               </div>
                             </div>
-                            <span className="text-[10px] font-bold text-rose-500 bg-rose-500/10 px-2 py-0.5 rounded">
+                            <span className="text-xs font-bold text-rose-500 bg-rose-500/10 px-2 py-0.5 rounded">
                               -{prereq.deficit}% Gap
                             </span>
                           </div>
@@ -723,7 +723,7 @@ export default function PracticePage() {
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-indigo-600 text-white uppercase tracking-wider">
+                        <span className="px-2 py-0.5 rounded-md text-xs font-extrabold bg-indigo-600 text-white uppercase tracking-wider">
                           Learning Path Drill
                         </span>
                         <h4 className="text-xs font-bold text-indigo-950 dark:text-indigo-200">
@@ -755,7 +755,7 @@ export default function PracticePage() {
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="px-2 py-0.5 rounded-md text-[10px] font-extrabold bg-blue-600 text-white uppercase tracking-wider">
+                        <span className="px-2 py-0.5 rounded-md text-xs font-extrabold bg-blue-600 text-white uppercase tracking-wider">
                           Faculty Assigned
                         </span>
                         <h4 className="text-xs font-bold text-blue-950 dark:text-blue-200">
@@ -778,7 +778,7 @@ export default function PracticePage() {
               )}
 
               <div>
-                <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-[9px] uppercase mb-1">
+                <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-xs font-semibold uppercase mb-1">
                   CONFIGURATION / ENGINE MATRIX
                 </p>
                 <h2 className="font-display text-2xl uppercase tracking-wide text-[#1a2540] dark:text-white flex items-center gap-2">
@@ -803,7 +803,7 @@ export default function PracticePage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {/* Course Selector */}
                 <div>
-                  <label className="block font-mono text-[9px] text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider mb-2">
+                  <label className="block font-mono text-xs text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider mb-2 font-bold">
                     Select Course
                   </label>
                   <select
@@ -817,7 +817,7 @@ export default function PracticePage() {
                         setSelectedTopicId('');
                       }
                     }}
-                    className="w-full p-3 font-mono text-xs bg-[var(--background)] border border-[var(--border)] focus:outline-none focus:border-[#e05033] text-[#1a2540] dark:text-[#e8edf5]"
+                    className="w-full p-3 font-mono text-xs sm:text-sm bg-[var(--background)] border border-[var(--border)] focus:outline-none focus:border-[#e05033] text-[#1a2540] dark:text-[#e8edf5]"
                   >
                     {courses.map((course) => (
                       <option key={course.id} value={course.id} className="bg-[var(--background)] text-[#1a2540] dark:text-[#e8edf5]">
@@ -830,13 +830,13 @@ export default function PracticePage() {
                 {/* Topic Selector - Clean, ONLY Topic Name + Custom Topic Mode */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <label className="block font-mono text-[9px] text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">
+                    <label className="block font-mono text-xs text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider font-bold">
                       Target Topic
                     </label>
                     <button
                       type="button"
                       onClick={() => setIsCustomTopicMode(!isCustomTopicMode)}
-                      className="font-mono text-[9px] text-[#e05033] hover:underline flex items-center gap-1 uppercase"
+                      className="font-mono text-xs text-[#e05033] hover:underline flex items-center gap-1 uppercase font-semibold"
                     >
                       <Sparkles className="w-2.5 h-2.5" />
                       {isCustomTopicMode ? 'Curriculum List' : 'Custom Topic'}
@@ -848,13 +848,13 @@ export default function PracticePage() {
                       placeholder="e.g. Red-Black Trees, Dynamic Programming..."
                       value={customTopicInput}
                       onChange={(e) => setCustomTopicInput(e.target.value)}
-                      className="w-full p-3 font-mono text-xs bg-[var(--background)] border border-[var(--border)] focus:outline-none focus:border-[#e05033] text-[#1a2540] dark:text-[#e8edf5]"
+                      className="w-full p-3 font-mono text-xs sm:text-sm bg-[var(--background)] border border-[var(--border)] focus:outline-none focus:border-[#e05033] text-[#1a2540] dark:text-[#e8edf5]"
                     />
                   ) : (
                     <select
                       value={selectedTopicId}
                       onChange={(e) => setSelectedTopicId(e.target.value)}
-                      className="w-full p-3 font-mono text-xs bg-[var(--background)] border border-[var(--border)] focus:outline-none focus:border-[#e05033] text-[#1a2540] dark:text-[#e8edf5]"
+                      className="w-full p-3 font-mono text-xs sm:text-sm bg-[var(--background)] border border-[var(--border)] focus:outline-none focus:border-[#e05033] text-[#1a2540] dark:text-[#e8edf5]"
                     >
                       <option value="" className="bg-[var(--background)] text-[#1a2540] dark:text-[#e8edf5]">All Topics (Curriculum-wide)</option>
                       {selectedCourse?.topics?.map((topic: any) => (
@@ -868,13 +868,13 @@ export default function PracticePage() {
 
                 {/* Question Count Selector */}
                 <div>
-                  <label className="block font-mono text-[9px] text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider mb-2">
+                  <label className="block font-mono text-xs text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider mb-2 font-bold">
                     Questions To Practice
                   </label>
                   <select
                     value={targetQuestionCount}
                     onChange={(e) => setTargetQuestionCount(Number(e.target.value))}
-                    className="w-full p-3 font-mono text-xs bg-[var(--background)] border border-[var(--border)] focus:outline-none focus:border-[#e05033] text-[#1a2540] dark:text-[#e8edf5]"
+                    className="w-full p-3 font-mono text-xs sm:text-sm bg-[var(--background)] border border-[var(--border)] focus:outline-none focus:border-[#e05033] text-[#1a2540] dark:text-[#e8edf5]"
                   >
                     <option value={5} className="bg-[var(--background)] text-[#1a2540] dark:text-[#e8edf5]">5 Questions (Sprint Drill)</option>
                     <option value={10} className="bg-[var(--background)] text-[#1a2540] dark:text-[#e8edf5]">10 Questions (Standard Practice)</option>
@@ -886,13 +886,13 @@ export default function PracticePage() {
                 {/* Difficulty Selector with Manual Calibration Option */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <label className="block font-mono text-[9px] text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">
+                    <label className="block font-mono text-xs text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider font-bold">
                       Difficulty Level
                     </label>
                     <button
                       type="button"
                       onClick={() => setAdaptiveMode(!adaptiveMode)}
-                      className="font-mono text-[9px] text-[#e05033] hover:underline uppercase"
+                      className="font-mono text-xs text-[#e05033] hover:underline uppercase font-semibold"
                     >
                       {adaptiveMode ? 'Manual Tier' : 'Auto-IRT'}
                     </button>
@@ -903,18 +903,18 @@ export default function PracticePage() {
                       setSelectedDifficulty(e.target.value);
                       setAdaptiveMode(false);
                     }}
-                    className="w-full p-3 font-mono text-xs bg-[var(--background)] border border-[var(--border)] focus:outline-none focus:border-[#e05033] text-[#1a2540] dark:text-[#e8edf5]"
+                    className="w-full p-3 font-mono text-xs sm:text-sm bg-[var(--background)] border border-[var(--border)] focus:outline-none focus:border-[#e05033] text-[#1a2540] dark:text-[#e8edf5]"
                   >
                     <option value="EASY" className="bg-[var(--background)] text-[#1a2540] dark:text-[#e8edf5]">Easy (Level 1: Scaffolding)</option>
                     <option value="MEDIUM" className="bg-[var(--background)] text-[#1a2540] dark:text-[#e8edf5]">Medium (Level 2: Analytical)</option>
                     <option value="HARD" className="bg-[var(--background)] text-[#1a2540] dark:text-[#e8edf5]">Hard (Level 3: Edge-Case Synthesis)</option>
                   </select>
                   {!adaptiveMode ? (
-                    <span className="font-mono text-[9px] text-amber-600 dark:text-amber-400 font-semibold block mt-1 uppercase">
+                    <span className="font-mono text-xs text-amber-600 dark:text-amber-400 font-semibold block mt-1 uppercase">
                       Manual: Strictly targeting {selectedDifficulty} tier
                     </span>
                   ) : (
-                    <span className="font-mono text-[9px] text-[#4a6fa5] dark:text-[#6a90c5] font-semibold block mt-1 uppercase">
+                    <span className="font-mono text-xs text-[#4a6fa5] dark:text-[#6a90c5] font-semibold block mt-1 uppercase">
                       Adaptive Calibration: Calibrated live to your mastery
                     </span>
                   )}
@@ -1037,7 +1037,7 @@ export default function PracticePage() {
                       <div className="text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-1">
                         {sessionScore.total > 0 ? Math.round((sessionScore.correct / sessionScore.total) * 100) : 0}%
                       </div>
-                      <div className="text-[10px] text-slate-500 mt-0.5">
+                      <div className="text-xs text-slate-500 mt-0.5">
                         {sessionScore.correct} of {sessionScore.total} solved correctly
                       </div>
                     </div>
@@ -1047,7 +1047,7 @@ export default function PracticePage() {
                       <div className="text-lg font-black text-slate-900 dark:text-white mt-1">
                         {!adaptiveMode ? selectedDifficulty : 'Adaptive IRT'}
                       </div>
-                      <div className="text-[10px] text-slate-500 mt-0.5">
+                      <div className="text-xs text-slate-500 mt-0.5">
                         {!adaptiveMode ? 'User-Calibrated Challenge' : 'Dynamic Ability Matching'}
                       </div>
                     </div>
@@ -1057,7 +1057,7 @@ export default function PracticePage() {
                       <div className="text-2xl font-black text-slate-900 dark:text-white mt-1 font-mono">
                         {sessionScore.total > 0 ? Math.round(sessionScore.totalTime / sessionScore.total) : 0}s
                       </div>
-                      <div className="text-[10px] text-slate-500 mt-0.5">per problem</div>
+                      <div className="text-xs text-slate-500 mt-0.5">per problem</div>
                     </div>
                   </div>
 
@@ -1142,7 +1142,7 @@ export default function PracticePage() {
                                   {attempt.topicName}
                                 </span>
                                 <span
-                                  className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${attempt.difficulty === 'EASY'
+                                  className={`text-xs font-bold px-2 py-0.5 rounded-md border ${attempt.difficulty === 'EASY'
                                       ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30'
                                       : attempt.difficulty === 'MEDIUM'
                                         ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30'
@@ -1154,11 +1154,11 @@ export default function PracticePage() {
                               </div>
 
                               <div className="flex items-center gap-2 text-xs">
-                                <span className="text-slate-400 font-mono text-[11px] flex items-center gap-1">
+                                <span className="text-slate-400 font-mono text-xs flex items-center gap-1">
                                   <Clock className="w-3 h-3" /> {attempt.timeTakenSeconds}s
                                 </span>
                                 <span
-                                  className={`px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase ${attempt.isCorrect
+                                  className={`px-2 py-0.5 rounded-md text-xs font-extrabold uppercase ${attempt.isCorrect
                                       ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300'
                                       : 'bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300'
                                     }`}
@@ -1188,7 +1188,7 @@ export default function PracticePage() {
                                   <XCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5" />
                                 )}
                                 <div>
-                                  <span className="block text-[10px] font-extrabold uppercase tracking-wider opacity-75 mb-0.5">
+                                  <span className="block text-xs font-extrabold uppercase tracking-wider opacity-75 mb-0.5">
                                     Your Answer:
                                   </span>
                                   <span className="font-medium">{attempt.selectedOptionText}</span>
@@ -1199,7 +1199,7 @@ export default function PracticePage() {
                               <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/50 text-emerald-950 dark:text-emerald-200 flex items-start gap-2.5">
                                 <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                                 <div>
-                                  <span className="block text-[10px] font-extrabold uppercase tracking-wider opacity-75 mb-0.5">
+                                  <span className="block text-xs font-extrabold uppercase tracking-wider opacity-75 mb-0.5">
                                     Correct Solution:
                                   </span>
                                   <span className="font-semibold">{attempt.correctOptionText}</span>
@@ -1484,7 +1484,7 @@ export default function PracticePage() {
             <form onSubmit={handleSubmitDispute} className="p-5 space-y-4 overflow-y-auto">
               {/* Question Preview */}
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1">
                   Question Under Review
                 </span>
                 <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 line-clamp-3">
@@ -1523,7 +1523,7 @@ export default function PracticePage() {
                   className="w-full p-3 text-xs bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 resize-none font-normal"
                   required
                 />
-                <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   Be specific so faculty can evaluate your argument fairly.
                 </p>
               </div>

@@ -50,24 +50,24 @@ export function TopicMasteryCard({
   }
 
   return (
-    <div className="bg-[#faf7f2] dark:bg-[#121b30] p-4 border border-[rgba(74,111,165,0.25)] dark:border-[rgba(106,144,197,0.2)] shadow-sm hover:shadow-md flex flex-col justify-between transition-all duration-200" style={{borderRadius:0}}>
+    <div className="bg-[#faf7f2] dark:bg-[#121b30] p-4 border border-[rgba(74,111,165,0.25)] dark:border-[rgba(106,144,197,0.2)] shadow-xs hover:shadow-sm flex flex-col justify-between transition-all duration-200" style={{borderRadius:0}}>
       <div>
         <div className="flex items-start justify-between gap-2">
           <div>
-            <span className="font-mono text-[10px] font-bold tracking-widest text-slate-400 dark:text-slate-500 uppercase">
+            <span className="font-mono text-xs font-bold tracking-wider text-[#4a6fa5] dark:text-[#6a90c5] uppercase">
               {courseCode}
             </span>
-            <h4 className="text-sm font-bold text-slate-900 dark:text-white leading-tight mt-0.5">{topicName}</h4>
+            <h4 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-tight mt-0.5">{topicName}</h4>
           </div>
           <div className="flex flex-col items-end gap-1">
             <span
-              className={`font-mono text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 border ${statusBadge.color}`}
+              className={`font-mono text-xs font-bold uppercase tracking-wider px-2.5 py-0.5 border ${statusBadge.color}`}
               style={{borderRadius:0}}
             >
               {statusBadge.label}
             </span>
             {retentionStatus && (retentionStatus === 'DECAYING' || retentionStatus === 'CRITICAL_DECAY') && (
-              <span className="font-mono text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/30">
+              <span className="font-mono text-xs font-bold uppercase px-2 py-0.5 bg-amber-50 text-amber-800 border border-amber-200 dark:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/30">
                 Decay Alert
               </span>
             )}
@@ -75,12 +75,12 @@ export function TopicMasteryCard({
         </div>
 
         <div className="mt-3">
-          <div className="flex items-center justify-between text-xs mb-1">
-            <span className="font-mono text-[11px] uppercase tracking-wider text-slate-500 dark:text-slate-400">Mastery Level</span>
+          <div className="flex items-center justify-between text-xs sm:text-sm mb-1.5">
+            <span className="font-mono text-xs uppercase tracking-wider text-slate-600 dark:text-slate-400 font-medium">Mastery Level</span>
             <div className="flex items-center gap-1.5">
               <span className="font-mono font-bold text-slate-900 dark:text-white">{score}%</span>
               {decayedMastery !== undefined && effectiveScore < score && (
-                <span className="font-mono text-[10px] text-amber-600 dark:text-amber-400 font-semibold" title="Decayed effective retention score">
+                <span className="font-mono text-xs text-amber-600 dark:text-amber-400 font-semibold" title="Decayed effective retention score">
                   ({effectiveScore}%)
                 </span>
               )}
@@ -95,12 +95,12 @@ export function TopicMasteryCard({
         </div>
       </div>
 
-      <div className="mt-3 pt-3 border-t border-[rgba(74,111,165,0.18)] dark:border-[rgba(106,144,197,0.15)] flex items-center justify-between text-[11px] text-[#6b7fa3] dark:text-[#8ba0c0]">
-        <span className="font-mono text-[10px] uppercase tracking-wider">{attemptCount ? `${attemptCount} attempts` : 'No attempts'}</span>
+      <div className="mt-3 pt-3 border-t border-[rgba(74,111,165,0.18)] dark:border-[rgba(106,144,197,0.15)] flex items-center justify-between text-xs text-slate-600 dark:text-slate-400">
+        <span className="font-mono text-xs uppercase tracking-wider font-medium">{attemptCount ? `${attemptCount} attempts` : 'No attempts'}</span>
         {onPracticeClick && (
           <button
             onClick={onPracticeClick}
-            className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#e05033] dark:text-[#e8604a] hover:text-[#c8432b] dark:hover:text-[#d0503a] transition flex items-center gap-1 cursor-pointer"
+            className="font-mono text-xs font-bold uppercase tracking-wider text-[#e05033] dark:text-[#e8604a] hover:text-[#c8432b] dark:hover:text-[#d0503a] transition flex items-center gap-1 cursor-pointer"
           >
             Practice Topic →
           </button>

@@ -199,7 +199,7 @@ export default function CodingProblemsPage() {
           {/* Gleam-Spark Page Intro */}
           <div className="page-intro">
             <div>
-              <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-[9px] uppercase mb-2">
+              <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-xs font-semibold uppercase mb-2">
                 LEARNING INTELLIGENCE / CODING ARENA / 01
               </p>
               <h1 className="page-title font-display text-5xl sm:text-6xl text-[#1a2540] dark:text-[#f5f0e8] uppercase tracking-tight">
@@ -207,11 +207,11 @@ export default function CodingProblemsPage() {
               </h1>
             </div>
             <div className="readiness">
-              <p className="mono text-[8px] uppercase tracking-wider text-[#6b7fa3]">ACCEPTED SOLUTIONS</p>
+              <p className="mono text-xs font-semibold uppercase tracking-wider text-[#6b7fa3]">ACCEPTED SOLUTIONS</p>
               <strong className="font-display text-4xl text-[#1a2540] dark:text-[#f5f0e8]">
                 {submissions.filter((s) => s.status === 'ACCEPTED').length}<span className="font-mono text-sm text-[#e05033]">/{problems.length}</span>
               </strong>
-              <p className="mono text-[8px] text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">SANDBOXED RUNTIME</p>
+              <p className="mono text-xs font-semibold text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">SANDBOXED RUNTIME</p>
             </div>
           </div>
 
@@ -243,7 +243,7 @@ export default function CodingProblemsPage() {
           <div className="priority-band">
             <div className="priority-symbol">!</div>
             <div className="priority-content">
-              <p className="mono text-[#e05033] text-[9px]">DSA SPRINT / REAL SANDBOX EXECUTION</p>
+              <p className="mono text-[#e05033] text-xs font-bold">DSA SPRINT / REAL SANDBOX EXECUTION</p>
               <h2 className="font-display text-xl uppercase tracking-wide">ALGORITHMIC TEST EVALUATION</h2>
               <p className="text-xs text-[#8ba0c0] font-sans">
                 Curated algorithmic problems evaluated against hidden boundary cases, time complexity limits, and memory constraints.
@@ -399,7 +399,7 @@ export default function CodingProblemsPage() {
                             </Link>
 
                             <span
-                              className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                              className={`px-2 py-0.5 rounded text-xs font-bold border ${
                                 isAccepted
                                   ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30'
                                   : sub.status === 'COMPILATION_ERROR'
@@ -410,7 +410,7 @@ export default function CodingProblemsPage() {
                               {sub.status.replace(/_/g, ' ')}
                             </span>
 
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-50 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30">
+                            <span className="px-2 py-0.5 rounded text-xs font-bold bg-blue-50 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-500/30">
                               Score: {sub.score ?? 0}%
                             </span>
                           </div>
@@ -422,7 +422,7 @@ export default function CodingProblemsPage() {
                             <span>•</span>
                             <span>{sub.executionTimeMs}ms</span>
                             <span>•</span>
-                            <span className="font-sans text-[11px]">
+                            <span className="font-sans text-xs">
                               {new Date(sub.createdAt).toLocaleDateString()} {new Date(sub.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </span>
                           </div>
@@ -505,12 +505,12 @@ export default function CodingProblemsPage() {
                               {problem.title}
                             </Link>
                             {isSolved && (
-                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30">
+                              <span className="px-2 py-0.5 rounded text-xs font-bold bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30">
                                 Solved
                               </span>
                             )}
                             <span
-                              className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                              className={`px-2 py-0.5 rounded text-xs font-bold border ${
                                 problem.difficulty === 'EASY'
                                   ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30'
                                   : problem.difficulty === 'MEDIUM'
@@ -527,7 +527,7 @@ export default function CodingProblemsPage() {
                               {problem.tags.split(',').map((tag, idx) => (
                                 <span
                                   key={idx}
-                                  className="text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700/60"
+                                  className="text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700/60"
                                 >
                                   {tag.trim()}
                                 </span>
@@ -539,7 +539,7 @@ export default function CodingProblemsPage() {
                         <div className="flex items-center gap-4">
                           <div className="text-right text-xs text-slate-500 dark:text-slate-400 hidden sm:block">
                             <div>{problem._count?.testCases || 3} Testcases</div>
-                            <div className="text-[11px] text-slate-400">
+                            <div className="text-xs text-slate-400">
                               {problem._count?.submissions || 1} Submissions
                             </div>
                           </div>
@@ -579,7 +579,7 @@ export default function CodingProblemsPage() {
                       {submissions.length > 0 && (
                         <button
                           onClick={() => setActiveTab('submissions')}
-                          className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                          className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
                         >
                           View All ({submissions.length})
                         </button>
@@ -603,12 +603,12 @@ export default function CodingProblemsPage() {
                               </div>
                               <div className="flex items-center gap-1.5 shrink-0">
                                 {sub.score !== undefined && (
-                                  <span className="text-[10px] font-bold text-blue-600 dark:text-blue-400">
+                                  <span className="text-xs font-bold text-blue-600 dark:text-blue-400">
                                     {sub.score}%
                                   </span>
                                 )}
                                 <span
-                                  className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                                  className={`px-2 py-0.5 rounded text-xs font-bold border ${
                                     sub.status === 'ACCEPTED'
                                       ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30'
                                       : 'bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-500/30'
@@ -619,13 +619,13 @@ export default function CodingProblemsPage() {
                               </div>
                             </div>
 
-                            <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 pt-1 border-t border-slate-200 dark:border-slate-800/80">
+                            <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 pt-1 border-t border-slate-200 dark:border-slate-800/80">
                               <div>
                                 {sub.language} • {sub.executionTimeMs}ms
                               </div>
                               <button
                                 onClick={() => setInspectedSubmission(sub)}
-                                className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                                className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
                               >
                                 <Eye className="w-3 h-3" />
                                 Inspect Code
@@ -655,7 +655,7 @@ export default function CodingProblemsPage() {
                     <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
                       Code is evaluated in isolated sandbox workers with strict memory and time boundaries.
                     </p>
-                    <div className="text-[11px] space-y-1.5 text-slate-700 dark:text-slate-300 pt-2 border-t border-slate-200 dark:border-slate-800">
+                    <div className="text-xs space-y-1.5 text-slate-700 dark:text-slate-300 pt-2 border-t border-slate-200 dark:border-slate-800">
                       <div className="flex justify-between">
                         <span className="text-slate-500 dark:text-slate-400">Python:</span>
                         <span className="font-mono text-blue-600 dark:text-blue-300">v3.11 CPython</span>
@@ -775,7 +775,7 @@ export default function CodingProblemsPage() {
                     />
                   </div>
 
-                  <div className="p-3.5 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/40 text-[11px] text-blue-700 dark:text-blue-300 flex items-start gap-2">
+                  <div className="p-3.5 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/40 text-xs text-blue-700 dark:text-blue-300 flex items-start gap-2">
                     <Sparkles className="w-4 h-4 shrink-0 mt-0.5 text-blue-500" />
                     <span>
                       Gemini will synthesize the full problem description, 4-language starter codes (Python, JS, C++, Java), and automated test cases.
@@ -826,7 +826,7 @@ export default function CodingProblemsPage() {
                         {inspectedSubmission.problem?.title || 'Historical Submission Code'}
                       </h3>
                       <span
-                        className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                        className={`px-2 py-0.5 rounded text-xs font-bold border ${
                           inspectedSubmission.status === 'ACCEPTED'
                             ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20'
                             : inspectedSubmission.status === 'COMPILATION_ERROR'
@@ -840,7 +840,7 @@ export default function CodingProblemsPage() {
                         Score: {inspectedSubmission.score ?? 0}%
                       </span>
                     </div>
-                    <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">
+                    <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">
                       Submitted on {new Date(inspectedSubmission.createdAt).toLocaleString()} • {inspectedSubmission.language} • {inspectedSubmission.testCasesPassed ?? 0}/{inspectedSubmission.totalTestCases ?? 0} test cases passed ({inspectedSubmission.executionTimeMs}ms)
                     </p>
                   </div>
@@ -852,7 +852,7 @@ export default function CodingProblemsPage() {
                   </button>
                 </div>
 
-                <div className="p-2.5 rounded-lg bg-blue-950/20 border border-blue-500/20 text-[11px] text-blue-300 flex items-center justify-between">
+                <div className="p-2.5 rounded-lg bg-blue-950/20 border border-blue-500/20 text-xs text-blue-300 flex items-center justify-between">
                   <span>Read-only inspection mode. Exact historical source code as evaluated by the judge.</span>
                   {inspectedSubmission.problem?.slug && (
                     <Link

@@ -187,7 +187,7 @@ export default function StudentLeaderboardPage() {
           {/* Gleam-Spark Page Intro */}
           <div className="page-intro">
             <div>
-              <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-[9px] uppercase mb-2">
+              <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-xs font-semibold uppercase mb-2">
                 LEARNING INTELLIGENCE / LEADERBOARD / 01
               </p>
               <h1 className="page-title font-display text-5xl sm:text-6xl text-[#1a2540] dark:text-[#f5f0e8] uppercase tracking-tight">
@@ -195,11 +195,11 @@ export default function StudentLeaderboardPage() {
               </h1>
             </div>
             <div className="readiness">
-              <p className="mono text-[8px] uppercase tracking-wider text-[#6b7fa3]">YOUR STANDING</p>
+              <p className="mono text-xs font-semibold uppercase tracking-wider text-[#6b7fa3]">YOUR STANDING</p>
               <strong className="font-display text-4xl text-[#1a2540] dark:text-[#f5f0e8]">
                 {standing?.rank ? `#${standing.rank}` : '--'}<span className="font-mono text-sm text-[#e05033]">{standing?.rank ? 'TH' : ''}</span>
               </strong>
-              <p className="mono text-[8px] text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">
+              <p className="mono text-xs font-semibold text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">
                 {standing ? `TOP ${(100 - standing.percentile).toFixed(1)}% IN BATCH` : 'NO PRACTICE DATA YET'}
               </p>
             </div>
@@ -233,9 +233,9 @@ export default function StudentLeaderboardPage() {
           <div className="priority-band">
             <div className="priority-symbol">!</div>
             <div className="priority-content">
-              <p className="mono text-[#e05033] text-[9px]">COMPETITIVE STANDING / CHARUSAT CSPIT</p>
+              <p className="mono text-[#e05033] text-xs font-bold">COMPETITIVE STANDING / CHARUSAT CSPIT</p>
               <h2 className="font-display text-xl uppercase tracking-wide">SEMESTER {metaInfo?.semester || 4} ACADEMIC STANDINGS</h2>
-              <p className="text-xs text-[#8ba0c0] font-sans">
+              <p className="text-xs sm:text-sm text-[#8ba0c0] font-sans">
                 Real-time percentile rankings calculated from assessment performance, adaptive practice drills, and consistency.
               </p>
             </div>
@@ -288,38 +288,38 @@ export default function StudentLeaderboardPage() {
                 {/* Score Breakdown Pills */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-[var(--surface-muted)] p-4 border border-[var(--border)] shrink-0">
                   <div className="text-center p-2">
-                    <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                    <p className="text-xs font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                       Assessment Marks
                     </p>
                     <p className="text-xl font-mono font-black text-amber-600 dark:text-amber-400 mt-1">{standing.assessmentScore}%</p>
-                    <span className="text-[10px] font-mono font-medium text-slate-500 dark:text-slate-400">70% Weight</span>
+                    <span className="text-xs font-mono font-semibold text-slate-600 dark:text-slate-400">70% Weight</span>
                   </div>
 
                   <div className="text-center p-2 border-l border-slate-200 dark:border-white/10">
-                    <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                    <p className="text-xs font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                       Practice Mastery
                     </p>
                     <p className="text-xl font-mono font-black text-blue-600 dark:text-blue-400 mt-1">{standing.practiceScore}%</p>
-                    <span className="text-[10px] font-mono font-medium text-slate-500 dark:text-slate-400">30% Weight</span>
+                    <span className="text-xs font-mono font-semibold text-slate-600 dark:text-slate-400">30% Weight</span>
                   </div>
 
                   <div className="text-center p-2 border-l border-slate-200 dark:border-white/10">
-                    <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                    <p className="text-xs font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                       Accuracy
                     </p>
                     <p className="text-xl font-mono font-black text-emerald-600 dark:text-emerald-400 mt-1">{standing.accuracy}%</p>
-                    <span className="text-[10px] font-mono font-medium text-slate-500 dark:text-slate-400">{standing.questionsCount} Solved</span>
+                    <span className="text-xs font-mono font-semibold text-slate-600 dark:text-slate-400">{standing.questionsCount} Solved</span>
                   </div>
 
                   <div className="text-center p-2 border-l border-slate-200 dark:border-white/10">
-                    <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                    <p className="text-xs font-mono font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                       Active Streak
                     </p>
                     <p className="text-xl font-mono font-black text-rose-600 dark:text-rose-400 mt-1 flex items-center justify-center gap-1">
                       <Flame className="w-4 h-4 fill-rose-500 text-rose-500" />
                       {standing.streakDays}d
                     </p>
-                    <span className="text-[10px] font-mono font-medium text-slate-500 dark:text-slate-400">Daily Goal</span>
+                    <span className="text-xs font-mono font-semibold text-slate-600 dark:text-slate-400">Daily Goal</span>
                   </div>
                 </div>
               </div>
@@ -459,7 +459,7 @@ export default function StudentLeaderboardPage() {
                   <div className="inline-block px-3 py-1 bg-slate-100 dark:bg-slate-800 text-xs font-black text-slate-700 dark:text-slate-300">
                     {podium[1].score} pts
                   </div>
-                  <div className="text-[11px] text-slate-600 dark:text-slate-400 flex justify-center gap-3 pt-1">
+                  <div className="text-xs font-semibold text-slate-600 dark:text-slate-400 flex justify-center gap-3 pt-1">
                     <span>Exam: {podium[1].assessmentScore}%</span>
                     <span>Practice: {podium[1].practiceScore}%</span>
                   </div>
@@ -472,7 +472,7 @@ export default function StudentLeaderboardPage() {
                   <Crown className="w-6 h-6 fill-white" />
                 </div>
                 <div className="pt-4 space-y-2">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-amber-700 dark:text-amber-400">
+                  <span className="text-xs font-black uppercase tracking-widest text-amber-700 dark:text-amber-400">
                     Cohort Champion
                   </span>
                   <div className="w-20 h-20 bg-gradient-to-br from-amber-500 to-amber-600 text-white font-black text-2xl flex items-center justify-center mx-auto shadow-md ring-4 ring-amber-200 dark:ring-amber-950">
@@ -489,7 +489,7 @@ export default function StudentLeaderboardPage() {
                   <div className="inline-block px-4 py-1.5 bg-amber-500 text-white text-xs font-black shadow-md">
                     {podium[0].score} pts
                   </div>
-                  <div className="text-[11px] text-slate-700 dark:text-slate-300 font-semibold flex justify-center gap-3 pt-1">
+                  <div className="text-xs text-slate-700 dark:text-slate-300 font-bold flex justify-center gap-3 pt-1">
                     <span>Exam: {podium[0].assessmentScore}%</span>
                     <span>Practice: {podium[0].practiceScore}%</span>
                   </div>
@@ -516,7 +516,7 @@ export default function StudentLeaderboardPage() {
                   <div className="inline-block px-3 py-1 bg-amber-100 dark:bg-amber-950/60 text-xs font-black text-amber-900 dark:text-amber-300">
                     {podium[2].score} pts
                   </div>
-                  <div className="text-[11px] text-slate-600 dark:text-slate-400 flex justify-center gap-3 pt-1">
+                  <div className="text-xs font-semibold text-slate-600 dark:text-slate-400 flex justify-center gap-3 pt-1">
                     <span>Exam: {podium[2].assessmentScore}%</span>
                     <span>Practice: {podium[2].practiceScore}%</span>
                   </div>
@@ -538,9 +538,9 @@ export default function StudentLeaderboardPage() {
             </div>
 
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
+              <table className="w-full text-left text-xs sm:text-sm">
                 <thead>
-                  <tr className="bg-[var(--surface-muted)] text-slate-600 dark:text-slate-400 border-b border-[var(--border)] font-bold uppercase tracking-wider text-[10px]">
+                  <tr className="bg-[var(--surface-muted)] text-slate-700 dark:text-slate-300 border-b border-[var(--border)] font-mono font-bold uppercase tracking-wider text-xs">
                     <th className="py-3.5 px-4 w-16 text-center">Rank</th>
                     <th className="py-3.5 px-4">Student &amp; Enrollment ID</th>
                     <th className="py-3.5 px-3">Division</th>
@@ -576,22 +576,22 @@ export default function StudentLeaderboardPage() {
                               {student.name.slice(0, 2).toUpperCase()}
                             </div>
                             <div>
-                              <p className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                              <p className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5 text-xs sm:text-sm">
                                 <span>{student.name}</span>
                                 {isMe && (
-                                  <span className="text-[10px] font-mono font-black uppercase px-1.5 py-0.2 bg-[#4a6fa5] text-white">
+                                  <span className="text-xs font-mono font-black uppercase px-2 py-0.5 bg-[#4a6fa5] text-white">
                                     You
                                   </span>
                                 )}
                               </p>
-                              <p className="text-[11px] text-slate-600 dark:text-slate-400 font-mono">
+                              <p className="text-xs text-slate-600 dark:text-slate-400 font-mono font-semibold">
                                 {student.enrollmentNumber}
                               </p>
                             </div>
                           </div>
                         </td>
                         <td className="py-3.5 px-3">
-                          <span className="px-2 py-0.5 text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700">
+                          <span className="px-2.5 py-1 text-xs font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-slate-700">
                             {student.division}
                           </span>
                         </td>
@@ -613,23 +613,23 @@ export default function StudentLeaderboardPage() {
                           )}
                         </td>
                         <td className="py-3.5 px-4 text-right">
-                          <span className="font-mono font-black text-sm text-[#4a6fa5] dark:text-blue-400">
+                          <span className="font-mono font-black text-base text-[#4a6fa5] dark:text-blue-400">
                             {student.score}
                           </span>
                         </td>
                         <td className="py-3.5 px-4 text-right">
-                          <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+                          <span className="font-mono font-bold text-sm text-slate-800 dark:text-slate-200">
                             {student.assessmentScore}%
                           </span>
-                          <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 block">
+                          <span className="text-xs font-mono font-semibold text-slate-600 dark:text-slate-400 block">
                             {student.assessmentsCount} tests
                           </span>
                         </td>
                         <td className="py-3.5 px-4 text-right">
-                          <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+                          <span className="font-mono font-bold text-sm text-slate-800 dark:text-slate-200">
                             {student.practiceScore}%
                           </span>
-                          <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 block">
+                          <span className="text-xs font-mono font-semibold text-slate-600 dark:text-slate-400 block">
                             {student.questionsCount} Qs ({student.accuracy}%)
                           </span>
                         </td>
@@ -638,7 +638,7 @@ export default function StudentLeaderboardPage() {
                             {student.badges.map((b, idx) => (
                               <span
                                 key={idx}
-                                className="px-2 py-0.5 text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
+                                className="px-2.5 py-1 text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700"
                               >
                                 {b}
                               </span>

@@ -210,7 +210,7 @@ export default function StudentLearningPath() {
           {/* Gleam-Spark Page Intro */}
           <div className="page-intro">
             <div>
-              <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-[9px] uppercase mb-2">
+              <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-xs font-semibold uppercase mb-2">
                 LEARNING INTELLIGENCE / CURRICULUM ROADMAP / 01
               </p>
               <h1 className="page-title font-display text-5xl sm:text-6xl text-[#1a2540] dark:text-[#f5f0e8] uppercase tracking-tight">
@@ -218,11 +218,11 @@ export default function StudentLearningPath() {
               </h1>
             </div>
             <div className="readiness">
-              <p className="mono text-[8px] uppercase tracking-wider text-[#6b7fa3]">DAG STATUS</p>
+              <p className="mono text-xs font-semibold uppercase tracking-wider text-[#6b7fa3]">DAG STATUS</p>
               <strong className="font-display text-4xl text-[#1a2540] dark:text-[#f5f0e8]">
                 {graph?.nodes?.filter((n: any) => n.status === 'MASTERED').length || 4}<span className="font-mono text-sm text-[#e05033]">/{graph?.nodes?.length || 8}</span>
               </strong>
-              <p className="mono text-[8px] text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">PREREQUISITES MAPPED</p>
+              <p className="mono text-xs font-semibold text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">PREREQUISITES MAPPED</p>
             </div>
           </div>
 
@@ -254,7 +254,7 @@ export default function StudentLearningPath() {
           <div className="priority-band">
             <div className="priority-symbol">!</div>
             <div className="priority-content">
-              <p className="mono text-[#e05033] text-[9px]">DIRECTED ACYCLIC GRAPH / KNOWLEDGE TOPOLOGY</p>
+              <p className="mono text-[#e05033] text-xs font-bold">DIRECTED ACYCLIC GRAPH / KNOWLEDGE TOPOLOGY</p>
               <h2 className="font-display text-xl uppercase tracking-wide">ADAPTIVE PREREQUISITE SEQUENCING</h2>
               <p className="text-xs text-[#8ba0c0] font-sans">
                 Topic nodes dynamically unlock as prerequisite masteries are verified by Bayesian Knowledge Tracing.
@@ -327,7 +327,7 @@ export default function StudentLearningPath() {
                       / {graph?.nodes.length || 0} Topics
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium mt-2">Prerequisites permanently satisfied</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 font-medium mt-2">Prerequisites permanently satisfied</p>
                 </div>
 
                 <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-xs">
@@ -339,7 +339,7 @@ export default function StudentLearningPath() {
                     {graph?.unlockedTopicsCount || 0}
                     <span className="text-xs text-slate-600 dark:text-slate-400 font-medium ml-1.5">Available for drill</span>
                   </div>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium mt-2">
+                  <p className="text-xs text-slate-600 dark:text-slate-400 font-medium mt-2">
                     {(graph?.nodes.filter((n) => n.status === 'MASTERED').length || 0) > 0
                       ? 'Foundations validated by engine'
                       : 'Foundational topics ready for drill'}
@@ -355,7 +355,7 @@ export default function StudentLearningPath() {
                     {courseDueReviews.length}
                     <span className="text-xs text-slate-600 dark:text-slate-400 font-medium ml-1.5">Topics Due</span>
                   </div>
-                  <p className="text-[11px] text-slate-600 dark:text-slate-400 font-medium mt-2">
+                  <p className="text-xs text-slate-600 dark:text-slate-400 font-medium mt-2">
                     {courseDueReviews.length > 0 ? 'Ebbinghaus retention decay active' : 'Prerequisites & retention healthy'}
                   </p>
                 </div>
@@ -425,7 +425,7 @@ export default function StudentLearningPath() {
                                     <strong className="text-slate-800 dark:text-slate-200">{Math.round(node.decayedMastery)}%</strong>
                                   </span>
                                   <span>
-                                    BKT <span className="font-mono text-[10px]">P(L)</span>:{' '}
+                                    BKT <span className="font-mono text-xs font-semibold">P(L)</span>:{' '}
                                     <strong className="text-indigo-600 dark:text-indigo-400 font-mono">
                                       {(node.bktProbability * 100).toFixed(0)}%
                                     </strong>
@@ -466,7 +466,7 @@ export default function StudentLearningPath() {
                     <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-5 sticky top-6 shadow-xs">
                       <div className="flex items-start justify-between">
                         <div>
-                          <span className="text-[10px] font-mono text-slate-700 dark:text-slate-300 font-bold uppercase tracking-wider block">
+                          <span className="text-xs font-mono text-slate-700 dark:text-slate-300 font-bold uppercase tracking-wider block">
                             Inspecting Concept Node
                           </span>
                           <h3 className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">{selectedNode.name}</h3>
@@ -512,8 +512,8 @@ export default function StudentLearningPath() {
                                 key={prereq}
                                 className="flex items-center justify-between text-xs p-2.5 rounded-lg bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300"
                               >
-                                <span className="font-mono text-[11px]">{prereq}</span>
-                                <span className="text-emerald-600 dark:text-emerald-400 text-[10px] font-semibold flex items-center gap-1">
+                                <span className="font-mono text-xs font-semibold">{prereq}</span>
+                                <span className="text-emerald-600 dark:text-emerald-400 text-xs font-semibold flex items-center gap-1">
                                   <ShieldCheck className="w-3 h-3" /> Min 60% Met
                                 </span>
                               </div>

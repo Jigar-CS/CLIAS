@@ -265,20 +265,20 @@ export default function StudentDashboard() {
           {/* Exact Gleam-Spark Page Intro Banner */}
           <div className="page-intro">
             <div>
-              <p className="mono">STUDENT / OVERVIEW / 04</p>
+              <p className="mono text-xs font-semibold uppercase mb-2">STUDENT / OVERVIEW / 04</p>
               <h1 className="page-title display">
                 GOOD MORNING,<span className="coral">{(user?.name || user?.email?.split('@')[0] || 'AARAV').toUpperCase().split(' ')[0]}.</span>
               </h1>
             </div>
             <div className="readiness">
-              <p className="mono">LEARNING READINESS</p>
+              <p className="mono text-xs font-semibold uppercase">LEARNING READINESS</p>
               <strong>
                 {summary && (summary.overallMastery > 0 || summary.accuracy > 0)
                   ? Math.min(100, Math.round((summary.overallMastery || 0) * 0.85 + (summary.accuracy || 0) * 0.15))
                   : 0}
                 <span>%</span>
               </strong>
-              <p className="mono blue">
+              <p className="mono blue text-xs font-semibold uppercase">
                 {(summary?.overallMastery ?? 0) >= 75
                   ? 'READY FOR ADVANCED DRILL'
                   : (summary?.overallMastery ?? 0) >= 50
@@ -379,18 +379,18 @@ export default function StudentDashboard() {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h3 className="text-xs font-mono font-bold uppercase text-[#1a2540] dark:text-[#f5f0e8]">
+                    <h3 className="text-xs sm:text-sm font-mono font-bold uppercase text-[#1a2540] dark:text-[#f5f0e8]">
                       OFFICIAL ASSESSMENT ASSIGNED ({assignedAssessments.length} ACTIVE)
                     </h3>
                   </div>
-                  <p className="text-[11px] text-[#4a6fa5] dark:text-[#6a90c5] font-mono mt-0.5">
+                  <p className="text-xs text-[#4a6fa5] dark:text-[#6a90c5] font-mono font-medium mt-0.5">
                     {assignedAssessments[0].title} ({assignedAssessments[0].courseCode}) • {assignedAssessments[0].durationMinutes}M • {assignedAssessments[0].totalQuestions} QUESTIONS
                   </p>
                 </div>
               </div>
               <Link
                 href="/student/assessments"
-                className="px-4 py-2 bg-[#1a2540] dark:bg-[#e8edf5] text-white dark:text-[#0c1220] font-mono text-[10px] uppercase font-bold tracking-wider hover:opacity-90 flex items-center gap-2 shrink-0"
+                className="px-4 py-2 bg-[#1a2540] dark:bg-[#e8edf5] text-white dark:text-[#0c1220] font-mono text-xs uppercase font-bold tracking-wider hover:opacity-90 flex items-center gap-2 shrink-0"
                 style={{ borderRadius: 0 }}
               >
                 <span>OPEN ASSESSMENT</span>
@@ -413,7 +413,7 @@ export default function StudentDashboard() {
                     <button
                       type="button"
                       onClick={() => handleSourceChange('ALL')}
-                      className={`px-2 py-1 text-[9px] font-mono uppercase tracking-wider transition ${kcSource === 'ALL'
+                      className={`px-2.5 py-1 text-xs font-mono uppercase tracking-wider font-semibold transition ${kcSource === 'ALL'
                           ? 'bg-[#1a2540] dark:bg-[#e8edf5] text-white dark:text-[#0c1220]'
                           : 'text-[#4a6fa5] hover:text-[#1a2540] dark:hover:text-[#e8edf5]'
                         }`}
@@ -423,7 +423,7 @@ export default function StudentDashboard() {
                     <button
                       type="button"
                       onClick={() => handleSourceChange('PRACTICE')}
-                      className={`px-2 py-1 text-[9px] font-mono uppercase tracking-wider transition ${kcSource === 'PRACTICE'
+                      className={`px-2.5 py-1 text-xs font-mono uppercase tracking-wider font-semibold transition ${kcSource === 'PRACTICE'
                           ? 'bg-[#1a2540] dark:bg-[#e8edf5] text-white dark:text-[#0c1220]'
                           : 'text-[#4a6fa5] hover:text-[#1a2540] dark:hover:text-[#e8edf5]'
                         }`}
@@ -433,7 +433,7 @@ export default function StudentDashboard() {
                     <button
                       type="button"
                       onClick={() => handleSourceChange('ASSESSMENT')}
-                      className={`px-2 py-1 text-[9px] font-mono uppercase tracking-wider transition ${kcSource === 'ASSESSMENT'
+                      className={`px-2.5 py-1 text-xs font-mono uppercase tracking-wider font-semibold transition ${kcSource === 'ASSESSMENT'
                           ? 'bg-[#1a2540] dark:bg-[#e8edf5] text-white dark:text-[#0c1220]'
                           : 'text-[#4a6fa5] hover:text-[#1a2540] dark:hover:text-[#e8edf5]'
                         }`}
@@ -588,7 +588,7 @@ export default function StudentDashboard() {
 
               {/* Priority Weak Topics */}
               <div className="mb-5">
-                <span className="text-[11px] font-extrabold text-rose-600 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1.5 mb-2">
+                <span className="text-xs font-extrabold text-rose-600 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1.5 mb-2">
                   <AlertTriangle className="w-3.5 h-3.5" />
                   Needs Immediate Practice:
                 </span>
@@ -598,40 +598,40 @@ export default function StudentDashboard() {
                       <Link
                         key={wt.topicId}
                         href={`/student/practice?topicId=${wt.topicId}`}
-                        className="p-3 rounded-xl bg-rose-50/70 dark:bg-rose-950/20 border border-rose-200/60 dark:border-rose-900/40 flex items-center justify-between hover:bg-rose-100/60 dark:hover:bg-rose-950/40 transition group cursor-pointer"
+                        className="p-3.5 rounded-xl bg-rose-50/70 dark:bg-rose-950/20 border border-rose-200/60 dark:border-rose-900/40 flex items-center justify-between hover:bg-rose-100/60 dark:hover:bg-rose-950/40 transition group cursor-pointer"
                       >
                         <div>
-                          <p className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-rose-600 dark:group-hover:text-rose-400 transition flex items-center gap-1.5">
+                          <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white group-hover:text-rose-600 dark:group-hover:text-rose-400 transition flex items-center gap-1.5">
                             {wt.topicName}
                             <ArrowRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                           </p>
-                          <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                          <span className="text-xs text-slate-600 dark:text-slate-400 font-mono font-medium">
                             {wt.courseCode} • {wt.attemptCount || 0} attempts
                           </span>
                         </div>
                         <div className="text-right">
-                          <span className="text-xs font-extrabold text-rose-600 dark:text-rose-400">
+                          <span className="text-xs sm:text-sm font-extrabold text-rose-600 dark:text-rose-400">
                             {wt.masteryScore}%
                           </span>
-                          <span className="block text-[9px] text-rose-500 font-semibold">
+                          <span className="block text-xs text-rose-500 font-semibold">
                             Target 70%
                           </span>
                         </div>
                       </Link>
                     ))
                   ) : summary?.questionsPracticed > 0 ? (
-                    <div className="p-3.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900/40 text-xs text-emerald-800 dark:text-emerald-300 font-medium">
+                    <div className="p-3.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900/40 text-xs sm:text-sm text-emerald-800 dark:text-emerald-300 font-medium">
                       🎉 All practiced topics have reached mastery (&ge;70%)! Select any topic in the curriculum to level up.
                     </div>
                   ) : (
-                    <p className="text-xs text-slate-400 italic">No weak topics identified yet. Start practicing to calibrate.</p>
+                    <p className="text-xs sm:text-sm text-slate-400 italic">No weak topics identified yet. Start practicing to calibrate.</p>
                   )}
                 </div>
               </div>
 
               {/* Mastered Concepts */}
               <div>
-                <span className="text-[11px] font-extrabold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1.5 mb-2">
+                <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1.5 mb-2">
                   <CheckCircle2 className="w-3.5 h-3.5" />
                   Mastered Concepts (&ge;70%):
                 </span>
@@ -640,19 +640,19 @@ export default function StudentDashboard() {
                     summary.strongTopics.map((st: any) => (
                       <div
                         key={st.topicId}
-                        className="p-3 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900/40 flex items-center justify-between"
+                        className="p-3.5 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900/40 flex items-center justify-between"
                       >
                         <div>
-                          <p className="text-xs font-bold text-slate-900 dark:text-white">{st.topicName}</p>
-                          <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                          <p className="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">{st.topicName}</p>
+                          <span className="text-xs text-slate-600 dark:text-slate-400 font-mono font-medium">
                             {st.courseCode} • {st.accuracy}% accuracy
                           </span>
                         </div>
-                        <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400">{st.masteryScore}%</span>
+                        <span className="text-xs sm:text-sm font-extrabold text-emerald-600 dark:text-emerald-400">{st.masteryScore}%</span>
                       </div>
                     ))
                   ) : (
-                    <p className="text-xs text-slate-400 italic">Complete practice and achieve 70%+ score to promote topics here.</p>
+                    <p className="text-xs sm:text-sm text-slate-400 italic">Complete practice and achieve 70%+ score to promote topics here.</p>
                   )}
                 </div>
               </div>
@@ -661,7 +661,7 @@ export default function StudentDashboard() {
             <Link
               href="/student/practice"
               prefetch={false}
-              className="w-full py-2.5 text-center text-[10px] font-mono font-bold text-[#e05033] dark:text-[#e8604a] bg-[rgba(224,80,51,0.08)] hover:bg-[rgba(224,80,51,0.14)] border border-[rgba(224,80,51,0.3)] transition uppercase tracking-widest" style={{ borderRadius: 0 }}
+              className="w-full py-3 text-center text-xs font-mono font-bold text-[#e05033] dark:text-[#e8604a] bg-[rgba(224,80,51,0.08)] hover:bg-[rgba(224,80,51,0.14)] border border-[rgba(224,80,51,0.3)] transition uppercase tracking-widest" style={{ borderRadius: 0 }}
             >
               Target Weak Areas Now →
             </Link>
@@ -682,7 +682,7 @@ export default function StudentDashboard() {
                           Cognitive Intelligence Advice
                         </h3>
                         <span
-                          className={`px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wider border ${
+                          className={`px-2.5 py-0.5 text-xs font-mono font-bold uppercase tracking-wider border ${
                             summary.cognitiveAdvice.urgency === 'HIGH'
                               ? 'bg-[#e05033]/15 text-[#e05033] border-[#e05033]/40'
                               : summary.cognitiveAdvice.urgency === 'MEDIUM'
@@ -693,7 +693,7 @@ export default function StudentDashboard() {
                           {summary.cognitiveAdvice.focusType.replace(/_/g, ' ')}
                         </span>
                       </div>
-                      <p className="text-xs font-bold text-[#4a6fa5] dark:text-[#6a90c5] mt-0.5">
+                      <p className="text-xs sm:text-sm font-bold text-[#4a6fa5] dark:text-[#6a90c5] mt-0.5">
                         {summary.cognitiveAdvice.headline}
                       </p>
                     </div>
@@ -718,7 +718,7 @@ export default function StudentDashboard() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-3 border-t border-[var(--border)]">
                     {summary.cognitiveAdvice.actionItems.map((item: string, idx: number) => (
                       <div key={idx} className="flex items-start gap-2.5 text-xs text-slate-800 dark:text-slate-200">
-                        <span className="w-4 h-4 bg-[#4a6fa5] text-white flex items-center justify-center font-mono font-bold shrink-0 text-[10px] mt-0.5">
+                        <span className="w-4 h-4 bg-[#4a6fa5] text-white flex items-center justify-center font-mono font-bold shrink-0 text-xs mt-0.5">
                           {idx + 1}
                         </span>
                         <span className="leading-snug font-medium">{item}</span>

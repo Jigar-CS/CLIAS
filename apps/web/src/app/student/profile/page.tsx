@@ -32,7 +32,7 @@ export default function StudentProfilePage() {
           {/* Gleam-Spark Page Intro */}
           <div className="page-intro">
             <div>
-              <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-[9px] uppercase mb-2">
+              <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-xs font-semibold uppercase mb-2">
                 LEARNING INTELLIGENCE / PROFILE / 01
               </p>
               <h1 className="page-title font-display text-5xl sm:text-6xl text-[#1a2540] dark:text-[#f5f0e8] uppercase tracking-tight">
@@ -40,11 +40,11 @@ export default function StudentProfilePage() {
               </h1>
             </div>
             <div className="readiness">
-              <p className="mono text-[8px] uppercase tracking-wider text-[#6b7fa3]">ENROLLMENT STATUS</p>
+              <p className="mono text-xs font-semibold uppercase tracking-wider text-[#6b7fa3]">ENROLLMENT STATUS</p>
               <strong className="font-display text-4xl text-[#1a2540] dark:text-[#f5f0e8]">
                 ACTIVE<span className="font-mono text-sm text-[#e05033]">●</span>
               </strong>
-              <p className="mono text-[8px] text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">CHARUSAT ACADEMIC IDENTITY</p>
+              <p className="mono text-xs font-semibold text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider">CHARUSAT ACADEMIC IDENTITY</p>
             </div>
           </div>
 

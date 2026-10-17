@@ -34,6 +34,10 @@ export interface CodeRunnerVerdict {
 @Injectable()
 export class CodeRunnerService {
   private readonly logger = new Logger(CodeRunnerService.name);
+  private cachedCppCompiler: string | null = null;
+  private cachedJavac: string | null = null;
+  private cachedJava: string | null = null;
+  private cachedPython: string | null = null;
 
   /**
    * Executes source code against test cases in an isolated subprocess with timeout.
@@ -1668,11 +1672,6 @@ ${calls}
       });
     });
   }
-
-  private cachedCppCompiler: string | null = null;
-  private cachedJavac: string | null = null;
-  private cachedJava: string | null = null;
-  private cachedPython: string | null = null;
 
   public getCppCompilerCommand(): string | null {
     if (this.cachedCppCompiler) return this.cachedCppCompiler;
