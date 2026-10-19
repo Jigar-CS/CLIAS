@@ -212,10 +212,23 @@ html:not(.dark) [class*="bg-[#1e293b]" i]:not([data-keep-dark]) .text-white {
   color: #1a2540 !important;
 }
 
+html:not(.dark) .bg-slate-900:not([data-keep-dark]) .text-slate-100,
 html:not(.dark) .bg-slate-900:not([data-keep-dark]) .text-slate-200,
+html:not(.dark) .bg-slate-950:not([data-keep-dark]) .text-slate-100,
+html:not(.dark) .bg-slate-950:not([data-keep-dark]) .text-slate-200,
+html:not(.dark) [class*="bg-slate-900"]:not([data-keep-dark]) .text-slate-100,
+html:not(.dark) [class*="bg-slate-900"]:not([data-keep-dark]) .text-slate-200,
+html:not(.dark) [class*="bg-[#0f172a]" i]:not([data-keep-dark]) .text-slate-100,
+html:not(.dark) [class*="bg-[#0f172a]" i]:not([data-keep-dark]) .text-slate-200,
+html:not(.dark) [class*="bg-[#111827]" i]:not([data-keep-dark]) .text-slate-100,
+html:not(.dark) [class*="bg-[#111827]" i]:not([data-keep-dark]) .text-slate-200,
+html:not(.dark) [class*="bg-[#1e293b]" i]:not([data-keep-dark]) .text-slate-100,
+html:not(.dark) [class*="bg-[#1e293b]" i]:not([data-keep-dark]) .text-slate-200 {
+  color: #1a2540 !important;
+}
+
 html:not(.dark) .bg-slate-900:not([data-keep-dark]) .text-slate-300,
 html:not(.dark) .bg-slate-900:not([data-keep-dark]) .text-slate-400,
-html:not(.dark) [class*="bg-slate-900"]:not([data-keep-dark]) .text-slate-200,
 html:not(.dark) [class*="bg-slate-900"]:not([data-keep-dark]) .text-slate-300,
 html:not(.dark) [class*="bg-slate-900"]:not([data-keep-dark]) .text-slate-400,
 html:not(.dark) [class*="bg-[#0f172a]" i]:not([data-keep-dark]) .text-slate-300,

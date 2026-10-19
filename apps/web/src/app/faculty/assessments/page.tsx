@@ -2625,7 +2625,7 @@ export default function FacultyAssessmentsPage() {
               {/* Title, Difficulty, Tags */}
               <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
                 <div className="sm:col-span-6">
-                  <label className="block text-xs font-bold text-slate-200 mb-1.5">Problem Title *</label>
+                  <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">Problem Title *</label>
                   <input
                     type="text"
                     required
@@ -2637,7 +2637,7 @@ export default function FacultyAssessmentsPage() {
                 </div>
 
                 <div className="sm:col-span-3">
-                  <label className="block text-xs font-bold text-slate-200 mb-1.5">Difficulty</label>
+                  <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">Difficulty</label>
                   <select
                     value={cpDifficulty}
                     onChange={(e: any) => setCpDifficulty(e.target.value)}
@@ -2650,7 +2650,7 @@ export default function FacultyAssessmentsPage() {
                 </div>
 
                 <div className="sm:col-span-3">
-                  <label className="block text-xs font-bold text-slate-200 mb-1.5">Tags / Topic</label>
+                  <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">Tags / Topic</label>
                   <input
                     type="text"
                     value={cpTags}
@@ -2663,7 +2663,7 @@ export default function FacultyAssessmentsPage() {
 
               {/* Full Problem Description */}
               <div>
-                <label className="block text-xs font-bold text-slate-200 mb-1.5 flex items-center justify-between">
+                <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5 flex items-center justify-between">
                   <span>Full Problem Statement & Requirements *</span>
                   <span className="text-[10px] text-slate-400">Detailed instructions, input specifications, and expectations</span>
                 </label>
@@ -2680,7 +2680,7 @@ export default function FacultyAssessmentsPage() {
               {/* Constraints & Hints */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-200 mb-1.5">Constraints</label>
+                  <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">Constraints</label>
                   <textarea
                     rows={3}
                     value={cpConstraints}
@@ -2690,7 +2690,7 @@ export default function FacultyAssessmentsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-200 mb-1.5">Hints (Optional)</label>
+                  <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">Hints (Optional)</label>
                   <textarea
                     rows={3}
                     value={cpHints}
@@ -2704,7 +2704,7 @@ export default function FacultyAssessmentsPage() {
               {/* Starter Codes (Python & JavaScript) */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-200 mb-1.5 flex items-center justify-between">
+                  <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5 flex items-center justify-between">
                     <span className="flex items-center gap-1.5">
                       <Code className="w-3.5 h-3.5 text-amber-400" />
                       Python Starter Code
@@ -2721,7 +2721,7 @@ export default function FacultyAssessmentsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-200 mb-1.5 flex items-center justify-between">
+                  <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5 flex items-center justify-between">
                     <span className="flex items-center gap-1.5">
                       <Code className="w-3.5 h-3.5 text-yellow-400" />
                       JavaScript Starter Code
@@ -3453,17 +3453,17 @@ export default function FacultyAssessmentsPage() {
 
       {/* Edit Assessment & Time Limit Modal */}
       {isEditModalOpen && editingAssessment && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in">
-          <div className="bg-[#0F172A] w-full max-w-xl rounded-3xl shadow-2xl border border-slate-700 overflow-hidden flex flex-col max-h-[92vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 dark:bg-black/80 backdrop-blur-md p-4 animate-in fade-in">
+          <div className="bg-[#faf7f2] dark:bg-[#0F172A] text-slate-900 dark:text-white w-full max-w-xl rounded-3xl shadow-2xl border border-[rgba(74,111,165,0.25)] dark:border-slate-700 overflow-hidden flex flex-col max-h-[92vh]">
             {/* Modal Header */}
-            <div className="flex items-center justify-between px-6 py-5 border-b border-slate-700/80 bg-[#1E293B]/80">
+            <div className="flex items-center justify-between px-6 py-5 border-b border-[rgba(74,111,165,0.2)] dark:border-slate-700/80 bg-[#ede8df] dark:bg-[#1E293B]/80">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                <div className="w-10 h-10 rounded-xl bg-indigo-500/10 dark:bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
                   <Sliders className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-extrabold text-white tracking-tight">Edit Assessment &amp; Time Limit</h3>
-                  <p className="text-xs text-slate-400 mt-0.5">
+                  <h3 className="text-lg font-extrabold text-slate-900 dark:text-white tracking-tight">Edit Assessment &amp; Time Limit</h3>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
                     {editingAssessment.code} • {courses.find((c) => c.id === selectedCourseId)?.code}
                   </p>
                 </div>
@@ -3471,7 +3471,7 @@ export default function FacultyAssessmentsPage() {
               <button
                 type="button"
                 onClick={() => setIsEditModalOpen(false)}
-                className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-700/80 transition"
+                className="p-2 rounded-xl text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200/80 dark:hover:bg-slate-700/80 transition"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -3481,18 +3481,18 @@ export default function FacultyAssessmentsPage() {
               {/* Expiration Status Indicator */}
               <div className={`p-4 rounded-2xl border text-xs flex items-center justify-between gap-3 ${
                 editingAssessment.isExpired || editingAssessment.status === 'COMPLETED'
-                  ? 'bg-rose-950/40 border-rose-500/30 text-rose-200'
-                  : 'bg-emerald-950/40 border-emerald-500/30 text-emerald-200'
+                  ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-500/30 text-rose-900 dark:text-rose-200'
+                  : 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-500/30 text-emerald-900 dark:text-emerald-200'
               }`}>
                 <div className="flex items-center gap-2.5">
-                  <Clock className={`w-4 h-4 shrink-0 ${editingAssessment.isExpired || editingAssessment.status === 'COMPLETED' ? 'text-rose-400' : 'text-emerald-400'}`} />
+                  <Clock className={`w-4 h-4 shrink-0 ${editingAssessment.isExpired || editingAssessment.status === 'COMPLETED' ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`} />
                   <div>
                     <span className="font-bold block">
                       {editingAssessment.isExpired || editingAssessment.status === 'COMPLETED'
                         ? 'Test is currently ENDED / EXPIRED'
                         : 'Test is currently ACTIVE'}
                     </span>
-                    <span className="text-[11px] opacity-80 block mt-0.5">
+                    <span className="text-[11px] opacity-90 block mt-0.5">
                       {editingAssessment.isExpired || editingAssessment.status === 'COMPLETED'
                         ? 'Students cannot take or resume this test. Extend duration or reopen below to allow access.'
                         : 'Students can access this test. Will automatically close 5 mins after duration.'}
@@ -3514,29 +3514,29 @@ export default function FacultyAssessmentsPage() {
 
               {/* Assessment Title */}
               <div>
-                <label className="block text-xs font-bold text-slate-200 mb-1.5">Assessment Title</label>
+                <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">Assessment Title</label>
                 <input
                   type="text"
                   required
                   value={editTitle}
                   onChange={(e) => setEditTitle(e.target.value)}
-                  className="w-full p-3 text-xs bg-[#1E293B] border border-slate-600 rounded-xl text-white font-medium focus:outline-none focus:border-indigo-500"
+                  className="w-full p-3 text-xs bg-white dark:bg-[#1E293B] border border-slate-300 dark:border-slate-600 rounded-xl text-slate-900 dark:text-white font-medium focus:outline-none focus:border-indigo-500 shadow-xs"
                 />
               </div>
 
               {/* Core Feature: Entire Test Time Limit / Duration */}
-              <div className="p-4 rounded-2xl bg-[#1E293B]/70 border border-indigo-500/30 space-y-3">
+              <div className="p-4 rounded-2xl bg-indigo-50/40 dark:bg-[#1E293B]/70 border border-indigo-200 dark:border-indigo-500/30 space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <label className="block text-xs font-bold text-white flex items-center gap-1.5">
-                      <Clock className="w-4 h-4 text-indigo-400" />
+                    <label className="block text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      <Clock className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                       Entire Test Time Limit / Duration (Minutes)
                     </label>
-                    <p className="text-[11px] text-slate-400 mt-0.5">
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
                       The total exam countdown timer for participating students.
                     </p>
                   </div>
-                  <span className="text-xs font-mono font-bold px-2.5 py-1 bg-indigo-500/20 text-indigo-300 rounded-lg border border-indigo-500/30">
+                  <span className="text-xs font-mono font-bold px-2.5 py-1 bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 rounded-lg border border-indigo-200 dark:border-indigo-500/30">
                     {editDuration} Mins
                   </span>
                 </div>
@@ -3548,7 +3548,7 @@ export default function FacultyAssessmentsPage() {
                     max={300}
                     value={editDuration}
                     onChange={(e) => setEditDuration(Number(e.target.value))}
-                    className="w-32 p-3 text-xs bg-[#0F172A] border border-slate-600 rounded-xl text-white font-bold text-center focus:outline-none focus:border-indigo-500"
+                    className="w-32 p-3 text-xs bg-white dark:bg-[#0F172A] border border-slate-300 dark:border-slate-600 rounded-xl text-slate-900 dark:text-white font-bold text-center focus:outline-none focus:border-indigo-500 shadow-xs"
                   />
                   <div className="flex items-center gap-1.5 flex-wrap">
                     {[15, 30, 45, 60, 90, 120].map((mins) => (
@@ -3558,8 +3558,8 @@ export default function FacultyAssessmentsPage() {
                         onClick={() => setEditDuration(mins)}
                         className={`px-2.5 py-1.5 rounded-lg text-xs font-bold border transition ${
                           editDuration === mins
-                            ? 'bg-indigo-600 border-indigo-500 text-white'
-                            : 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white'
+                            ? 'bg-indigo-600 border-indigo-500 text-white shadow-xs'
+                            : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'
                         }`}
                       >
                         {mins}m
@@ -3569,8 +3569,8 @@ export default function FacultyAssessmentsPage() {
                 </div>
 
                 {/* Expiration Buffer Notice */}
-                <div className="p-3 rounded-xl bg-indigo-950/40 border border-indigo-800/40 text-[11px] text-indigo-300 flex items-start gap-2">
-                  <AlertCircle className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+                <div className="p-3 rounded-xl bg-indigo-100/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/40 text-[11px] text-indigo-950 dark:text-indigo-200 flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5" />
                   <span>
                     <strong>Automatic Expiration:</strong> The test window will automatically expire after{' '}
                     <strong>{editDuration + 5} minutes</strong> ({editDuration} mins + 5 mins grace period). Once expired, students will see &quot;Test Ended&quot; and will not be able to start or resume.
@@ -3578,8 +3578,8 @@ export default function FacultyAssessmentsPage() {
                 </div>
 
                 {/* Quick Extend Window */}
-                <div className="pt-2 border-t border-slate-700/60 flex items-center justify-between text-xs">
-                  <span className="text-slate-400 font-medium">Quick Time Extension from Now:</span>
+                <div className="pt-2 border-t border-[rgba(74,111,165,0.15)] dark:border-slate-700/60 flex items-center justify-between text-xs">
+                  <span className="text-slate-600 dark:text-slate-400 font-medium">Quick Time Extension from Now:</span>
                   <div className="flex items-center gap-1.5">
                     {[10, 15, 30].map((ext) => (
                       <button
@@ -3589,7 +3589,7 @@ export default function FacultyAssessmentsPage() {
                         className={`px-2.5 py-1 rounded-lg font-bold border text-[11px] transition ${
                           editExtendMinutes === ext
                             ? 'bg-emerald-600 border-emerald-500 text-white'
-                            : 'bg-slate-800 border-slate-700 text-slate-300 hover:text-white'
+                            : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white'
                         }`}
                       >
                         +{ext}m
@@ -3599,7 +3599,7 @@ export default function FacultyAssessmentsPage() {
                       <button
                         type="button"
                         onClick={() => setEditExtendMinutes(0)}
-                        className="text-[10px] text-slate-400 hover:text-white px-1"
+                        className="text-[10px] text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white px-1"
                       >
                         Reset
                       </button>
@@ -3611,11 +3611,11 @@ export default function FacultyAssessmentsPage() {
               {/* Status, Batch & Division */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-200 mb-1.5">Status</label>
+                  <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">Status</label>
                   <select
                     value={editStatus}
                     onChange={(e) => setEditStatus(e.target.value)}
-                    className="w-full p-3 text-xs bg-[#1E293B] border border-slate-600 rounded-xl text-white font-medium focus:outline-none focus:border-indigo-500"
+                    className="w-full p-3 text-xs bg-white dark:bg-[#1E293B] border border-slate-300 dark:border-slate-600 rounded-xl text-slate-900 dark:text-white font-medium focus:outline-none focus:border-indigo-500 shadow-xs"
                   >
                     <option value="DRAFT">DRAFT (Hidden from students)</option>
                     <option value="PUBLISHED">PUBLISHED (Visible to cohort)</option>
@@ -3625,14 +3625,14 @@ export default function FacultyAssessmentsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-200 mb-1.5 flex items-center gap-1">
-                    <GraduationCap className="w-3.5 h-3.5 text-indigo-400" />
+                  <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5 flex items-center gap-1">
+                    <GraduationCap className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                     Target Batch ({deptBatchConfig.rollPrefix})
                   </label>
                   <select
                     value={editBatch}
                     onChange={(e) => setEditBatch(e.target.value)}
-                    className="w-full p-3 text-xs bg-[#1E293B] border border-slate-600 rounded-xl text-white font-medium focus:outline-none focus:border-indigo-500"
+                    className="w-full p-3 text-xs bg-white dark:bg-[#1E293B] border border-slate-300 dark:border-slate-600 rounded-xl text-slate-900 dark:text-white font-medium focus:outline-none focus:border-indigo-500 shadow-xs"
                   >
                     {deptBatchConfig.batches.map((b) => (
                       <option key={b.id} value={b.id}>
@@ -3642,14 +3642,14 @@ export default function FacultyAssessmentsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-200 mb-1.5 flex items-center gap-1">
-                    <Users className="w-3.5 h-3.5 text-indigo-400" />
+                  <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5 flex items-center gap-1">
+                    <Users className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
                     Section / Division
                   </label>
                   <select
                     value={editDivision}
                     onChange={(e) => setEditDivision(e.target.value as any)}
-                    className="w-full p-3 text-xs bg-[#1E293B] border border-slate-600 rounded-xl text-white font-medium focus:outline-none focus:border-indigo-500"
+                    className="w-full p-3 text-xs bg-white dark:bg-[#1E293B] border border-slate-300 dark:border-slate-600 rounded-xl text-slate-900 dark:text-white font-medium focus:outline-none focus:border-indigo-500 shadow-xs"
                   >
                     <option value="ALL">Both Divisions (All)</option>
                     <option value="DIV 1">Division A (DIV 1)</option>
@@ -3661,35 +3661,35 @@ export default function FacultyAssessmentsPage() {
               {/* Passing Marks & Allowed Attempts */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-200 mb-1.5">Passing %</label>
+                  <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">Passing %</label>
                   <input
                     type="number"
                     min={10}
                     max={100}
                     value={editPassingMarks}
                     onChange={(e) => setEditPassingMarks(Number(e.target.value))}
-                    className="w-full p-3 text-xs bg-[#1E293B] border border-slate-600 rounded-xl text-white font-medium focus:outline-none focus:border-indigo-500"
+                    className="w-full p-3 text-xs bg-white dark:bg-[#1E293B] border border-slate-300 dark:border-slate-600 rounded-xl text-slate-900 dark:text-white font-medium focus:outline-none focus:border-indigo-500 shadow-xs"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-200 mb-1.5">Allowed Attempts</label>
+                  <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">Allowed Attempts</label>
                   <input
                     type="number"
                     min={1}
                     max={10}
                     value={editAllowedAttempts}
                     onChange={(e) => setEditAllowedAttempts(Number(e.target.value))}
-                    className="w-full p-3 text-xs bg-[#1E293B] border border-slate-600 rounded-xl text-white font-medium focus:outline-none focus:border-indigo-500"
+                    className="w-full p-3 text-xs bg-white dark:bg-[#1E293B] border border-slate-300 dark:border-slate-600 rounded-xl text-slate-900 dark:text-white font-medium focus:outline-none focus:border-indigo-500 shadow-xs"
                   />
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="pt-4 border-t border-slate-700/80 flex items-center justify-end gap-3">
+              <div className="pt-4 border-t border-[rgba(74,111,165,0.2)] dark:border-slate-700/80 flex items-center justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => setIsEditModalOpen(false)}
-                  className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs transition"
+                  className="px-4 py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs transition"
                 >
                   Cancel
                 </button>
