@@ -654,31 +654,34 @@ export class AssessmentService {
       ? getAllowedAssessmentDivisions(studentDivision)
       : null;
 
+    const andFilters: any[] = [];
+    if (allowedDivisions) {
+      andFilters.push({
+        OR: [
+          { division: 'ALL' },
+          { division: null },
+          { division: '' },
+          { division: { in: allowedDivisions } },
+        ],
+      });
+    }
+    if (!isFacultyOrAdmin && studentBatch) {
+      andFilters.push({
+        OR: [
+          { batch: 'ALL' },
+          { batch: null },
+          { batch: '' },
+          { batch: studentBatch },
+          { batch: { contains: studentBatch } },
+        ],
+      });
+    }
+
     const assessments = await this.prisma.assessment.findMany({
       where: {
         status: statusFilter,
         ...(targetCourseUUID ? { courseId: targetCourseUUID } : {}),
-        ...(allowedDivisions
-          ? {
-              OR: [
-                { division: 'ALL' },
-                { division: null },
-                { division: '' },
-                { division: { in: allowedDivisions } },
-              ],
-            }
-          : {}),
-        ...(!isFacultyOrAdmin && studentBatch
-          ? {
-              OR: [
-                { batch: 'ALL' },
-                { batch: null },
-                { batch: '' },
-                { batch: studentBatch },
-                { batch: { contains: studentBatch } },
-              ],
-            }
-          : {}),
+        ...(andFilters.length > 0 ? { AND: andFilters } : {}),
       },
       include: {
         course: { select: { code: true, name: true } },
