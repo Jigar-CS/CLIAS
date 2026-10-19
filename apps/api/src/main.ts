@@ -1,7 +1,13 @@
+import * as dns from 'dns';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { json, urlencoded } from 'express';
 import { AppModule } from './app.module';
+
+// Prioritize IPv4 for cloud deployments (e.g. Render, Railway, AWS) where IPv6 routes cause ENETUNREACH
+if (typeof (dns as any).setDefaultResultOrder === 'function') {
+  (dns as any).setDefaultResultOrder('ipv4first');
+}
 
 async function bootstrap() {
   const logger = new Logger('CLIAS-Bootstrap');

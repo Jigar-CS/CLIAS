@@ -54,33 +54,27 @@ export class NodemailerEmailService implements EmailService {
     }
 
     const isGmail = host.includes('gmail') || user?.includes('@gmail.com') || user?.includes('charusat.edu.in');
+    const resolvedHost = isGmail ? 'smtp.gmail.com' : host;
+    const resolvedPort = port || 587;
+    const isSecure = secure || resolvedPort === 465;
 
-    this.transporter = isGmail
-      ? nodemailer.createTransport({
-          service: 'gmail',
-          auth: user && pass ? { user, pass } : undefined,
-          connectionTimeout: 10000,
-          greetingTimeout: 10000,
-          socketTimeout: 15000,
-          tls: {
-            rejectUnauthorized: false,
-          },
-        })
-      : nodemailer.createTransport({
-          host,
-          port,
-          secure,
-          auth: user && pass ? { user, pass } : undefined,
-          connectionTimeout: 10000,
-          greetingTimeout: 10000,
-          socketTimeout: 15000,
-          tls: {
-            rejectUnauthorized: false,
-          },
-        });
+    this.transporter = nodemailer.createTransport({
+      host: resolvedHost,
+      port: resolvedPort,
+      secure: isSecure,
+      auth: user && pass ? { user, pass } : undefined,
+      connectionTimeout: 15000,
+      greetingTimeout: 15000,
+      socketTimeout: 20000,
+      tls: {
+        rejectUnauthorized: false,
+      },
+      // Force IPv4 to prevent ENETUNREACH in cloud container environments (Render, AWS, Railway) where IPv6 routes are unavailable
+      family: 4,
+    } as any);
 
     this.logger.log(
-      `📧 Nodemailer transporter initialized for ${isGmail ? 'Gmail Service' : `${host}:${port}`} (Sender: ${this.fromAddress})`,
+      `📧 Nodemailer transporter initialized for ${resolvedHost}:${resolvedPort} (IPv4, Sender: ${this.fromAddress})`,
     );
 
     // Verify SMTP connection on startup
