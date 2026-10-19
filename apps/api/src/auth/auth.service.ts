@@ -12,7 +12,6 @@ import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from '../email/email.service';
 import { LoginDto, RegisterStudentDto, RequestOtpDto, VerifyOtpDto } from './dto/auth.dto';
 import { UserRole, UserStatus } from '@prisma/client';
-import { findBatchStudent, formatStudentName, getBatchStudentDivision } from './data/cse-batch-students';
 
 interface OtpRecord {
   code: string;
@@ -97,70 +96,24 @@ export class AuthService {
     let recipientName = '';
 
     if (role === UserRole.STUDENT) {
-      // 2. Check preloaded CSE batch students list
-      const batchStudent = findBatchStudent(email);
-
       let authorized = await this.prisma.authorizedStudent.findUnique({
         where: { email },
       });
 
-      if (batchStudent) {
-        if (!authorized) {
-          // Check if record exists with this student's enrollmentNumber
-          authorized = await this.prisma.authorizedStudent.findUnique({
-            where: { enrollmentNumber: batchStudent.studentId },
-          });
+      if (!authorized) {
+        const prefix = email.split('@')[0];
+        const enrollmentNumber = prefix.toUpperCase();
 
-          if (authorized) {
-            authorized = await this.prisma.authorizedStudent.update({
-              where: { id: authorized.id },
-              data: {
-                email,
-                name: formatStudentName(batchStudent.name),
-                institute: batchStudent.institute,
-                department: 'Computer Science & Engineering',
-                programName: batchStudent.degree,
-                semester: batchStudent.semester,
-                division: getBatchStudentDivision(batchStudent.studentId),
-                graduationYear: 2026,
-              },
-            });
-          } else {
-            authorized = await this.prisma.authorizedStudent.create({
-              data: {
-                enrollmentNumber: batchStudent.studentId,
-                name: formatStudentName(batchStudent.name),
-                email,
-                institute: batchStudent.institute,
-                department: 'Computer Science & Engineering',
-                programName: batchStudent.degree,
-                semester: batchStudent.semester,
-                division: getBatchStudentDivision(batchStudent.studentId),
-                graduationYear: 2026,
-                activated: false,
-              },
-            });
-          }
-        } else {
-          // Upgrade existing authorized record with exact roster data
+        authorized = await this.prisma.authorizedStudent.findUnique({
+          where: { enrollmentNumber },
+        });
+
+        if (authorized) {
           authorized = await this.prisma.authorizedStudent.update({
             where: { id: authorized.id },
-            data: {
-              enrollmentNumber: batchStudent.studentId,
-              name: formatStudentName(batchStudent.name),
-              institute: batchStudent.institute,
-              department: 'Computer Science & Engineering',
-              programName: batchStudent.degree,
-              semester: batchStudent.semester,
-              division: getBatchStudentDivision(batchStudent.studentId),
-            },
+            data: { email },
           });
-        }
-      } else {
-        // Fallback auto-provision for new Charusat students not matching the CSE batch roster
-        if (!authorized) {
-          const prefix = email.split('@')[0];
-          const enrollmentNumber = prefix.toUpperCase();
+        } else {
           const name = prefix.includes('.')
             ? prefix
                 .split('.')
@@ -168,31 +121,20 @@ export class AuthService {
                 .join(' ')
             : `Student ${enrollmentNumber}`;
 
-          const existingByEnrollment = await this.prisma.authorizedStudent.findUnique({
-            where: { enrollmentNumber },
+          authorized = await this.prisma.authorizedStudent.create({
+            data: {
+              enrollmentNumber,
+              name,
+              email,
+              institute: 'CSPIT',
+              department: 'Computer Science & Engineering',
+              programName: 'B.Tech Computer Science & Engineering',
+              semester: 4,
+              division: 'DIV 1',
+              graduationYear: 2026,
+              activated: false,
+            },
           });
-
-          if (existingByEnrollment) {
-            authorized = await this.prisma.authorizedStudent.update({
-              where: { id: existingByEnrollment.id },
-              data: { email },
-            });
-          } else {
-            authorized = await this.prisma.authorizedStudent.create({
-              data: {
-                enrollmentNumber,
-                name,
-                email,
-                institute: 'CSPIT',
-                department: 'Computer Engineering',
-                programName: 'B.Tech Computer Engineering',
-                semester: 4,
-                division: 'CE-A',
-                graduationYear: 2026,
-                activated: false,
-              },
-            });
-          }
         }
       }
       recipientName = authorized.name;
@@ -281,12 +223,11 @@ export class AuthService {
       });
 
       if (!authorized) {
-        const batchStudent = findBatchStudent(email);
-        if (batchStudent) {
-          authorized = await this.prisma.authorizedStudent.findUnique({
-            where: { enrollmentNumber: batchStudent.studentId },
-          });
-        }
+        const prefix = email.split('@')[0];
+        const enrollmentNumber = prefix.toUpperCase();
+        authorized = await this.prisma.authorizedStudent.findUnique({
+          where: { enrollmentNumber },
+        });
       }
 
       if (!authorized) {
@@ -344,17 +285,16 @@ export class AuthService {
       });
 
       if (!authorized) {
-        const batchStudent = findBatchStudent(email);
-        if (batchStudent) {
-          authorized = await this.prisma.authorizedStudent.findUnique({
-            where: { enrollmentNumber: batchStudent.studentId },
+        const prefix = email.split('@')[0];
+        const enrollmentNumber = prefix.toUpperCase();
+        authorized = await this.prisma.authorizedStudent.findUnique({
+          where: { enrollmentNumber },
+        });
+        if (authorized) {
+          authorized = await this.prisma.authorizedStudent.update({
+            where: { id: authorized.id },
+            data: { email },
           });
-          if (authorized) {
-            authorized = await this.prisma.authorizedStudent.update({
-              where: { id: authorized.id },
-              data: { email },
-            });
-          }
         }
       }
 
