@@ -25,10 +25,12 @@ import {
   BookOpen,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRealtimeGreeting } from '@/lib/greeting';
 
 export default function StudentDashboard() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
+  const greeting = useRealtimeGreeting();
 
   // Initial baseline for fresh student: all metrics start at zero until activity is performed
   const [summary, setSummary] = useState<any>({
@@ -266,8 +268,8 @@ export default function StudentDashboard() {
           <div className="page-intro">
             <div>
               <p className="mono text-xs font-semibold uppercase mb-2">STUDENT / OVERVIEW / 04</p>
-              <h1 className="page-title display">
-                GOOD MORNING,<span className="coral">{(user?.name || user?.email?.split('@')[0] || 'AARAV').toUpperCase().split(' ')[0]}.</span>
+              <h1 className="page-title display" suppressHydrationWarning>
+                {greeting},<span className="coral">{(user?.name || user?.email?.split('@')[0] || 'AARAV').toUpperCase().split(' ')[0]}.</span>
               </h1>
             </div>
             <div className="readiness">

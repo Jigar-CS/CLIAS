@@ -23,10 +23,12 @@ import {
   GraduationCap,
   ArrowRight,
 } from 'lucide-react';
+import { useRealtimeGreeting } from '@/lib/greeting';
 
 export default function FacultyDashboard() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const greeting = useRealtimeGreeting();
   const [courses, setCourses] = useState<any[]>([]);
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
   const [cohortData, setCohortData] = useState<any>(null);
@@ -100,8 +102,8 @@ export default function FacultyDashboard() {
           <div className="page-intro">
             <div>
               <p className="mono">FACULTY / OVERVIEW / 04</p>
-              <h1 className="page-title display">
-                GOOD MORNING,<span className="coral">{(user?.name || 'PROF. MEHTA').toUpperCase().startsWith('PROF.') ? (user?.name || 'PROF. MEHTA').toUpperCase() : `PROF. ${(user?.name || 'MEHTA').toUpperCase().split(' ')[0]}.`}</span>
+              <h1 className="page-title display" suppressHydrationWarning>
+                {greeting},<span className="coral">{(user?.name || 'PROF. MEHTA').toUpperCase().startsWith('PROF.') ? (user?.name || 'PROF. MEHTA').toUpperCase() : `PROF. ${(user?.name || 'MEHTA').toUpperCase().split(' ')[0]}.`}</span>
               </h1>
             </div>
             <div className="readiness">
