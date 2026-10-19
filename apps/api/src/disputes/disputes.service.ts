@@ -394,34 +394,6 @@ export class DisputesService {
       }
 
       try {
-        const plagiarismScans = await this.prisma.plagiarismScan.findMany({
-          where: { flaggedPairsCount: { gt: 0 } },
-          include: { problem: true },
-          orderBy: { createdAt: 'desc' },
-          take: 10,
-        });
-
-        for (const scan of plagiarismScans) {
-          const id = `plagiarism-${scan.id}`;
-          if (dismissed.has(id)) continue;
-          items.push({
-            id,
-            title: `⚠️ Plagiarism Alert: ${scan.problem?.title || 'Coding Problem'}`,
-            message: `${scan.flaggedPairsCount} submission pair(s) flagged above ${scan.threshold}% similarity threshold.`,
-            type: 'PLAGIARISM_FLAGGED',
-            read: readSet.has(id),
-            metadata: JSON.stringify({
-              scanId: scan.id,
-              actionUrl: '/faculty/plagiarism',
-            }),
-            createdAt: scan.createdAt,
-          });
-        }
-      } catch (e) {
-        // ignore
-      }
-
-      try {
         const flaggedSessions = await this.prisma.proctoringSession.findMany({
           where: { status: 'FLAGGED' as any },
           include: {

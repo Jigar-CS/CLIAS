@@ -1174,7 +1174,7 @@ export class AssessmentService {
               pointsAwarded = Number((passedRatio * pointsForQ).toFixed(2));
               isCorrect = verdict.status === 'ACCEPTED';
 
-              // Persist CodeSubmission record for AST plagiarism and audit
+              // Persist CodeSubmission record for code analysis and audit
               if (prob) {
                 try {
                   await this.prisma.codeSubmission.create({

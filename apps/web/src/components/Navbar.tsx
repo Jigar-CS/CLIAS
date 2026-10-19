@@ -227,25 +227,6 @@ function NotificationCardBody({ item }: { item: NotificationItem }) {
     );
   }
 
-  if (item.type === 'PLAGIARISM_FLAGGED') {
-    return (
-      <div className="space-y-2 mt-1.5 text-xs">
-        <p className="text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed font-normal">
-          {item.message}
-        </p>
-        <div className="pt-1">
-          <Link
-            href="/faculty/plagiarism"
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white text-[11px] font-bold rounded-lg shadow-xs transition"
-          >
-            <span>Inspect Similarity Report</span>
-            <span>→</span>
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
   if (item.type === 'PROCTORING_FLAGGED') {
     return (
       <div className="space-y-2 mt-1.5 text-xs">

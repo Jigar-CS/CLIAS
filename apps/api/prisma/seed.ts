@@ -21,8 +21,6 @@ import {
   CareerRoleType,
   ProgrammingLanguage,
   JudgeSubmissionStatus,
-  PlagiarismScanStatus,
-  PlagiarismVerdict,
 } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
 
@@ -32,8 +30,6 @@ async function main() {
   console.log('🌱 Starting CLIAS database seeding...');
 
   // 1. Clear existing records in dependency order
-  await prisma.plagiarismMatch.deleteMany();
-  await prisma.plagiarismScan.deleteMany();
   await prisma.codeSubmission.deleteMany();
   await prisma.testCase.deleteMany();
   await prisma.codingProblem.deleteMany();
@@ -1540,33 +1536,6 @@ async function main() {
     },
   });
 
-  // Seed Phase 12 Plagiarism Scan & Match
-  const plagiarismScan = await prisma.plagiarismScan.create({
-    data: {
-      problemId: probTwoSum.id,
-      threshold: 70.0,
-      totalSubmissionsScanned: 2,
-      flaggedPairsCount: 1,
-      status: PlagiarismScanStatus.COMPLETED,
-    },
-  });
-
-  await prisma.plagiarismMatch.create({
-    data: {
-      scanId: plagiarismScan.id,
-      submissionAId: subA.id,
-      submissionBId: subB.id,
-      similarityScore: 88.5,
-      matchedTokensCount: 24,
-      verdict: PlagiarismVerdict.FLAGGED,
-      facultyNotes: 'Near-identical variable renaming and hash map loop structure detected via winnowing AST fingerprint.',
-      fingerprintOverlap: JSON.stringify([
-        { startA: 2, endA: 7, startB: 2, endB: 7, matchType: 'STRUCTURAL_HASH_EQUIVALENCE' },
-      ]),
-    },
-  });
-
-  console.log('🔍 Seeded Phase 12 Code Plagiarism Scan, AST Fingerprints, and Pairwise Matches.');
   console.log('💻 Seeded Phase 11 Coding Problems, Test Cases, and Automated Judge Submissions.');
   console.log('🚀 Seeded Phase 10 Career Role Benchmarks, Skill Gap Profile, and Placement Mock Exam.');
   console.log('🏛️ Seeded Phase 8 OBE Program Outcomes, Course Outcomes, and At-Risk Predictive Alerts.');

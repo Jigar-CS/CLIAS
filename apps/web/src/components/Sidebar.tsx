@@ -21,7 +21,6 @@ import {
   LogOut,
   Briefcase,
   Terminal,
-  GitCompare,
   Pin,
   Sparkles,
   Sun,
@@ -134,7 +133,6 @@ export function Sidebar({ isLocked = false, onLockedClick }: SidebarProps = {}) 
     { name: 'Class Analytics', href: '/faculty/analytics', icon: TrendingUp },
     { name: 'AI Question Studio', href: '/faculty/ai-generator', icon: Sparkles },
     { name: 'Exam Studio', href: '/faculty/assessments', icon: FileCheck },
-    { name: 'Plagiarism Studio', href: '/faculty/plagiarism', icon: GitCompare },
     { name: 'Invigilation Console', href: '/faculty/invigilation', icon: ShieldCheck },
     { name: 'My Profile', href: '/faculty/profile', icon: UserCircle },
   ];

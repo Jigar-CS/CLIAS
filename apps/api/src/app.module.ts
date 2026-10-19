@@ -15,7 +15,6 @@ import { RagModule } from './rag/rag.module';
 import { ProctoringModule } from './proctoring/proctoring.module';
 import { PlacementModule } from './placement/placement.module';
 import { CodingModule } from './coding/coding.module';
-import { PlagiarismModule } from './plagiarism/plagiarism.module';
 import { ProfileModule } from './profile/profile.module';
 import { LeaderboardModule } from './leaderboard/leaderboard.module';
 import { DisputesModule } from './disputes/disputes.module';
@@ -41,7 +40,6 @@ import { DisputesModule } from './disputes/disputes.module';
     ProctoringModule,
     PlacementModule,
     CodingModule,
-    PlagiarismModule,
     ProfileModule,
     LeaderboardModule,
     DisputesModule,
