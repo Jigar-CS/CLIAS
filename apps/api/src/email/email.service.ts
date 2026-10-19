@@ -538,8 +538,49 @@ export class BrevoEmailService implements EmailService {
       this.logger.log(`📤 Dispatching OTP email via Brevo HTTPS API to: ${toEmail} (${studentName})`);
 
       const portalUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
-      const textContent = `Hello ${studentName},\n\nYour ${this.universityName} CLIAS verification code is: ${otp}\n\nThis code will expire in 10 minutes.\n\nCharotar University of Science and Technology (${this.universityName}) — CLIAS AdaptIQ`;
-      const htmlContent = `<!DOCTYPE html><html><body style="margin:0;padding:24px;background:#f8fafc;font-family:sans-serif;"><div style="max-width:540px;margin:auto;background:#ffffff;border-radius:14px;padding:32px;border:1px solid #e2e8f0;box-shadow:0 4px 12px rgba(0,0,0,0.05);"><div style="font-size:12px;color:#4f46e5;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">${this.universityName} • CLIAS AdaptIQ</div><h2 style="margin:0 0 16px 0;color:#0f172a;font-size:22px;">Verification Code</h2><p style="color:#475569;font-size:15px;line-height:1.5;">Hello <strong>${studentName}</strong>,<br/>Use the verification code below to verify your email and complete registration:</p><div style="text-align:center;margin:28px 0;background:#f1f5f9;border-radius:10px;padding:18px;border:1px solid #e2e8f0;"><span style="font-size:36px;font-weight:800;letter-spacing:8px;color:#312e81;font-family:monospace;">${otp}</span></div><p style="color:#64748b;font-size:13px;line-height:1.5;">⏱️ This code is valid for <strong>10 minutes</strong>. If you did not request this, please ignore this email.</p></div></body></html>`;
+      const textContent = `Hello ${studentName},\n\nYour ${this.universityName} CLIAS verification code is: ${otp}\n\nThis verification code will expire in 10 minutes.\n\nCharotar University of Science and Technology (CHARUSAT)\nChanga - 388421, Dist. Anand, Gujarat, India\nCLIAS Learning Intelligence & Adaptive Assessment Platform`;
+      const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CLIAS Verification Code</title>
+</head>
+<body style="margin:0;padding:24px;background-color:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width:540px;margin:auto;background-color:#ffffff;border-radius:14px;overflow:hidden;border:1px solid #e2e8f0;box-shadow:0 4px 14px rgba(0,0,0,0.06);">
+    <tr>
+      <td style="height:4px;background:linear-gradient(90deg, #4f46e5 0%, #06b6d4 100%);"></td>
+    </tr>
+    <tr>
+      <td style="padding:32px 36px;">
+        <div style="font-size:11px;font-weight:700;color:#4f46e5;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;">
+          🏛️ ${this.universityName} • CLIAS ADAPTIQ
+        </div>
+        <h1 style="margin:0 0 16px 0;color:#0f172a;font-size:22px;font-weight:800;letter-spacing:-0.3px;">
+          Your Verification Code
+        </h1>
+        <p style="color:#475569;font-size:14px;line-height:1.6;margin:0 0 24px 0;">
+          Hello <strong>${studentName}</strong>,<br/>
+          Use the one-time verification code below to verify your email address and activate your institutional account:
+        </p>
+        <div style="text-align:center;margin:24px 0;background-color:#f1f5f9;border-radius:10px;padding:18px 24px;border:1px solid #e2e8f0;">
+          <span style="font-family:'Courier New',Courier,monospace;font-size:36px;font-weight:800;letter-spacing:8px;color:#312e81;display:inline-block;padding-left:8px;">
+            ${otp}
+          </span>
+        </div>
+        <p style="color:#64748b;font-size:12px;line-height:1.5;margin:0 0 24px 0;">
+          ⏱️ This code is valid for <strong>10 minutes</strong>. Never share this code with anyone. If you did not request this, please ignore this email.
+        </p>
+        <div style="border-top:1px solid #f1f5f9;padding-top:20px;text-align:center;font-size:11px;color:#94a3b8;line-height:1.5;">
+          Charotar University of Science and Technology (${this.universityName})<br/>
+          Changa, Dist. Anand, Gujarat, India - 388421<br/>
+          Automated Transactional Security Message • CLIAS Learning System
+        </div>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
 
       const res = await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
@@ -551,9 +592,16 @@ export class BrevoEmailService implements EmailService {
         body: JSON.stringify({
           sender: { name: this.senderName, email: this.senderEmail },
           to: [{ email: toEmail, name: studentName }],
-          subject: `${otp} is your CLIAS verification code — ${this.universityName}`,
+          replyTo: { name: `${this.universityName} Support`, email: this.senderEmail },
+          subject: `CLIAS Verification Code: ${otp}`,
           htmlContent,
           textContent,
+          tags: ['transactional-otp'],
+          headers: {
+            'Auto-Submitted': 'auto-generated',
+            'X-Auto-Response-Suppress': 'OOF, AutoReply',
+            'X-Entity-Ref-ID': `clias-otp-${Date.now()}`,
+          },
         }),
       });
 
@@ -587,9 +635,15 @@ export class BrevoEmailService implements EmailService {
         body: JSON.stringify({
           sender: { name: this.senderName, email: this.senderEmail },
           to: [{ email: toEmail, name: studentName }],
+          replyTo: { name: `${this.universityName} Support`, email: this.senderEmail },
           subject: `Welcome to CLIAS AdaptIQ, ${studentName}! 🎓`,
           htmlContent,
           textContent,
+          tags: ['welcome-email'],
+          headers: {
+            'Auto-Submitted': 'auto-generated',
+            'X-Auto-Response-Suppress': 'OOF, AutoReply',
+          },
         }),
       });
 
