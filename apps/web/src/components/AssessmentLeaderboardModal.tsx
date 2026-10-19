@@ -18,6 +18,10 @@ import {
   Sparkles,
   TrendingUp,
   Percent,
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 
 export interface LeaderboardEntry {
@@ -91,12 +95,19 @@ export function AssessmentLeaderboardView({
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [selectedDivision, setSelectedDivision] = useState<string>('ALL');
+  const [showPodium, setShowPodium] = useState<boolean>(true);
+  const [pageSize, setPageSize] = useState<number>(25);
+  const [currentPage, setCurrentPage] = useState<number>(1);
 
   useEffect(() => {
     if (assessmentId) {
       loadLeaderboard();
     }
   }, [assessmentId]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedDivision, pageSize]);
 
   const loadLeaderboard = async () => {
     setLoading(true);
@@ -113,20 +124,30 @@ export function AssessmentLeaderboardView({
   };
 
   const filteredRankings = (data?.rankings || []).filter((item) => {
+    const div = (item.division || '').toUpperCase();
     const matchesDiv =
       selectedDivision === 'ALL' ||
-      item.division.toUpperCase() === selectedDivision.toUpperCase() ||
-      (selectedDivision === 'DIV 1' && item.division.includes('1')) ||
-      (selectedDivision === 'DIV 2' && item.division.includes('2'));
+      div === selectedDivision.toUpperCase() ||
+      (selectedDivision === 'DIV 1' && (div.includes('1') || div.includes('A'))) ||
+      (selectedDivision === 'DIV 2' && (div.includes('2') || div.includes('B')));
 
     const searchLower = searchTerm.toLowerCase().trim();
     const matchesSearch =
       !searchLower ||
-      item.studentName.toLowerCase().includes(searchLower) ||
-      item.enrollmentNumber.toLowerCase().includes(searchLower);
+      (item.studentName || '').toLowerCase().includes(searchLower) ||
+      (item.enrollmentNumber || '').toLowerCase().includes(searchLower);
 
     return matchesDiv && matchesSearch;
   });
+
+  const totalRanked = filteredRankings.length;
+  const effectivePageSize = pageSize === -1 ? totalRanked || 1 : pageSize;
+  const totalPages = pageSize === -1 ? 1 : Math.max(1, Math.ceil(totalRanked / effectivePageSize));
+  const currentSafePage = Math.min(currentPage, totalPages);
+  const paginatedRankings =
+    pageSize === -1
+      ? filteredRankings
+      : filteredRankings.slice((currentSafePage - 1) * effectivePageSize, currentSafePage * effectivePageSize);
 
   const top1 = data?.rankings[0];
   const top2 = data?.rankings[1];
@@ -183,10 +204,10 @@ export function AssessmentLeaderboardView({
   };
 
   return (
-    <div className="flex flex-col w-full h-full bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+    <div className="flex flex-col w-full h-full min-h-0 flex-1 overflow-hidden bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
       {/* Header Bar */}
       {showHeader && (
-        <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/50">
+        <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/50 shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center shrink-0">
               <Trophy className="w-5 h-5 fill-amber-500/20" />
@@ -242,8 +263,8 @@ export function AssessmentLeaderboardView({
         </div>
       )}
 
-      {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+      {/* Main Content Area - Scrollable Container */}
+      <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 space-y-5">
         {loading && !data ? (
           <div className="p-16 text-center space-y-3">
             <div className="w-10 h-10 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto" />
@@ -359,9 +380,9 @@ export function AssessmentLeaderboardView({
               </div>
             )}
 
-            {/* Podium View for Top 3 (if at least 2 participants) */}
-            {data.rankings.length >= 2 && (
-              <div className="py-2">
+            {/* Podium View for Top 3 (Collapsible) */}
+            {showPodium && data.rankings.length >= 2 && (
+              <div className="py-2 animate-in fade-in duration-200">
                 <div className="flex items-end justify-center gap-2 sm:gap-4 max-w-lg mx-auto">
                   {/* 2nd Place */}
                   {top2 && (
@@ -432,7 +453,7 @@ export function AssessmentLeaderboardView({
               </div>
             )}
 
-            {/* Search & Filter Bar */}
+            {/* Search, Filter & Controls Bar */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
               <div className="relative flex-1 max-w-sm">
                 <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -445,29 +466,68 @@ export function AssessmentLeaderboardView({
                 />
               </div>
 
-              <div className="flex items-center gap-2">
-                <Filter className="w-3.5 h-3.5 text-slate-400" />
+              <div className="flex items-center gap-2 flex-wrap">
+                {/* Division Filter */}
+                <div className="flex items-center gap-1.5">
+                  <Filter className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  <select
+                    value={selectedDivision}
+                    onChange={(e) => setSelectedDivision(e.target.value)}
+                    className="text-xs font-semibold px-2.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none"
+                  >
+                    <option value="ALL">All Divisions</option>
+                    <option value="DIV 1">Division A (DIV 1)</option>
+                    <option value="DIV 2">Division B (DIV 2)</option>
+                  </select>
+                </div>
+
+                {/* Page Size Selector */}
                 <select
-                  value={selectedDivision}
-                  onChange={(e) => setSelectedDivision(e.target.value)}
-                  className="text-xs font-semibold px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none"
+                  value={pageSize}
+                  onChange={(e) => setPageSize(Number(e.target.value))}
+                  className="text-xs font-semibold px-2.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none"
+                  title="Rows per page"
                 >
-                  <option value="ALL">All Divisions</option>
-                  <option value="DIV 1">Division A (DIV 1)</option>
-                  <option value="DIV 2">Division B (DIV 2)</option>
+                  <option value={10}>10 / page</option>
+                  <option value={25}>25 / page</option>
+                  <option value={50}>50 / page</option>
+                  <option value={-1}>All ({data.totalParticipants})</option>
                 </select>
 
-                <span className="text-xs text-slate-400 whitespace-nowrap pl-1">
-                  {filteredRankings.length} of {data.totalParticipants} ranked
+                {/* Toggle Podium View */}
+                {data.rankings.length >= 2 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowPodium(!showPodium)}
+                    className="text-xs font-semibold px-2.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-1.5 transition"
+                    title={showPodium ? 'Hide top 3 podium to see more table rows' : 'Show top 3 podium'}
+                  >
+                    {showPodium ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                    <span className="hidden sm:inline">{showPodium ? 'Hide Podium' : 'Show Podium'}</span>
+                  </button>
+                )}
+
+                <span className="text-xs font-medium text-slate-500 dark:text-slate-400 whitespace-nowrap pl-1">
+                  {totalRanked === 0
+                    ? '0 ranked'
+                    : `Showing ${
+                        pageSize === -1
+                          ? 1
+                          : (currentSafePage - 1) * effectivePageSize + 1
+                      }–${
+                        pageSize === -1
+                          ? totalRanked
+                          : Math.min(currentSafePage * effectivePageSize, totalRanked)
+                      } of ${totalRanked}`}
                 </span>
               </div>
             </div>
 
-            {/* Full Dynamic Leaderboard Table */}
+            {/* Full Dynamic Leaderboard Table with Sticky Header */}
             <div className="border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden bg-white dark:bg-slate-900 shadow-xs">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs min-w-[620px]">
-                  <thead className="bg-slate-50 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 uppercase font-bold text-[10px] tracking-wider border-b border-slate-200 dark:border-slate-800">
+                  <thead className="sticky top-0 z-10 bg-slate-100/95 dark:bg-slate-800/95 backdrop-blur-xs text-slate-600 dark:text-slate-300 uppercase font-bold text-[10px] tracking-wider border-b border-slate-200 dark:border-slate-700 shadow-xs">
                     <tr>
                       <th className="px-4 py-3 text-center w-16">Rank</th>
                       <th className="px-4 py-3">Student Details</th>
@@ -480,7 +540,7 @@ export function AssessmentLeaderboardView({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
-                    {filteredRankings.map((entry) => {
+                    {paginatedRankings.map((entry) => {
                       const isTop1 = entry.rank === 1;
                       const isTop2 = entry.rank === 2;
                       const isTop3 = entry.rank === 3;
@@ -604,6 +664,69 @@ export function AssessmentLeaderboardView({
                   </tbody>
                 </table>
               </div>
+
+              {/* Pagination Controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between px-4 py-3 border-t border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/80 text-xs">
+                  <span className="text-slate-500 dark:text-slate-400 font-medium">
+                    Page {currentSafePage} of {totalPages}
+                  </span>
+
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={currentSafePage <= 1}
+                      className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 font-bold disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center gap-1"
+                    >
+                      <ChevronLeft className="w-3.5 h-3.5" />
+                      <span>Prev</span>
+                    </button>
+
+                    <div className="hidden sm:flex items-center gap-1">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .filter((page) => {
+                          return (
+                            page === 1 ||
+                            page === totalPages ||
+                            Math.abs(page - currentSafePage) <= 1
+                          );
+                        })
+                        .map((page, idx, arr) => {
+                          const prev = arr[idx - 1];
+                          const hasGap = prev && page - prev > 1;
+
+                          return (
+                            <React.Fragment key={page}>
+                              {hasGap && <span className="px-1 text-slate-400">...</span>}
+                              <button
+                                type="button"
+                                onClick={() => setCurrentPage(page)}
+                                className={`w-7 h-7 rounded-lg font-bold text-xs transition ${
+                                  currentSafePage === page
+                                    ? 'bg-indigo-600 text-white shadow-xs'
+                                    : 'border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+                                }`}
+                              >
+                                {page}
+                              </button>
+                            </React.Fragment>
+                          );
+                        })}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={currentSafePage >= totalPages}
+                      className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 font-bold disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center gap-1"
+                    >
+                      <span>Next</span>
+                      <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </>
         ) : null}
@@ -635,7 +758,7 @@ export function AssessmentLeaderboardModal({
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-4xl max-h-[92vh] flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden text-slate-900 dark:text-slate-100"
+        className="relative w-full max-w-5xl h-[92vh] max-h-[92vh] flex flex-col min-h-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden text-slate-900 dark:text-slate-100"
         onClick={(e) => e.stopPropagation()}
       >
         <AssessmentLeaderboardView
