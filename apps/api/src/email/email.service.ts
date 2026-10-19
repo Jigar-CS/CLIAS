@@ -512,3 +512,93 @@ export class NodemailerEmailService implements EmailService {
   }
 }
 
+@Injectable()
+export class BrevoEmailService implements EmailService {
+  private readonly logger = new Logger('BrevoEmailService');
+  private readonly apiKey: string;
+  private readonly universityName: string;
+  private readonly senderName: string;
+  private readonly senderEmail: string;
+
+  constructor(private configService: ConfigService) {
+    this.apiKey = this.configService.get<string>('BREVO_API_KEY') || '';
+    this.universityName = this.configService.get<string>('UNIVERSITY_NAME') || 'CHARUSAT';
+    this.senderName = this.configService.get<string>('BREVO_SENDER_NAME') || `CLIAS ${this.universityName}`;
+    this.senderEmail = this.configService.get<string>('BREVO_SENDER_EMAIL') || '24cs093@charusat.edu.in';
+
+    if (!this.apiKey) {
+      this.logger.warn('⚠️ BREVO_API_KEY is missing in environment variables.');
+    } else {
+      this.logger.log(`🚀 Brevo HTTP Email Service active (HTTPS Port 443, Sender: ${this.senderName} <${this.senderEmail}>)`);
+    }
+  }
+
+  async sendOtp(toEmail: string, otp: string, studentName: string = 'Student'): Promise<boolean> {
+    try {
+      this.logger.log(`📤 Dispatching OTP email via Brevo HTTPS API to: ${toEmail} (${studentName})`);
+
+      const portalUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
+      const textContent = `Hello ${studentName},\n\nYour ${this.universityName} CLIAS verification code is: ${otp}\n\nThis code will expire in 10 minutes.\n\nCharotar University of Science and Technology (${this.universityName}) — CLIAS AdaptIQ`;
+      const htmlContent = `<!DOCTYPE html><html><body style="margin:0;padding:24px;background:#f8fafc;font-family:sans-serif;"><div style="max-width:540px;margin:auto;background:#ffffff;border-radius:14px;padding:32px;border:1px solid #e2e8f0;box-shadow:0 4px 12px rgba(0,0,0,0.05);"><div style="font-size:12px;color:#4f46e5;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">${this.universityName} • CLIAS AdaptIQ</div><h2 style="margin:0 0 16px 0;color:#0f172a;font-size:22px;">Verification Code</h2><p style="color:#475569;font-size:15px;line-height:1.5;">Hello <strong>${studentName}</strong>,<br/>Use the verification code below to verify your email and complete registration:</p><div style="text-align:center;margin:28px 0;background:#f1f5f9;border-radius:10px;padding:18px;border:1px solid #e2e8f0;"><span style="font-size:36px;font-weight:800;letter-spacing:8px;color:#312e81;font-family:monospace;">${otp}</span></div><p style="color:#64748b;font-size:13px;line-height:1.5;">⏱️ This code is valid for <strong>10 minutes</strong>. If you did not request this, please ignore this email.</p></div></body></html>`;
+
+      const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          accept: 'application/json',
+          'api-key': this.apiKey,
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          sender: { name: this.senderName, email: this.senderEmail },
+          to: [{ email: toEmail, name: studentName }],
+          subject: `${otp} is your CLIAS verification code — ${this.universityName}`,
+          htmlContent,
+          textContent,
+        }),
+      });
+
+      const data: any = await res.json();
+      if (!res.ok) {
+        throw new Error(data?.message || JSON.stringify(data));
+      }
+
+      this.logger.log(`✅ Brevo Email delivered successfully! Message ID: ${data?.messageId} to ${toEmail}`);
+      return true;
+    } catch (error: any) {
+      this.logger.error(`❌ Failed to send OTP email via Brevo to ${toEmail}: ${error.message}`);
+      this.logger.warn(`🔑 [FALLBACK DEV OTP] >>> ${otp} <<< for ${toEmail}`);
+      return false;
+    }
+  }
+
+  async sendWelcome(toEmail: string, studentName: string): Promise<boolean> {
+    try {
+      const portalUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
+      const textContent = `Welcome to AdaptIQ, ${studentName}!\n\nYour institutional account at ${this.universityName} has been verified and activated.\n\nYou can log in now at: ${portalUrl}/auth/login`;
+      const htmlContent = `<!DOCTYPE html><html><body style="margin:0;padding:24px;background:#f8fafc;font-family:sans-serif;"><div style="max-width:540px;margin:auto;background:#ffffff;border-radius:14px;padding:32px;border:1px solid #e2e8f0;"><h2 style="color:#0f172a;margin:0 0 16px 0;">Welcome to CLIAS AdaptIQ! 🎓</h2><p style="color:#475569;font-size:15px;line-height:1.6;">Hello <strong>${studentName}</strong>,<br/>Your account at ${this.universityName} has been verified and activated.</p><p style="margin:24px 0;"><a href="${portalUrl}/auth/login" style="background:#4f46e5;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:700;display:inline-block;">Sign In to Portal &rarr;</a></p></div></body></html>`;
+
+      const res = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          accept: 'application/json',
+          'api-key': this.apiKey,
+          'content-type': 'application/json',
+        },
+        body: JSON.stringify({
+          sender: { name: this.senderName, email: this.senderEmail },
+          to: [{ email: toEmail, name: studentName }],
+          subject: `Welcome to CLIAS AdaptIQ, ${studentName}! 🎓`,
+          htmlContent,
+          textContent,
+        }),
+      });
+
+      return res.ok;
+    } catch (err: any) {
+      this.logger.warn(`Could not send welcome email via Brevo: ${err.message}`);
+      return false;
+    }
+  }
+}
+
+
