@@ -395,37 +395,69 @@ export function Navbar({ title, subtitle, isLocked = false, onLockedClick }: Nav
     if (!token) return;
 
     let eventSource: EventSource | null = null;
-    try {
-      eventSource = new EventSource(`/api/v1/disputes/notifications/stream?token=${encodeURIComponent(token)}`);
+    let reconnectTimeout: NodeJS.Timeout | null = null;
+    let isCancelled = false;
 
-      eventSource.onopen = () => {
-        setIsLiveConnected(true);
-      };
+    const connectSSE = () => {
+      if (isCancelled) return;
 
-      eventSource.onmessage = (event) => {
-        try {
-          const payload = JSON.parse(event.data);
-          if (payload?.type === 'PING') {
-            setIsLiveConnected(true);
-            return;
+      try {
+        const apiBase =
+          process.env.NEXT_PUBLIC_API_URL ||
+          (typeof window !== 'undefined' && window.location.hostname
+            ? `${window.location.protocol}//${window.location.hostname}:4000/api/v1`
+            : '/api/v1');
+        const streamUrl = `${apiBase.replace(/\/$/, '')}/disputes/notifications/stream?token=${encodeURIComponent(token)}`;
+
+        eventSource = new EventSource(streamUrl);
+
+        eventSource.onopen = () => {
+          if (!isCancelled) setIsLiveConnected(true);
+        };
+
+        eventSource.onmessage = (event) => {
+          if (isCancelled) return;
+          try {
+            const payload = JSON.parse(event.data);
+            if (payload?.type === 'PING') {
+              setIsLiveConnected(true);
+              return;
+            }
+            // Real-time notification received!
+            loadNotifications(true);
+            setHasNewArrival(true);
+            setTimeout(() => {
+              if (!isCancelled) setHasNewArrival(false);
+            }, 3500);
+          } catch {
+            // ignore malformed ping
           }
-          // Real-time notification received!
-          loadNotifications(true);
-          setHasNewArrival(true);
-          setTimeout(() => setHasNewArrival(false), 3500);
-        } catch {
-          // ignore malformed ping
-        }
-      };
+        };
 
-      eventSource.onerror = () => {
-        setIsLiveConnected(false);
-      };
-    } catch (err) {
-      console.warn('Notification stream connection failed:', err);
-    }
+        eventSource.onerror = () => {
+          if (!isCancelled) setIsLiveConnected(false);
+          if (eventSource) {
+            eventSource.close();
+            eventSource = null;
+          }
+          // Debounce reconnection attempt
+          if (!isCancelled && !reconnectTimeout) {
+            reconnectTimeout = setTimeout(() => {
+              reconnectTimeout = null;
+              connectSSE();
+            }, 5000);
+          }
+        };
+      } catch (err) {
+        console.warn('Notification stream connection failed:', err);
+      }
+    };
+
+    connectSSE();
 
     return () => {
+      isCancelled = true;
+      if (reconnectTimeout) clearTimeout(reconnectTimeout);
       if (eventSource) {
         eventSource.close();
       }

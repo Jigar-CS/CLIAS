@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Logger } from '@nestjs/common';
-import { Subject, Observable, interval, map, filter, merge } from 'rxjs';
+import { Subject, Observable, timer, of, map, filter, merge, catchError } from 'rxjs';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateDisputeDto, ResolveDisputeDto, ResolveDisputeAction } from './dto/dispute.dto';
 import { DisputeStatus, QuestionStatus } from '@prisma/client';
@@ -301,7 +301,7 @@ export class DisputesService {
   }
 
   subscribeToNotifications(userId?: string, role?: string): Observable<{ data: any }> {
-    const pings$ = interval(25000).pipe(
+    const pings$ = timer(0, 25000).pipe(
       map(() => ({
         data: {
           type: 'PING',
@@ -324,7 +324,17 @@ export class DisputesService {
       })),
     );
 
-    return merge(pings$, events$);
+    return merge(pings$, events$).pipe(
+      catchError((err) => {
+        this.logger.error('Error in notification stream:', err);
+        return of({
+          data: {
+            type: 'PING',
+            timestamp: new Date().toISOString(),
+          },
+        });
+      }),
+    );
   }
 
   /**
