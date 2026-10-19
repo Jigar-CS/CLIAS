@@ -493,6 +493,7 @@ model Assessment {
   status             AssessmentStatus     @default(PUBLISHED)
   division           String?              @default("ALL")
   batch              String?              @default("ALL")
+  rollFilter         String?              @default("ALL")
   durationMinutes    Int                  @default(30)
   totalMarks         Float                @default(100.0)
   passingMarks       Float                @default(40.0)

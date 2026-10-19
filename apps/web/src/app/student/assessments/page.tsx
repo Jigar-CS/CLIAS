@@ -32,6 +32,7 @@ interface AssessmentItem {
   type: string;
   division?: string;
   batch?: string;
+  rollFilter?: string;
   status: string;
   durationMinutes: number;
   totalMarks: number;
@@ -241,6 +242,17 @@ export default function StudentAssessmentsPage() {
                                 : item.division === 'DIV 2'
                                   ? 'Division B'
                                   : 'All Divisions'}
+                            </span>
+                          )}
+                          {item.rollFilter && item.rollFilter !== 'ALL' && (
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                                item.rollFilter === 'ODD'
+                                  ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-500/30'
+                                  : 'bg-purple-50 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-500/30'
+                              }`}
+                            >
+                              {item.rollFilter === 'ODD' ? 'Odd IDs Only' : 'Even IDs Only'}
                             </span>
                           )}
                           {item.isExpired && (

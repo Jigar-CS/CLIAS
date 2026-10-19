@@ -48,7 +48,7 @@ class TtlCache<T> {
   }
 
   invalidatePrefix(prefix: string): void {
-    for (const k of this.store.keys()) {
+    for (const k of Array.from(this.store.keys())) {
       if (k.startsWith(prefix)) this.store.delete(k);
     }
   }

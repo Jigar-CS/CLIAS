@@ -238,6 +238,7 @@ export default function FacultyAssessmentsPage() {
   const [newType, setNewType] = useState('QUIZ');
   const [newDivision, setNewDivision] = useState<'ALL' | 'DIV 1' | 'DIV 2'>('ALL');
   const [newBatch, setNewBatch] = useState<string>('ALL');
+  const [newRollFilter, setNewRollFilter] = useState<'ALL' | 'ODD' | 'EVEN'>('ALL');
   const [newDuration, setNewDuration] = useState(30);
   const [newTotalMarks, setNewTotalMarks] = useState(100);
   const [newPassingMarks, setNewPassingMarks] = useState(40);
@@ -276,6 +277,7 @@ export default function FacultyAssessmentsPage() {
   const [editTotalMarks, setEditTotalMarks] = useState(100);
   const [editDivision, setEditDivision] = useState<'ALL' | 'DIV 1' | 'DIV 2'>('ALL');
   const [editBatch, setEditBatch] = useState<string>('ALL');
+  const [editRollFilter, setEditRollFilter] = useState<'ALL' | 'ODD' | 'EVEN'>('ALL');
   const [editAllowedAttempts, setEditAllowedAttempts] = useState(2);
   const [editStatus, setEditStatus] = useState<string>('PUBLISHED');
   const [editExtendMinutes, setEditExtendMinutes] = useState<number>(0);
@@ -293,6 +295,7 @@ export default function FacultyAssessmentsPage() {
     setEditTotalMarks(assessment.totalMarks || 100);
     setEditDivision(assessment.division || 'ALL');
     setEditBatch(assessment.batch || 'ALL');
+    setEditRollFilter((assessment.rollFilter as any) || 'ALL');
     setEditAllowedAttempts(assessment.allowedAttempts || 2);
     setEditStatus(assessment.status || 'PUBLISHED');
     setEditExtendMinutes(0);
@@ -313,6 +316,7 @@ export default function FacultyAssessmentsPage() {
         totalMarks: Number(editTotalMarks),
         division: editDivision,
         batch: editBatch,
+        rollFilter: editRollFilter,
         allowedAttempts: Number(editAllowedAttempts),
         status: editStatus,
         extendMinutes: editExtendMinutes > 0 ? Number(editExtendMinutes) : undefined,
@@ -1083,6 +1087,7 @@ export default function FacultyAssessmentsPage() {
         type: newType,
         division: newDivision,
         batch: newBatch,
+        rollFilter: newRollFilter,
         durationMinutes: Number(newDuration),
         totalMarks: Number(newTotalMarks),
         passingMarks: Number(newPassingMarks),
@@ -1097,6 +1102,7 @@ export default function FacultyAssessmentsPage() {
       setNewCode('');
       setNewBatch('ALL');
       setNewDivision('ALL');
+      setNewRollFilter('ALL');
       setAuthoredCodingProblems([]);
       setSelectedQuestionIds([]);
       setRagFile(null);
@@ -1260,6 +1266,17 @@ export default function FacultyAssessmentsPage() {
                             ? 'CS Div 2'
                             : 'Both Divisions (All)'}
                         </span>
+                        {a.rollFilter && a.rollFilter !== 'ALL' && (
+                          <span
+                            className={`px-2 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider ${
+                              a.rollFilter === 'ODD'
+                                ? 'bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/40'
+                                : 'bg-purple-500/15 text-purple-800 dark:text-purple-300 border border-purple-500/40'
+                            }`}
+                          >
+                            {a.rollFilter === 'ODD' ? 'Odd IDs Only' : 'Even IDs Only'}
+                          </span>
+                        )}
                       </div>
 
                       <span
@@ -1711,6 +1728,86 @@ export default function FacultyAssessmentsPage() {
                     </p>
                   </button>
                 </div>
+              </div>
+
+              {/* Optional Odd / Even Roll ID Filter */}
+              <div className="p-3.5 bg-[var(--surface-muted)] border border-[var(--border)] space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <label className="font-mono text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-[#4a6fa5] inline-block"></span>
+                    Student ID / Roll Allocation (Odd / Even)
+                  </label>
+                  <span className="text-[10px] font-mono font-bold text-[#4a6fa5] dark:text-[#6a90c5]">
+                    {newRollFilter === 'ALL'
+                      ? 'All Student IDs Eligible'
+                      : newRollFilter === 'ODD'
+                      ? 'Odd IDs Only (...001, ...003)'
+                      : 'Even IDs Only (...002, ...004)'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setNewRollFilter('ALL')}
+                    className={`py-2 px-3 border text-center transition-all ${
+                      newRollFilter === 'ALL'
+                        ? 'bg-[var(--surface)] border-2 border-[#4a6fa5] shadow-xs'
+                        : 'bg-[var(--surface)] border border-[var(--border)] hover:border-slate-400 opacity-70'
+                    }`}
+                  >
+                    <div className="font-display text-xs uppercase text-slate-900 dark:text-white font-bold">
+                      All Roll IDs
+                    </div>
+                    <div className="text-[10px] text-slate-500 font-sans">
+                      Both Odd & Even
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setNewRollFilter('ODD')}
+                    className={`py-2 px-3 border text-center transition-all ${
+                      newRollFilter === 'ODD'
+                        ? 'bg-amber-500/15 border-2 border-amber-500 shadow-xs text-amber-900 dark:text-amber-200'
+                        : 'bg-[var(--surface)] border border-[var(--border)] hover:border-slate-400 opacity-70'
+                    }`}
+                  >
+                    <div className="font-display text-xs uppercase text-slate-900 dark:text-white font-bold flex items-center justify-center gap-1">
+                      <span>Odd IDs Only</span>
+                      <span className="text-[9px] font-mono px-1 py-0.2 bg-amber-500/20 text-amber-700 dark:text-amber-300 font-bold">ODD</span>
+                    </div>
+                    <div className="text-[10px] text-slate-500 font-sans">
+                      Ending in 1, 3, 5, 7, 9
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setNewRollFilter('EVEN')}
+                    className={`py-2 px-3 border text-center transition-all ${
+                      newRollFilter === 'EVEN'
+                        ? 'bg-purple-500/15 border-2 border-purple-500 shadow-xs text-purple-900 dark:text-purple-200'
+                        : 'bg-[var(--surface)] border border-[var(--border)] hover:border-slate-400 opacity-70'
+                    }`}
+                  >
+                    <div className="font-display text-xs uppercase text-slate-900 dark:text-white font-bold flex items-center justify-center gap-1">
+                      <span>Even IDs Only</span>
+                      <span className="text-[9px] font-mono px-1 py-0.2 bg-purple-500/20 text-purple-700 dark:text-purple-300 font-bold">EVEN</span>
+                    </div>
+                    <div className="text-[10px] text-slate-500 font-sans">
+                      Ending in 0, 2, 4, 6, 8
+                    </div>
+                  </button>
+                </div>
+
+                <p className="text-[11px] text-slate-600 dark:text-slate-400 font-sans leading-relaxed">
+                  {newRollFilter === 'ODD'
+                    ? `🎯 Only students with Odd enrollment numbers in ${newDivision === 'DIV 1' ? 'Division A (DIV 1)' : newDivision === 'DIV 2' ? 'Division B (DIV 2)' : 'All Divisions'} will see and be allowed to attempt this test.`
+                    : newRollFilter === 'EVEN'
+                    ? `🎯 Only students with Even enrollment numbers in ${newDivision === 'DIV 1' ? 'Division A (DIV 1)' : newDivision === 'DIV 2' ? 'Division B (DIV 2)' : 'All Divisions'} will see and be allowed to attempt this test.`
+                    : `ℹ️ All students in ${newDivision === 'DIV 1' ? 'Division A (DIV 1)' : newDivision === 'DIV 2' ? 'Division B (DIV 2)' : 'All Divisions'} can view and attempt this test.`}
+                </p>
               </div>
 
               {/* Assessment Type, Duration, Passing */}
@@ -2485,7 +2582,7 @@ export default function FacultyAssessmentsPage() {
               <div className="pt-4 border-t border-[var(--border)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <span className="font-mono text-xs text-slate-700 dark:text-slate-300">
-                    Target: <strong className="text-slate-900 dark:text-white font-bold">{newDivision === 'DIV 1' ? 'Division A' : newDivision === 'DIV 2' ? 'Division B' : 'All Divisions'}</strong> • {examMode === 'CODING' ? (
+                    Target: <strong className="text-slate-900 dark:text-white font-bold">{newDivision === 'DIV 1' ? 'Division A' : newDivision === 'DIV 2' ? 'Division B' : 'All Divisions'}</strong>{newRollFilter !== 'ALL' && <strong className="text-amber-700 dark:text-amber-300 font-bold ml-1">({newRollFilter === 'ODD' ? 'Odd IDs Only' : 'Even IDs Only'})</strong>} • {examMode === 'CODING' ? (
                       <strong className="text-[#e05033] font-bold">{authoredCodingProblems.length} Problems</strong>
                     ) : examMode === 'HYBRID' ? (
                       <strong className="text-purple-600 dark:text-purple-400 font-bold">{selectedQuestionIds.length} MCQs + {authoredCodingProblems.length} Problems</strong>
@@ -3608,8 +3705,8 @@ export default function FacultyAssessmentsPage() {
                 </div>
               </div>
 
-              {/* Status, Batch & Division */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {/* Status, Batch, Division & Odd/Even ID Allocation */}
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5">Status</label>
                   <select
@@ -3654,6 +3751,21 @@ export default function FacultyAssessmentsPage() {
                     <option value="ALL">Both Divisions (All)</option>
                     <option value="DIV 1">Division A (DIV 1)</option>
                     <option value="DIV 2">Division B (DIV 2)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-800 dark:text-slate-200 mb-1.5 flex items-center gap-1">
+                    <span className="w-2 h-2 rounded-full bg-indigo-500 inline-block"></span>
+                    ID Allocation
+                  </label>
+                  <select
+                    value={editRollFilter}
+                    onChange={(e) => setEditRollFilter(e.target.value as any)}
+                    className="w-full p-3 text-xs bg-white dark:bg-[#1E293B] border border-slate-300 dark:border-slate-600 rounded-xl text-slate-900 dark:text-white font-medium focus:outline-none focus:border-indigo-500 shadow-xs"
+                  >
+                    <option value="ALL">All Roll IDs (Both)</option>
+                    <option value="ODD">Odd IDs Only (...001, ...003)</option>
+                    <option value="EVEN">Even IDs Only (...002, ...004)</option>
                   </select>
                 </div>
               </div>

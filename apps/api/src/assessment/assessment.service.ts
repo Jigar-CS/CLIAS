@@ -36,6 +36,7 @@ export interface CreateAssessmentDto {
   scheduledEndTime?: string;
   division?: string;
   batch?: string;
+  rollFilter?: string;
   questionIds?: string[];
   codingProblems?: CreateCodingProblemDto[];
   codingProblemIds?: string[];
@@ -51,12 +52,27 @@ export interface UpdateAssessmentDto {
   passingMarks?: number;
   division?: string;
   batch?: string;
+  rollFilter?: string;
   allowedAttempts?: number;
   scheduledStartTime?: string | Date;
   scheduledEndTime?: string | Date;
   status?: AssessmentStatus;
   reopen?: boolean;
   extendMinutes?: number;
+}
+
+export function isEnrollmentOddEvenMatch(enrollmentNumber?: string | null, rollFilter?: string | null): boolean {
+  if (!rollFilter || rollFilter === 'ALL') return true;
+  if (!enrollmentNumber) return true;
+  const match = enrollmentNumber.match(/(\d+)$/);
+  if (!match) return true;
+  const num = parseInt(match[1], 10);
+  if (isNaN(num)) return true;
+  const isEven = num % 2 === 0;
+  const normFilter = rollFilter.trim().toUpperCase();
+  if (normFilter === 'ODD') return !isEven;
+  if (normFilter === 'EVEN') return isEven;
+  return true;
 }
 
 export function normalizeDivision(div?: string | null): string {
@@ -359,6 +375,7 @@ export class AssessmentService {
           status: dto.status || AssessmentStatus.DRAFT,
           division: targetDivision,
           batch: dto.batch || 'ALL',
+          rollFilter: (dto.rollFilter || 'ALL').toUpperCase(),
           durationMinutes,
           totalMarks,
           passingMarks: Number(dto.passingMarks) > 0 ? Number(dto.passingMarks) : 40.0,
@@ -374,7 +391,7 @@ export class AssessmentService {
               order: idx + 1,
             })),
           },
-        },
+        } as any,
         include: {
           questions: {
             include: {
@@ -414,7 +431,8 @@ export class AssessmentService {
   private async notifyAssignedStudents(assessment: any) {
     try {
       const targetDivision = assessment.division || 'ALL';
-      const targetBatch = assessment.batch || 'ALL';
+      const targetBatch = (assessment as any).batch || 'ALL';
+      const targetRollFilter = ((assessment as any).rollFilter || 'ALL').toUpperCase();
       const norm = normalizeDivision(targetDivision);
       const conditions: any[] = [];
 
@@ -441,25 +459,46 @@ export class AssessmentService {
 
       const targetStudents = await this.prisma.studentProfile.findMany({
         where: divisionFilter,
-        select: { id: true },
+        select: {
+          id: true,
+          authorizedStudent: { select: { enrollmentNumber: true } },
+        },
         take: 500,
       });
 
-      if (targetStudents.length > 0) {
+      // Filter by odd / even roll numbers if specified
+      let eligibleStudents = targetStudents;
+      if (targetRollFilter && targetRollFilter !== 'ALL') {
+        eligibleStudents = targetStudents.filter((s: any) =>
+          isEnrollmentOddEvenMatch(s.authorizedStudent?.enrollmentNumber, targetRollFilter),
+        );
+      }
+
+      if (eligibleStudents.length > 0) {
         const divisionLabel = norm === 'CS Div 1'
           ? 'Division A (DIV 1)'
           : norm === 'CS Div 2'
           ? 'Division B (DIV 2)'
           : 'All Divisions';
         const batchLabel = targetBatch && targetBatch !== 'ALL' ? `Batch '${targetBatch}` : 'All Batches';
+        const rollLabel = targetRollFilter === 'ODD'
+          ? ' • Odd IDs Only'
+          : targetRollFilter === 'EVEN'
+          ? ' • Even IDs Only'
+          : '';
 
         await this.prisma.studentNotification.createMany({
-          data: targetStudents.map((s) => ({
+          data: eligibleStudents.map((s) => ({
             studentId: s.id,
             title: `New Assessment Assigned: ${assessment.title}`,
-            message: `A new ${assessment.type ? assessment.type.toString().toLowerCase() : 'assessment'} (${assessment.code}) has been allocated to ${batchLabel} (${divisionLabel}). Duration: ${assessment.durationMinutes} mins.`,
+            message: `A new ${assessment.type ? assessment.type.toString().toLowerCase() : 'assessment'} (${assessment.code}) has been allocated to ${batchLabel} (${divisionLabel}${rollLabel}). Duration: ${assessment.durationMinutes} mins.`,
             type: 'ASSESSMENT_ASSIGNED',
-            metadata: JSON.stringify({ assessmentId: assessment.id, division: targetDivision, batch: targetBatch }),
+            metadata: JSON.stringify({
+              assessmentId: assessment.id,
+              division: targetDivision,
+              batch: targetBatch,
+              rollFilter: targetRollFilter,
+            }),
           })),
         });
       }
@@ -516,11 +555,13 @@ export class AssessmentService {
     }
 
     // Permission check for faculty
-    const faculty = await this.prisma.facultyProfile.findFirst({
-      where: {
-        OR: [{ id: facultyProfileId }, { userId: facultyProfileId }],
-      },
-    });
+    const faculty = facultyProfileId
+      ? await this.prisma.facultyProfile.findFirst({
+          where: {
+            OR: [{ id: facultyProfileId }, { userId: facultyProfileId }],
+          },
+        })
+      : null;
 
     if (faculty) {
       const extraAssignments = ((await this.prisma.$queryRawUnsafe(
@@ -545,6 +586,7 @@ export class AssessmentService {
     if (dto.passingMarks !== undefined) dataToUpdate.passingMarks = Number(dto.passingMarks);
     if (dto.division !== undefined) dataToUpdate.division = dto.division;
     if (dto.batch !== undefined) dataToUpdate.batch = dto.batch;
+    if (dto.rollFilter !== undefined) dataToUpdate.rollFilter = dto.rollFilter.toUpperCase();
     if (dto.allowedAttempts !== undefined) dataToUpdate.allowedAttempts = Number(dto.allowedAttempts);
     if (dto.status !== undefined) dataToUpdate.status = dto.status;
 
@@ -609,6 +651,8 @@ export class AssessmentService {
     // Check if the requester is a student with an assigned division
     let studentDivision: string | null = null;
     let studentBatch: string | null = null;
+    let studentEnrollment: string | null = null;
+    let studentRollType: 'ODD' | 'EVEN' | null = null;
     let resolvedStudentProfileId: string = studentProfileId;
     if (studentProfileId) {
       const student = await this.prisma.studentProfile.findFirst({
@@ -626,7 +670,12 @@ export class AssessmentService {
           studentDivision = student.authorizedStudent.division;
         }
         if (student.authorizedStudent?.enrollmentNumber) {
+          studentEnrollment = student.authorizedStudent.enrollmentNumber;
           studentBatch = student.authorizedStudent.enrollmentNumber.slice(0, 2);
+          const m = student.authorizedStudent.enrollmentNumber.match(/(\d+)$/);
+          if (m) {
+            studentRollType = parseInt(m[1], 10) % 2 === 0 ? 'EVEN' : 'ODD';
+          }
         }
       }
     }
@@ -673,7 +722,17 @@ export class AssessmentService {
           { batch: '' },
           { batch: studentBatch },
           { batch: { contains: studentBatch } },
-        ],
+        ] as any,
+      });
+    }
+    if (!isFacultyOrAdmin && studentRollType) {
+      andFilters.push({
+        OR: [
+          { rollFilter: 'ALL' },
+          { rollFilter: null },
+          { rollFilter: '' },
+          { rollFilter: studentRollType },
+        ] as any,
       });
     }
 
@@ -698,14 +757,19 @@ export class AssessmentService {
       orderBy: { createdAt: 'desc' },
     });
 
-    return assessments.map((a) => {
+    const visibleAssessments = assessments.filter((a: any) => {
+      if (isFacultyOrAdmin) return true;
+      return isEnrollmentOddEvenMatch(studentEnrollment, a.rollFilter);
+    });
+
+    return visibleAssessments.map((a: any) => {
       const attemptsCount = a.submissions.length;
-      const bestSubmission = [...a.submissions].sort((x, y) => y.totalScore - x.totalScore)[0];
-      const activeSubmission = a.submissions.find((s) => s.status === SubmissionStatus.IN_PROGRESS);
+      const bestSubmission = [...a.submissions].sort((x: any, y: any) => y.totalScore - x.totalScore)[0];
+      const activeSubmission = a.submissions.find((s: any) => s.status === SubmissionStatus.IN_PROGRESS);
       const isCodingExam =
         a.title.includes('[CODING]') ||
         (a.description?.toLowerCase().includes('coding') ?? false) ||
-        a.questions.some((q) => q.question.type === QuestionType.CODING);
+        a.questions.some((q: any) => q.question.type === QuestionType.CODING);
 
       const expired = isAssessmentExpired(a);
       const expiresAt = a.scheduledEndTime
@@ -720,6 +784,7 @@ export class AssessmentService {
         code: a.code,
         division: a.division || 'ALL',
         batch: a.batch || 'ALL',
+        rollFilter: a.rollFilter || 'ALL',
         courseCode: a.course.code,
         courseName: a.course.name,
         type: a.type,
@@ -820,11 +885,24 @@ export class AssessmentService {
     }
 
     // Verify batch eligibility if restricted
-    if (assessment.batch && assessment.batch !== 'ALL') {
+    const aBatch = (assessment as any).batch;
+    if (aBatch && aBatch !== 'ALL') {
       const studentBatch = student?.authorizedStudent?.enrollmentNumber?.slice(0, 2);
-      if (studentBatch && assessment.batch !== studentBatch && !assessment.batch.includes(studentBatch)) {
+      if (studentBatch && aBatch !== studentBatch && !aBatch.includes(studentBatch)) {
         throw new ForbiddenException(
-          `This assessment is restricted to Batch '${assessment.batch}'. Your account is registered under Batch '${studentBatch}'.`,
+          `This assessment is restricted to Batch '${aBatch}'. Your account is registered under Batch '${studentBatch}'.`,
+        );
+      }
+    }
+
+    // Verify roll number (odd/even) eligibility if restricted
+    const aRollFilter = (assessment as any).rollFilter;
+    if (aRollFilter && aRollFilter !== 'ALL') {
+      const enrollment = student?.authorizedStudent?.enrollmentNumber;
+      if (!isEnrollmentOddEvenMatch(enrollment, aRollFilter)) {
+        const expectedLabel = aRollFilter.toUpperCase() === 'ODD' ? 'Odd Roll Numbers' : 'Even Roll Numbers';
+        throw new ForbiddenException(
+          `This assessment is restricted to students with ${expectedLabel}. Your account (${enrollment || 'N/A'}) is not eligible to take this test.`,
         );
       }
     }
@@ -1266,7 +1344,7 @@ export class AssessmentService {
     const historyEntries: any[] = [];
     const submissionTimestamp = evaluatedSubmission.submittedAt || new Date();
 
-    for (const [topicId, stats] of topicAggregates.entries()) {
+    for (const [topicId, stats] of Array.from(topicAggregates.entries())) {
       const topicPercentage = stats.totalPoints > 0
         ? Number(((stats.earnedPoints / stats.totalPoints) * 100).toFixed(1))
         : percentage;
@@ -1487,6 +1565,7 @@ export class AssessmentService {
       title: assessment.title,
       code: assessment.code,
       division: assessment.division || 'ALL',
+      rollFilter: (assessment as any).rollFilter || 'ALL',
       courseCode: assessment.course.code,
       courseName: assessment.course.name,
       totalQuestions: assessment.totalQuestions,
@@ -1669,6 +1748,7 @@ export class AssessmentService {
       title: assessment.title,
       code: assessment.code,
       division: assessment.division || 'ALL',
+      rollFilter: (assessment as any).rollFilter || 'ALL',
       courseCode: assessment.course.code,
       courseName: assessment.course.name,
       totalQuestions: assessment.totalQuestions,
