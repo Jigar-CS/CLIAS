@@ -227,6 +227,13 @@ export class ProctoringService {
   ) {
     const session = await this.prisma.proctoringSession.findUnique({
       where: { id: sessionId },
+      include: {
+        submission: {
+          include: {
+            assessment: { select: { title: true, code: true } },
+          },
+        },
+      },
     });
 
     if (!session) {
@@ -240,11 +247,77 @@ export class ProctoringService {
         ? ProctoringSessionStatus.FLAGGED
         : ProctoringSessionStatus.INVALIDATED;
 
+    const updatedTrustScore =
+      decision === 'APPROVED' ? 100.0 : decision === 'INVALIDATED' ? 0.0 : session.trustScore;
+
+    const updatedViolationsCount =
+      decision === 'APPROVED' ? 0 : session.violationsCount;
+
+    // When approved, mark all recorded violations as resolved (false positive / cleared)
+    if (decision === 'APPROVED') {
+      await this.prisma.proctoringViolation.updateMany({
+        where: { sessionId },
+        data: { resolved: true },
+      });
+    }
+
+    // When invalidated, mark submission as not passed
+    if (decision === 'INVALIDATED' && session.submissionId) {
+      await this.prisma.assessmentSubmission.update({
+        where: { id: session.submissionId },
+        data: { passed: false },
+      });
+    }
+
+    const assessmentTitle = session.submission?.assessment?.title || 'Proctored Assessment';
+
+    // Dispatch a student notification
+    try {
+      const notifTitle =
+        decision === 'APPROVED'
+          ? 'Proctoring Review: Cleared & Approved'
+          : decision === 'FLAGGED'
+          ? 'Proctoring Review: Flagged for Review'
+          : 'Proctoring Review: Submission Invalidated';
+
+      const notifMessage =
+        decision === 'APPROVED'
+          ? `Your submission for "${assessmentTitle}" has been verified and cleared by the faculty invigilator. Trust index restored to 100%.\nNotes: ${notes}`
+          : decision === 'FLAGGED'
+          ? `Your submission for "${assessmentTitle}" has been flagged for academic review.\nNotes: ${notes}`
+          : `Your submission for "${assessmentTitle}" has been invalidated due to exam integrity policy violations.\nNotes: ${notes}`;
+
+      await this.prisma.studentNotification.create({
+        data: {
+          studentId: session.studentId,
+          title: notifTitle,
+          message: notifMessage,
+          type: 'PROCTORING_REVIEW',
+        },
+      });
+    } catch (notifErr) {
+      this.logger.warn(`Failed to create student notification for session ${sessionId}:`, notifErr);
+    }
+
     return this.prisma.proctoringSession.update({
       where: { id: sessionId },
       data: {
         status: updatedStatus,
+        trustScore: updatedTrustScore,
+        violationsCount: updatedViolationsCount,
         invigilatorNotes: notes,
+      },
+      include: {
+        violations: true,
+        student: {
+          include: {
+            authorizedStudent: true,
+            user: { select: { email: true } },
+          },
+        },
+        submission: {
+          include: { assessment: { select: { title: true, code: true } } },
+        },
       },
     });
   }

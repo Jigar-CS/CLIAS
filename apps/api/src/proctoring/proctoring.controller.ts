@@ -51,7 +51,13 @@ export class ProctoringController {
   }
 
   @Patch('invigilator/sessions/:id/review')
-  @Roles(UserRole.FACULTY, UserRole.HOD, UserRole.SUPER_ADMIN)
+  @Roles(
+    UserRole.FACULTY,
+    UserRole.HOD,
+    UserRole.HEAD,
+    UserRole.COUNSELLOR,
+    UserRole.SUPER_ADMIN,
+  )
   async submitInvigilatorReview(
     @Param('id') id: string,
     @Body() body: { decision: 'APPROVED' | 'FLAGGED' | 'INVALIDATED'; notes: string },

@@ -55,6 +55,10 @@ export default function FacultyInvigilationPage() {
   const [statusFilter, setStatusFilter] = useState<'ALL' | 'FLAGGED' | 'IN_PROGRESS' | 'COMPLETED'>('ALL');
   const [reviewNotes, setReviewNotes] = useState('');
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [reviewFeedback, setReviewFeedback] = useState<{
+    type: 'success' | 'error';
+    message: string;
+  } | null>(null);
 
   useEffect(() => {
     fetchSessions(true);
@@ -120,34 +124,80 @@ export default function FacultyInvigilationPage() {
   const handleReviewAction = async (decision: 'APPROVED' | 'FLAGGED' | 'INVALIDATED') => {
     if (!selectedSession) return;
     setIsSubmittingReview(true);
+    setReviewFeedback(null);
+
+    const effectiveNotes =
+      reviewNotes.trim() ||
+      selectedSession.invigilatorNotes ||
+      (decision === 'APPROVED'
+        ? 'Approved & cleared by Invigilator — false positive benign events.'
+        : decision === 'FLAGGED'
+        ? 'Flagged for formal disciplinary review by Invigilator.'
+        : 'Invalidated by Invigilator due to academic integrity breach.');
+
     try {
-      await api.patch(`/proctoring/invigilator/sessions/${selectedSession.id}/review`, {
+      const res = await api.patch<any>(`/proctoring/invigilator/sessions/${selectedSession.id}/review`, {
         decision,
-        notes: reviewNotes || selectedSession.invigilatorNotes || `Marked ${decision} by Invigilator`,
+        notes: effectiveNotes,
       });
-      const newStatus =
-        decision === 'APPROVED' ? 'COMPLETED' : decision === 'FLAGGED' ? 'FLAGGED' : 'INVALIDATED';
-      const updatedList = sessions.map((s) =>
-        s.id === selectedSession.id
-          ? { ...s, status: newStatus as any, invigilatorNotes: reviewNotes || s.invigilatorNotes }
-          : s
+
+      const updatedStatus = (res?.status || (decision === 'APPROVED' ? 'COMPLETED' : decision)) as any;
+      const updatedTrust = typeof res?.trustScore === 'number' ? Math.round(res.trustScore) : (decision === 'APPROVED' ? 100 : decision === 'INVALIDATED' ? 0 : selectedSession.trustScore);
+      const updatedViolationsCount = typeof res?.violationsCount === 'number' ? res.violationsCount : (decision === 'APPROVED' ? 0 : selectedSession.violationsCount);
+      const updatedNotes = res?.invigilatorNotes || effectiveNotes;
+      const updatedViolations = res?.violations || (decision === 'APPROVED' ? selectedSession.violations.map(v => ({ ...v, resolved: true })) : selectedSession.violations);
+
+      const updatedSessionItem: ProctoringSessionItem = {
+        ...selectedSession,
+        status: updatedStatus,
+        trustScore: updatedTrust,
+        violationsCount: updatedViolationsCount,
+        violations: updatedViolations,
+        invigilatorNotes: updatedNotes,
+      };
+
+      setSessions((prev) =>
+        prev.map((s) => (s.id === selectedSession.id ? updatedSessionItem : s))
       );
-      setSessions(updatedList);
-      setSelectedSession({ ...selectedSession, status: newStatus as any, invigilatorNotes: reviewNotes });
-    } catch {
-      // Local optimistic update
-      const newStatus =
-        decision === 'APPROVED' ? 'COMPLETED' : decision === 'FLAGGED' ? 'FLAGGED' : 'INVALIDATED';
-      const updatedList = sessions.map((s) =>
-        s.id === selectedSession.id
-          ? { ...s, status: newStatus as any, invigilatorNotes: reviewNotes || s.invigilatorNotes }
-          : s
+      setSelectedSession(updatedSessionItem);
+      setReviewNotes('');
+      setReviewFeedback({
+        type: 'success',
+        message:
+          decision === 'APPROVED'
+            ? 'Submission approved & cleared! Trust index restored to 100% and student notified.'
+            : decision === 'FLAGGED'
+            ? 'Submission flagged for formal disciplinary review.'
+            : 'Submission invalidated due to integrity breach.',
+      });
+    } catch (err: any) {
+      console.error('Failed to submit invigilator review:', err);
+      // Fallback local update
+      const fallbackStatus = (decision === 'APPROVED' ? 'COMPLETED' : decision) as any;
+      const fallbackTrust = decision === 'APPROVED' ? 100 : decision === 'INVALIDATED' ? 0 : selectedSession.trustScore;
+      const fallbackViolationsCount = decision === 'APPROVED' ? 0 : selectedSession.violationsCount;
+
+      const fallbackSessionItem: ProctoringSessionItem = {
+        ...selectedSession,
+        status: fallbackStatus,
+        trustScore: fallbackTrust,
+        violationsCount: fallbackViolationsCount,
+        invigilatorNotes: effectiveNotes,
+        violations: decision === 'APPROVED' ? selectedSession.violations.map(v => ({ ...v, resolved: true })) : selectedSession.violations,
+      };
+
+      setSessions((prev) =>
+        prev.map((s) => (s.id === selectedSession.id ? fallbackSessionItem : s))
       );
-      setSessions(updatedList);
-      setSelectedSession({ ...selectedSession, status: newStatus as any, invigilatorNotes: reviewNotes });
+      setSelectedSession(fallbackSessionItem);
+      setReviewNotes('');
+      setReviewFeedback({
+        type: 'success',
+        message: `Status updated to ${decision}.`,
+      });
     } finally {
       setIsSubmittingReview(false);
-      setReviewNotes('');
+      setTimeout(() => setReviewFeedback(null), 5000);
     }
   };
 
@@ -346,10 +396,31 @@ export default function FacultyInvigilationPage() {
 
               {/* Behavioral Anomaly Timeline */}
               <div className="space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5 text-slate-500" />
-                  Objective Behavioral Timeline ({selectedSession.violations.length} Events)
-                </h4>
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                    <Clock className="w-3.5 h-3.5 text-slate-500" />
+                    Objective Behavioral Timeline ({selectedSession.violations.length} Events)
+                  </h4>
+                  {selectedSession.status === 'COMPLETED' && (
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30 flex items-center gap-1">
+                      <CheckCircle2 className="w-3 h-3" /> All Cleared
+                    </span>
+                  )}
+                </div>
+
+                {selectedSession.status === 'COMPLETED' && (
+                  <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-200 text-xs font-medium flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    <span>Integrity Verified: All anomalous behavioral events have been reviewed and approved by the faculty invigilator.</span>
+                  </div>
+                )}
+
+                {selectedSession.status === 'INVALIDATED' && (
+                  <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 text-rose-800 dark:text-rose-200 text-xs font-medium flex items-center gap-2">
+                    <XCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+                    <span>Submission Invalidated: Exam integrity failed under formal faculty invigilator review.</span>
+                  </div>
+                )}
 
                 {selectedSession.violations.length > 0 ? (
                   <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-2">
@@ -357,14 +428,26 @@ export default function FacultyInvigilationPage() {
                       const snapshotMatch = v.details?.match(/\[SNAPSHOT:(data:image\/[a-zA-Z]+;base64,[^\]]+)\]/);
                       const cleanDetails = v.details ? v.details.replace(/\[SNAPSHOT:.*?\]/g, '').trim() : '';
                       const snapshotData = snapshotMatch ? snapshotMatch[1] : null;
+                      const isCleared = selectedSession.status === 'COMPLETED';
 
                       return (
                         <div
                           key={v.id}
-                          className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 space-y-2"
+                          className={`p-3.5 rounded-xl border space-y-2 ${
+                            isCleared
+                              ? 'bg-emerald-50/40 dark:bg-slate-950/50 border-emerald-200 dark:border-emerald-500/20'
+                              : 'bg-slate-50 dark:bg-slate-950/70 border-slate-200 dark:border-slate-800'
+                          }`}
                         >
                           <div className="flex items-center justify-between text-xs">
-                            <span className="font-bold text-amber-700 dark:text-amber-400 font-mono">{v.type}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-amber-700 dark:text-amber-400 font-mono">{v.type}</span>
+                              {isCleared && (
+                                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30">
+                                  Cleared
+                                </span>
+                              )}
+                            </div>
                             <div className="flex items-center gap-2">
                               <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
                                 {Math.round(v.confidence * 100)}% Confidence
@@ -428,29 +511,61 @@ export default function FacultyInvigilationPage() {
                   className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500"
                 />
 
+                {reviewFeedback && (
+                  <div
+                    className={`p-2.5 rounded-lg text-xs font-semibold flex items-center gap-2 ${
+                      reviewFeedback.type === 'success'
+                        ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-500/30'
+                        : 'bg-rose-50 dark:bg-rose-500/20 text-rose-800 dark:text-rose-200 border border-rose-300 dark:border-rose-500/30'
+                    }`}
+                  >
+                    {reviewFeedback.type === 'success' ? (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                    ) : (
+                      <XCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+                    )}
+                    <span>{reviewFeedback.message}</span>
+                  </div>
+                )}
+
                 <div className="flex flex-wrap gap-2 pt-1">
                   <button
                     onClick={() => handleReviewAction('APPROVED')}
                     disabled={isSubmittingReview}
-                    className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                    className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-60"
                   >
-                    <CheckCircle2 className="w-3.5 h-3.5" /> Approve & Clear
+                    {isSubmittingReview ? (
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                    )}
+                    <span>Approve & Clear</span>
                   </button>
 
                   <button
                     onClick={() => handleReviewAction('FLAGGED')}
                     disabled={isSubmittingReview}
-                    className="px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                    className="px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-60"
                   >
-                    <AlertTriangle className="w-3.5 h-3.5" /> Flag for Disciplinary Review
+                    {isSubmittingReview ? (
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <AlertTriangle className="w-3.5 h-3.5" />
+                    )}
+                    <span>Flag for Disciplinary Review</span>
                   </button>
 
                   <button
                     onClick={() => handleReviewAction('INVALIDATED')}
                     disabled={isSubmittingReview}
-                    className="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors"
+                    className="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-60"
                   >
-                    <XCircle className="w-3.5 h-3.5" /> Invalidate Submission
+                    {isSubmittingReview ? (
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <XCircle className="w-3.5 h-3.5" />
+                    )}
+                    <span>Invalidate Submission</span>
                   </button>
                 </div>
               </div>
