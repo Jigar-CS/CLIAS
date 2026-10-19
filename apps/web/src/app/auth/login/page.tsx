@@ -5,19 +5,109 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { useTheme } from '@/lib/theme-context';
-import { BrainCircuit, Lock, Mail, Loader2, AlertCircle, Sun, Moon } from 'lucide-react';
+import {
+  BrainCircuit,
+  Lock,
+  Mail,
+  Loader2,
+  AlertCircle,
+  Sun,
+  Moon,
+  Eye,
+  EyeOff,
+  Check,
+  ShieldCheck,
+} from 'lucide-react';
 import { UserRole } from '@clias/shared-types';
 
+interface RolePreset {
+  id: string;
+  label: string;
+  email: string;
+  password: string;
+  roleBadge: string;
+  description: string;
+  accentColor: string;
+}
+
+const ROLE_PRESETS: RolePreset[] = [
+  {
+    id: 'FACULTY',
+    label: 'Faculty',
+    email: 'faculty1.cspit.cse@charusat.edu.in',
+    password: 'clias123',
+    roleBadge: 'FACULTY',
+    description: 'CSPIT CSE Faculty & Exam Evaluator',
+    accentColor: 'border-emerald-500 text-emerald-700 dark:text-emerald-300 bg-emerald-50/80 dark:bg-emerald-950/40',
+  },
+  {
+    id: 'STUDENT',
+    label: 'Student',
+    email: 'student@charusat.edu.in',
+    password: 'rahul@2006',
+    roleBadge: 'STUDENT',
+    description: 'Rahul Patel (Batch 24 CSE)',
+    accentColor: 'border-red-500 text-red-700 dark:text-red-300 bg-red-50/80 dark:bg-red-950/40',
+  },
+  {
+    id: 'COUNSELLOR',
+    label: 'Counsellor',
+    email: 'counsellor@charusat.edu.in',
+    password: 'clias123',
+    roleBadge: 'COUNSELLOR',
+    description: 'Lead Academic Counsellor',
+    accentColor: 'border-amber-500 text-amber-800 dark:text-amber-300 bg-amber-50/80 dark:bg-amber-950/40',
+  },
+  {
+    id: 'HOD',
+    label: 'HOD',
+    email: 'hod@charusat.edu.in',
+    password: 'clias123',
+    roleBadge: 'HOD',
+    description: 'Head of Department (CSE)',
+    accentColor: 'border-teal-500 text-teal-800 dark:text-teal-300 bg-teal-50/80 dark:bg-teal-950/40',
+  },
+  {
+    id: 'HEAD',
+    label: 'Dean',
+    email: 'head@charusat.edu.in',
+    password: 'clias123',
+    roleBadge: 'DEAN',
+    description: 'Institute Dean / Executive',
+    accentColor: 'border-purple-500 text-purple-800 dark:text-purple-300 bg-purple-50/80 dark:bg-purple-950/40',
+  },
+  {
+    id: 'ADMIN',
+    label: 'Admin',
+    email: 'admin@charusat.edu.in',
+    password: 'clias123',
+    roleBadge: 'SUPER_ADMIN',
+    description: 'System Super Administrator',
+    accentColor: 'border-slate-500 text-slate-800 dark:text-slate-200 bg-slate-100 dark:bg-slate-800/80',
+  },
+];
+
 export default function LoginPage() {
-  const [email, setEmail] = useState('student@charusat.edu.in');
-  const [password, setPassword] = useState('clias123');
-  const [loading, setLoading] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<string>('FACULTY');
+  const [email, setEmail] = useState<string>('faculty1.cspit.cse@charusat.edu.in');
+  const [password, setPassword] = useState<string>('clias123');
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   const { login } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const router = useRouter();
   const universityName = process.env.NEXT_PUBLIC_UNIVERSITY_NAME || 'CHARUSAT';
+
+  const currentPreset = ROLE_PRESETS.find((p) => p.id === selectedRole) || ROLE_PRESETS[0];
+
+  const handleSelectPreset = (preset: RolePreset) => {
+    setSelectedRole(preset.id);
+    setEmail(preset.email);
+    setPassword(preset.password);
+    setError(null);
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,14 +137,8 @@ export default function LoginPage() {
     }
   };
 
-  const fillDemo = (demoEmail: string) => {
-    setEmail(demoEmail);
-    setPassword('clias123');
-    setError(null);
-  };
-
   return (
-    <div className="min-h-screen bg-transparent text-[#1a2540] dark:text-[#e8edf5] flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative transition-colors duration-200 grid-paper z-10">
+    <div className="min-h-screen bg-transparent text-[#1a2540] dark:text-[#e8edf5] flex flex-col justify-center py-10 sm:px-6 lg:px-8 relative transition-colors duration-200 grid-paper z-10">
       {/* CARDIA Atlas Coordinate Grid Atmosphere */}
       <div className="absolute inset-0 pointer-events-none atlas-grid opacity-35 dark:opacity-20" />
 
@@ -86,19 +170,63 @@ export default function LoginPage() {
           [AUTH // PORTAL]
         </p>
         <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">University Portal Sign In</h1>
-        <p className="font-mono text-[11px] text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-tight">{universityName} Learning Intelligence &amp; Assessment System</p>
+        <p className="font-mono text-[11px] text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-tight">
+          {universityName} Learning Intelligence &amp; Assessment System
+        </p>
       </div>
 
       <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-md relative z-10">
-        <div className="bg-[#faf7f2] dark:bg-[#121b30] py-8 px-6 border border-[rgba(74,111,165,0.28)] dark:border-[rgba(106,144,197,0.2)] shadow-xl sm:px-10" style={{ borderRadius: 0 }}>
+        <div className="bg-[#faf7f2] dark:bg-[#121b30] py-7 px-6 border border-[rgba(74,111,165,0.28)] dark:border-[rgba(106,144,197,0.2)] shadow-xl sm:px-9" style={{ borderRadius: 0 }}>
+
+          {/* Quick Select Role Selector Tabs */}
+          <div className="mb-5">
+            <div className="flex items-center justify-between mb-2">
+              <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                Select Role (Pre-fills Base Credentials):
+              </span>
+              <span className="font-mono text-[9px] uppercase tracking-wider text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
+                <ShieldCheck className="w-3 h-3" /> Ready
+              </span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-1.5 font-mono text-[10px] font-bold">
+              {ROLE_PRESETS.map((preset) => {
+                const isActive = preset.id === selectedRole;
+                return (
+                  <button
+                    key={preset.id}
+                    type="button"
+                    onClick={() => handleSelectPreset(preset)}
+                    className={`py-2 px-2 text-center transition cursor-pointer border flex items-center justify-center gap-1 ${
+                      isActive
+                        ? `${preset.accentColor} border-2 shadow-sm font-black`
+                        : 'border-[rgba(74,111,165,0.2)] dark:border-white/10 hover:border-[#e05033]/50 text-slate-600 dark:text-slate-400 bg-white/40 dark:bg-white/5'
+                    }`}
+                    style={{ borderRadius: 0 }}
+                  >
+                    {isActive && <Check className="w-3 h-3 shrink-0" />}
+                    <span>{preset.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Active Role Meta Notice */}
+            <div className="mt-2.5 px-2.5 py-1.5 bg-[rgba(74,111,165,0.06)] dark:bg-white/5 border border-[rgba(74,111,165,0.18)] dark:border-white/10 flex items-center justify-between text-[10px] font-mono">
+              <span className="text-slate-600 dark:text-slate-300 truncate">
+                Role: <strong className="text-slate-900 dark:text-white uppercase">{currentPreset.label}</strong> ({currentPreset.description})
+              </span>
+            </div>
+          </div>
+
           {error && (
-            <div className="mb-5 p-3 bg-[rgba(224,80,51,0.08)] border border-[rgba(224,80,51,0.3)] text-[#e05033] text-[11px] flex items-start gap-2.5 font-mono" style={{ borderRadius: 0 }}>
+            <div className="mb-4 p-3 bg-[rgba(224,80,51,0.08)] border border-[rgba(224,80,51,0.3)] text-[#e05033] text-[11px] flex items-start gap-2.5 font-mono" style={{ borderRadius: 0 }}>
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-red-600" />
               <span>{error}</span>
             </div>
           )}
 
-          <form onSubmit={handleLogin} className="space-y-4">
+          <form onSubmit={handleLogin} className="space-y-4" autoComplete="off">
             <div>
               <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1 font-mono uppercase tracking-wider text-[11px]">
                 University Email Address
@@ -109,27 +237,45 @@ export default function LoginPage() {
                   type="email"
                   required
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    setError(null);
+                  }}
+                  autoComplete="username"
                   placeholder={`name@${process.env.NEXT_PUBLIC_UNIVERSITY_EMAIL_DOMAIN || 'charusat.edu.in'}`}
-                  className="w-full pl-10 pr-4 py-2.5 text-[11px] font-mono bg-[rgba(74,111,165,0.06)] dark:bg-[rgba(106,144,197,0.06)] border border-[rgba(74,111,165,0.28)] dark:border-[rgba(106,144,197,0.2)] text-[#1a2540] dark:text-[#e8edf5] focus:outline-none focus:border-[#e05033] focus:bg-[#faf7f2] dark:focus:bg-[#121b30] transition uppercase tracking-wider placeholder:normal-case placeholder:tracking-normal"
+                  className="w-full pl-10 pr-4 py-2.5 text-[11px] font-mono bg-[rgba(74,111,165,0.06)] dark:bg-[rgba(106,144,197,0.06)] border border-[rgba(74,111,165,0.28)] dark:border-[rgba(106,144,197,0.2)] text-[#1a2540] dark:text-[#e8edf5] focus:outline-none focus:border-[#e05033] focus:bg-[#faf7f2] dark:focus:bg-[#121b30] transition tracking-wider placeholder:normal-case placeholder:tracking-normal"
                   style={{ borderRadius: 0 }}
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1 font-mono uppercase tracking-wider text-[11px]">
-                Password
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 font-mono uppercase tracking-wider text-[11px]">
+                  Password
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="text-[10px] font-mono text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 flex items-center gap-1 cursor-pointer"
+                >
+                  {showPassword ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                  <span>{showPassword ? 'Hide' : 'Show'}</span>
+                </button>
+              </div>
               <div className="relative">
                 <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   required
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setError(null);
+                  }}
+                  autoComplete="current-password"
                   placeholder="••••••••"
-                  className="w-full pl-10 pr-4 py-2.5 text-[11px] font-mono bg-[rgba(74,111,165,0.06)] dark:bg-[rgba(106,144,197,0.06)] border border-[rgba(74,111,165,0.28)] dark:border-[rgba(106,144,197,0.2)] text-[#1a2540] dark:text-[#e8edf5] focus:outline-none focus:border-[#e05033] focus:bg-[#faf7f2] dark:focus:bg-[#121b30] transition"
+                  className="w-full pl-10 pr-10 py-2.5 text-[11px] font-mono bg-[rgba(74,111,165,0.06)] dark:bg-[rgba(106,144,197,0.06)] border border-[rgba(74,111,165,0.28)] dark:border-[rgba(106,144,197,0.2)] text-[#1a2540] dark:text-[#e8edf5] focus:outline-none focus:border-[#e05033] focus:bg-[#faf7f2] dark:focus:bg-[#121b30] transition"
                   style={{ borderRadius: 0 }}
                 />
               </div>
@@ -138,66 +284,15 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 px-4 text-[10px] font-mono font-bold uppercase tracking-widest text-white bg-[#e05033] hover:bg-[#c8432b] transition shadow-sm flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+              className="w-full py-3 px-4 text-[10px] font-mono font-bold uppercase tracking-widest text-white bg-[#e05033] hover:bg-[#c8432b] transition shadow-sm flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer mt-2"
               style={{ borderRadius: 0 }}
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-              <span>{loading ? 'Authenticating...' : 'Sign In to Portal'}</span>
+              <span>{loading ? 'Authenticating...' : `Sign In as ${currentPreset.label}`}</span>
             </button>
           </form>
 
-          {/* Quick Demo Fill Buttons */}
-          <div className="mt-6 pt-5 border-t border-[#141c2e]/10 dark:border-white/10">
-            <p className="font-mono text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest text-center mb-2.5">
-              One-Click Role Presets:
-            </p>
-            <div className="grid grid-cols-3 gap-1.5 font-mono text-[10px] font-bold">
-              <button
-                type="button"
-                onClick={() => fillDemo('student@charusat.edu.in')}
-                className="py-1.5 px-2 rounded bg-red-50 dark:bg-red-950/40 hover:bg-red-100 dark:hover:bg-red-900/60 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800/40 transition cursor-pointer"
-              >
-                Student
-              </button>
-              <button
-                type="button"
-                onClick={() => fillDemo('dharasolanki.cse@charusat.ac.in')}
-                className="py-1.5 px-2 rounded bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800/40 transition cursor-pointer"
-              >
-                Faculty
-              </button>
-              <button
-                type="button"
-                onClick={() => fillDemo('counsellor@charusat.edu.in')}
-                className="py-1.5 px-2 rounded bg-amber-50 dark:bg-amber-950/40 hover:bg-amber-100 dark:hover:bg-amber-900/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/40 transition cursor-pointer"
-              >
-                Counsellor
-              </button>
-              <button
-                type="button"
-                onClick={() => fillDemo('hod@charusat.edu.in')}
-                className="py-1.5 px-2 rounded bg-teal-50 dark:bg-teal-950/40 hover:bg-teal-100 dark:hover:bg-teal-900/60 text-teal-800 dark:text-teal-300 border border-teal-200 dark:border-teal-800/40 transition cursor-pointer"
-              >
-                HOD
-              </button>
-              <button
-                type="button"
-                onClick={() => fillDemo('head@charusat.edu.in')}
-                className="py-1.5 px-2 rounded bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/60 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-800/40 transition cursor-pointer"
-              >
-                Dean
-              </button>
-              <button
-                type="button"
-                onClick={() => fillDemo('admin@charusat.edu.in')}
-                className="py-1.5 px-2 rounded bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-200 border border-slate-200 dark:border-slate-700 transition cursor-pointer"
-              >
-                Admin
-              </button>
-            </div>
-          </div>
-
-          <div className="mt-5 text-center text-xs text-slate-500 dark:text-slate-400">
+          <div className="mt-5 text-center text-xs text-slate-500 dark:text-slate-400 border-t border-[rgba(74,111,165,0.15)] dark:border-white/10 pt-4">
             <span>New university student? </span>
             <Link href="/auth/register" className="font-mono font-bold text-[10px] uppercase tracking-widest text-[#e05033] dark:text-[#e8604a] hover:underline">
               Activate your account &rarr;
