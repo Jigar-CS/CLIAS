@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { api } from '@/lib/api';
@@ -113,6 +113,44 @@ export default function HodDashboard() {
       setFetching(false);
     }
   };
+
+  // Standardize division benchmarks strictly into two canonical cohorts: Div 1 and Div 2
+  const normalizedDivisionBenchmarks = useMemo(() => {
+    if (!curriculumHealth?.divisionBenchmark || !Array.isArray(curriculumHealth.divisionBenchmark)) {
+      return [];
+    }
+
+    let div1 = { division: 'Div 1', label: 'Division 1 (Div 1)', enrolledStudents: 0, totalMasteryWeight: 0, riskCount: 0 };
+    let div2 = { division: 'Div 2', label: 'Division 2 (Div 2)', enrolledStudents: 0, totalMasteryWeight: 0, riskCount: 0 };
+
+    for (const b of curriculumHealth.divisionBenchmark) {
+      const divStr = String(b.division || '').toUpperCase();
+      const isDiv2 = divStr.includes('2') || divStr.includes('B');
+      const target = isDiv2 ? div2 : div1;
+      const count = Number(b.enrolledStudents || 0);
+
+      target.enrolledStudents += count;
+      target.totalMasteryWeight += Number(b.averageMastery || 0) * count;
+      target.riskCount += Number(b.riskCount || 0);
+    }
+
+    return [
+      {
+        division: div1.division,
+        label: div1.label,
+        enrolledStudents: div1.enrolledStudents,
+        averageMastery: div1.enrolledStudents > 0 ? Math.round(div1.totalMasteryWeight / div1.enrolledStudents) : 0,
+        riskCount: div1.riskCount,
+      },
+      {
+        division: div2.division,
+        label: div2.label,
+        enrolledStudents: div2.enrolledStudents,
+        averageMastery: div2.enrolledStudents > 0 ? Math.round(div2.totalMasteryWeight / div2.enrolledStudents) : 0,
+        riskCount: div2.riskCount,
+      },
+    ];
+  }, [curriculumHealth?.divisionBenchmark]);
 
   const departmentTitle = curriculumHealth?.departmentName || 'Computer Science & Engineering';
 
@@ -417,48 +455,55 @@ export default function HodDashboard() {
             </div>
           )}
 
-          {/* TAB 2: Division Benchmarking */}
-          {activeTab === 'divisions' && curriculumHealth && (
-            <div className="bg-slate-900/80 rounded-2xl border border-slate-800 shadow-xl p-6 space-y-4">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <BarChart3 className="w-5 h-5 text-cyan-400" />
-                Division-to-Division Comparative Benchmark
-              </h3>
-              <p className="text-xs text-slate-400">
-                Comparative mastery analysis enables targeted pedagogical interventions across faculty sections.
-              </p>
+          {/* TAB 2: Division Benchmarking (Strictly 2 Divisions: Div 1 and Div 2) */}
+          {activeTab === 'divisions' && (
+            <div className="bg-slate-900/80 rounded-2xl border border-slate-800 shadow-xl p-6 space-y-5">
+              <div>
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5 text-cyan-400" />
+                  Division-to-Division Comparative Benchmark
+                </h3>
+                <p className="text-xs text-slate-400 mt-1">
+                  Comparative mastery analysis across the two academic cohorts enabling targeted pedagogical interventions.
+                </p>
+              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {curriculumHealth.divisionBenchmark.map((div: any) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {normalizedDivisionBenchmarks.map((div: any) => (
                   <div
                     key={div.division}
-                    className="p-5 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-3"
+                    className="p-6 rounded-2xl bg-slate-950/80 border border-slate-800 hover:border-cyan-500/40 transition space-y-4 shadow-sm"
                   >
                     <div className="flex items-center justify-between">
-                      <span className="text-lg font-extrabold text-white">
-                        {div.division.startsWith('DIV') ? div.division : `Division ${div.division}`}
-                      </span>
-                      <span className="px-2 py-0.5 rounded text-xs font-mono bg-slate-800 text-slate-300">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center font-mono font-bold text-cyan-400 text-xs">
+                          {div.division === 'Div 1' ? '01' : '02'}
+                        </div>
+                        <span className="text-xl font-extrabold text-white tracking-tight">
+                          {div.label}
+                        </span>
+                      </div>
+                      <span className="px-3 py-1 rounded-lg text-xs font-mono font-bold bg-slate-800 text-cyan-300 border border-slate-700">
                         {div.enrolledStudents} Students
                       </span>
                     </div>
 
-                    <div className="space-y-1">
+                    <div className="space-y-1.5 pt-1">
                       <div className="flex justify-between text-xs">
                         <span className="text-slate-400">Average Mastery</span>
-                        <span className="font-bold text-emerald-400">{div.averageMastery}%</span>
+                        <span className="font-bold text-emerald-400 text-sm font-mono">{div.averageMastery}%</span>
                       </div>
-                      <div className="w-full bg-slate-800 rounded-full h-2">
+                      <div className="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden">
                         <div
-                          className="bg-emerald-500 h-2 rounded-full"
+                          className="bg-gradient-to-r from-emerald-500 to-teal-400 h-2.5 rounded-full transition-all duration-500"
                           style={{ width: `${div.averageMastery}%` }}
                         />
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between pt-2 border-t border-slate-800 text-xs">
+                    <div className="flex items-center justify-between pt-3 border-t border-slate-800/80 text-xs">
                       <span className="text-slate-400">At-Risk Students:</span>
-                      <span className={`font-bold ${div.riskCount > 2 ? 'text-rose-400' : 'text-amber-400'}`}>
+                      <span className={`font-bold font-mono ${div.riskCount > 2 ? 'text-rose-400' : 'text-amber-400'}`}>
                         {div.riskCount} Students Flagged
                       </span>
                     </div>

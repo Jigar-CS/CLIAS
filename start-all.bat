@@ -4,6 +4,12 @@ echo ===================================================
 echo   Starting CLIAS Platform Services...
 echo ===================================================
 
+:: Clear any stale/ghost dev processes on application ports so fresh visible command windows launch reliably
+for /f "tokens=5" %%a in ('netstat -aon ^| findstr :8000 ^| findstr LISTENING') do taskkill /f /pid %%a >nul 2>&1
+for /f "tokens=5" %%a in ('netstat -aon ^| findstr :4000 ^| findstr LISTENING') do taskkill /f /pid %%a >nul 2>&1
+for /f "tokens=5" %%a in ('netstat -aon ^| findstr :3000 ^| findstr LISTENING') do taskkill /f /pid %%a >nul 2>&1
+timeout /t 1 /nobreak >nul
+
 :: 1. Check & Start XAMPP MySQL on Port 3307
 netstat -ano | findstr :3307 | findstr LISTENING >nul 2>&1
 if %errorlevel% equ 0 (
@@ -14,32 +20,17 @@ if %errorlevel% equ 0 (
     timeout /t 3 /nobreak >nul
 )
 
-:: 2. Check & Start FastAPI AI Microservice on Port 8000
-netstat -ano | findstr :8000 | findstr LISTENING >nul 2>&1
-if %errorlevel% equ 0 (
-    echo [2/4] FastAPI AI Service is ALREADY RUNNING on Port 8000. Reusing active instance.
-) else (
-    echo [2/4] Starting FastAPI AI Service on Port 8000...
-    start "CLIAS 2 - FastAPI AI Service (Port 8000)" /d "%~dp0apps\ai" cmd /k "color 0B && echo Starting FastAPI Microservice... && python -m uvicorn main:app --host 0.0.0.0 --port 8000"
-)
+:: 2. Start FastAPI AI Microservice on Port 8000
+echo [2/4] Starting FastAPI AI Service on Port 8000...
+start "CLIAS 2 - FastAPI AI Service (Port 8000)" /d "%~dp0apps\ai" cmd /k "color 0B && echo Starting FastAPI Microservice... && python -m uvicorn main:app --host 0.0.0.0 --port 8000"
 
-:: 3. Check & Start NestJS Backend API on Port 4000
-netstat -ano | findstr :4000 | findstr LISTENING >nul 2>&1
-if %errorlevel% equ 0 (
-    echo [3/4] NestJS Backend API is ALREADY RUNNING on Port 4000. Reusing active instance.
-) else (
-    echo [3/4] Starting NestJS Backend API on Port 4000...
-    start "CLIAS 3 - NestJS API (Port 4000)" /d "%~dp0apps\api" cmd /k "color 0E && echo Starting NestJS API... && npm run dev"
-)
+:: 3. Start NestJS Backend API on Port 4000
+echo [3/4] Starting NestJS Backend API on Port 4000...
+start "CLIAS 3 - NestJS API (Port 4000)" /d "%~dp0apps\api" cmd /k "color 0E && echo Starting NestJS API... && npm run dev"
 
-:: 4. Check & Start Next.js Frontend on Port 3000
-netstat -ano | findstr :3000 | findstr LISTENING >nul 2>&1
-if %errorlevel% equ 0 (
-    echo [4/4] Next.js Web Frontend is ALREADY RUNNING on Port 3000. Reusing active instance.
-) else (
-    echo [4/4] Starting Next.js Web Frontend on Port 3000...
-    start "CLIAS 4 - Next.js Web (Port 3000)" /d "%~dp0apps\web" cmd /k "color 0D && echo Starting Next.js Frontend... && npm run dev"
-)
+:: 4. Start Next.js Frontend on Port 3000
+echo [4/4] Starting Next.js Web Frontend on Port 3000...
+start "CLIAS 4 - Next.js Web (Port 3000)" /d "%~dp0apps\web" cmd /k "color 0D && echo Starting Next.js Frontend... && npm run dev"
 
 echo ===================================================
 echo   All 4 services active!

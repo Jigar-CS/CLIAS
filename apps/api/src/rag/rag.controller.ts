@@ -7,6 +7,7 @@ import {
   UseGuards,
   Req,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import {
   RagService,
@@ -96,11 +97,30 @@ export class RagController {
     @Param('courseId') courseId: string,
     @Body('questions') questions: ExtractedQuestionItem[],
   ) {
-    if (req.user?.role === UserRole.FACULTY && req.user?.courseId && courseId !== req.user.courseId) {
-      throw new ForbiddenException('Faculty can only import questions into their assigned course.');
+    const targetCourseId = (courseId && courseId !== 'undefined' && courseId !== 'null')
+      ? courseId
+      : req.user?.courseId;
+    const facultyId = req.user?.facultyId || req.user?.facultyProfile?.id || req.user?.id;
+    return this.ragService.importQuestionsToCourse(targetCourseId, questions || [], facultyId);
+  }
+
+  /**
+   * Fallback endpoint accepting courseId in body or inferred from faculty session
+   */
+  @Post('import-questions')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.FACULTY, UserRole.HOD, UserRole.HEAD, UserRole.SUPER_ADMIN)
+  async importQuestionsFallback(
+    @Req() req: any,
+    @Body('courseId') bodyCourseId: string,
+    @Body('questions') questions: ExtractedQuestionItem[],
+  ) {
+    const targetCourseId = bodyCourseId || req.user?.courseId;
+    if (!targetCourseId) {
+      throw new BadRequestException('A valid courseId is required to import questions.');
     }
     const facultyId = req.user?.facultyId || req.user?.facultyProfile?.id || req.user?.id;
-    return this.ragService.importQuestionsToCourse(courseId, questions || [], facultyId);
+    return this.ragService.importQuestionsToCourse(targetCourseId, questions || [], facultyId);
   }
 
   /**

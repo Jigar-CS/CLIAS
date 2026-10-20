@@ -77,7 +77,7 @@ export class CoursesService {
         const allCourseIds = Array.from(new Set([faculty.courseId, ...extraCourseIds].filter(Boolean)));
 
         if (allCourseIds.length > 0) {
-          return this.prisma.course.findMany({
+          const assignedCourses = await this.prisma.course.findMany({
             where: { id: { in: allCourseIds } },
             include: {
               topics: {
@@ -95,6 +95,36 @@ export class CoursesService {
             },
             orderBy: { code: 'asc' },
           });
+
+          if (assignedCourses.length > 0) {
+            return assignedCourses;
+          }
+        }
+
+        // Fallback to faculty's department courses if assigned courses are not present
+        if (faculty.departmentId) {
+          const deptCourses = await this.prisma.course.findMany({
+            where: { departmentId: faculty.departmentId },
+            include: {
+              topics: {
+                select: {
+                  id: true,
+                  name: true,
+                  slug: true,
+                  _count: { select: { questions: true } },
+                },
+              },
+              department: {
+                include: { institute: true },
+              },
+              _count: { select: { questions: true } },
+            },
+            orderBy: { code: 'asc' },
+          });
+
+          if (deptCourses.length > 0) {
+            return deptCourses;
+          }
         }
       }
     }

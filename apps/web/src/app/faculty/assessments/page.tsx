@@ -511,10 +511,19 @@ export default function FacultyAssessmentsPage() {
     setCandidateQuestions([]);
     setSelectedCandidateIndices([]);
     setShowDraftPreview(false);
+    let activeCourseId = selectedCourseId;
+    if (!activeCourseId) {
+      activeCourseId = (courses && courses.length > 0 ? courses[0].id : '') || user?.courseId || user?.assignedCourse?.id || '';
+      if (activeCourseId) {
+        setSelectedCourseId(activeCourseId);
+      }
+    }
     try {
       // Fetch approved questions directly for the selected course
-      const questions = await api.get(`/courses/${selectedCourseId}/questions`);
-      setAvailableQuestions(questions || []);
+      if (activeCourseId) {
+        const questions = await api.get(`/courses/${activeCourseId}/questions`);
+        setAvailableQuestions(questions || []);
+      }
     } catch (err) {
       console.error('Failed to load question bank', err);
     } finally {
@@ -649,12 +658,28 @@ export default function FacultyAssessmentsPage() {
       return;
     }
 
+    let targetCourseId =
+      selectedCourseId ||
+      (courses && courses.length > 0 ? courses[0].id : '') ||
+      user?.courseId ||
+      user?.assignedCourse?.id ||
+      '';
+
+    if (!selectedCourseId && targetCourseId) {
+      setSelectedCourseId(targetCourseId);
+    }
+
     setImportingToAssessment(true);
     try {
       const questionsToImport = selectedCandidateIndices.map((idx) => candidateQuestions[idx]);
 
-      const res: any = await api.post(`/rag/courses/${selectedCourseId}/import-questions`, {
+      const endpoint = targetCourseId
+        ? `/rag/courses/${targetCourseId}/import-questions`
+        : '/rag/import-questions';
+
+      const res: any = await api.post(endpoint, {
         questions: questionsToImport,
+        courseId: targetCourseId || undefined,
       });
 
       const imported = res?.questions || [];
@@ -1452,18 +1477,36 @@ export default function FacultyAssessmentsPage() {
             </div>
 
             <form onSubmit={handleCreateAssessment} className="p-6 overflow-y-auto space-y-5">
-              {/* Assigned Course Header */}
+              {/* Assigned Course Header / Selector */}
               <div className="p-3.5 bg-[var(--surface-muted)] border border-[var(--border)] text-xs flex items-center justify-between">
-                <div>
+                <div className="flex-1 mr-4">
                   <span className="font-mono text-[9px] font-bold text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider block">
                     Assigned Teaching Subject
                   </span>
-                  <span className="font-bold text-slate-900 dark:text-white text-sm">
-                    {courses.find((c) => c.id === selectedCourseId)?.code} - {courses.find((c) => c.id === selectedCourseId)?.name}
-                  </span>
+                  {courses.length > 1 ? (
+                    <select
+                      value={selectedCourseId || (courses[0]?.id ?? '')}
+                      onChange={(e) => {
+                        const newId = e.target.value;
+                        setSelectedCourseId(newId);
+                        api.get(`/courses/${newId}/questions`).then((q) => setAvailableQuestions(q || [])).catch(() => {});
+                      }}
+                      className="mt-1 bg-transparent border border-[var(--border)] px-2 py-1 text-sm font-bold text-slate-900 dark:text-white rounded focus:outline-none focus:border-[#4a6fa5]"
+                    >
+                      {courses.map((c) => (
+                        <option key={c.id} value={c.id} className="bg-slate-900 text-white">
+                          {c.code} - {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  ) : (
+                    <span className="font-bold text-slate-900 dark:text-white text-sm">
+                      {courses.find((c) => c.id === selectedCourseId)?.code || courses[0]?.code || 'CORE'} - {courses.find((c) => c.id === selectedCourseId)?.name || courses[0]?.name || 'Course'}
+                    </span>
+                  )}
                 </div>
                 <span className="font-mono text-[9px] font-bold px-2 py-0.5 uppercase bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30">
-                  Fixed For Faculty
+                  {courses.length > 1 ? 'Selectable' : 'Fixed For Faculty'}
                 </span>
               </div>
 

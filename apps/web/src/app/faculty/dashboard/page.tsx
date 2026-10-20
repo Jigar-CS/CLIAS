@@ -66,18 +66,24 @@ export default function FacultyDashboard() {
 
   const loadCourseDetails = async (course: any) => {
     try {
-      // 1. Load real course cohort analytics
-      const res: any = await api.get(`/analytics/faculty/course/${course.id}/summary`);
-      setCohortData(res);
+      const [cohortRes, assessRes] = await Promise.allSettled([
+        api.get(`/analytics/faculty/course/${course.id}/summary`),
+        api.get(`/assessments/student?courseId=${course.id}`),
+      ]);
+
+      if (cohortRes.status === 'fulfilled') {
+        setCohortData(cohortRes.value);
+      } else {
+        setCohortData(null);
+      }
+
+      if (assessRes.status === 'fulfilled') {
+        setAssessmentCount(Array.isArray(assessRes.value) ? assessRes.value.length : 0);
+      } else {
+        setAssessmentCount(0);
+      }
     } catch (e) {
       setCohortData(null);
-    }
-
-    try {
-      // 2. Load assessments created for this course
-      const assessments: any = await api.get(`/assessments/student?courseId=${course.id}`);
-      setAssessmentCount(assessments ? assessments.length : 0);
-    } catch (e) {
       setAssessmentCount(0);
     }
   };

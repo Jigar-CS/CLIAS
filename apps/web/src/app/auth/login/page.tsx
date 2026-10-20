@@ -102,11 +102,29 @@ export default function LoginPage() {
 
   const currentPreset = ROLE_PRESETS.find((p) => p.id === selectedRole) || ROLE_PRESETS[0];
 
+  // Warm-up and prefetch destination dashboard bundles on mount for instant zero-lag entry
+  React.useEffect(() => {
+    router.prefetch('/faculty/dashboard');
+    router.prefetch('/student/dashboard');
+    router.prefetch('/counsellor/dashboard');
+    router.prefetch('/hod/dashboard');
+    router.prefetch('/head/dashboard');
+    router.prefetch('/admin/dashboard');
+  }, [router]);
+
   const handleSelectPreset = (preset: RolePreset) => {
     setSelectedRole(preset.id);
     setEmail(preset.email);
     setPassword(preset.password);
     setError(null);
+
+    // Warm-up target route for this specific preset
+    if (preset.id === 'FACULTY') router.prefetch('/faculty/dashboard');
+    else if (preset.id === 'STUDENT') router.prefetch('/student/dashboard');
+    else if (preset.id === 'COUNSELLOR') router.prefetch('/counsellor/dashboard');
+    else if (preset.id === 'HOD') router.prefetch('/hod/dashboard');
+    else if (preset.id === 'HEAD') router.prefetch('/head/dashboard');
+    else if (preset.id === 'ADMIN') router.prefetch('/admin/dashboard');
   };
 
   const handleLogin = async (e: React.FormEvent) => {

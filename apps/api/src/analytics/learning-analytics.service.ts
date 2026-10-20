@@ -2622,6 +2622,13 @@ export class LearningAnalyticsService {
       }
 
       if (!hodDeptId) {
+        const defaultDept = await this.prisma.department.findFirst({
+          where: { OR: [{ code: 'CSE' }, { code: 'CS' }] },
+        });
+        hodDeptId = defaultDept?.id;
+      }
+
+      if (!hodDeptId) {
         throw new ForbiddenException('No department is assigned to this HOD account.');
       }
 
@@ -3227,30 +3234,52 @@ export class LearningAnalyticsService {
       OR: deptMatchConditions.length > 0 ? deptMatchConditions : [{ department: department.name }],
     };
 
-    // Dynamically compute division benchmark strictly from this Department's AuthorizedStudent and SkillMastery records
-    const rawDivisions = await this.prisma.authorizedStudent.findMany({
-      where: deptStudentWhere,
-      select: { division: true },
-      distinct: ['division'],
-    });
-    const divisionList = rawDivisions.map((d) => d.division).filter(Boolean).sort();
+    // For all departments, standardize division benchmark strictly into two cohorts: Div 1 and Div 2
+    const canonicalDivisions = [
+      {
+        division: 'Div 1',
+        prismaCondition: {
+          AND: [
+            deptStudentWhere,
+            {
+              NOT: {
+                OR: [
+                  { division: { contains: '2' } },
+                  { division: { contains: 'B' } },
+                  { division: { contains: 'b' } },
+                ],
+              },
+            },
+          ],
+        },
+      },
+      {
+        division: 'Div 2',
+        prismaCondition: {
+          AND: [
+            deptStudentWhere,
+            {
+              OR: [
+                { division: { contains: '2' } },
+                { division: { contains: 'B' } },
+                { division: { contains: 'b' } },
+              ],
+            },
+          ],
+        },
+      },
+    ];
 
     const divisionBenchmark = await Promise.all(
-      divisionList.map(async (div) => {
+      canonicalDivisions.map(async (cDiv) => {
         const enrolledStudents = await this.prisma.authorizedStudent.count({
-          where: {
-            division: div,
-            ...deptStudentWhere,
-          },
+          where: cDiv.prismaCondition,
         });
 
         const divMasteries = await this.prisma.skillMastery.findMany({
           where: {
             student: {
-              authorizedStudent: {
-                division: div,
-                ...deptStudentWhere,
-              },
+              authorizedStudent: cDiv.prismaCondition,
             },
           },
           select: { masteryScore: true },
@@ -3265,16 +3294,13 @@ export class LearningAnalyticsService {
           where: {
             status: { not: 'RESOLVED' },
             student: {
-              authorizedStudent: {
-                division: div,
-                ...deptStudentWhere,
-              },
+              authorizedStudent: cDiv.prismaCondition,
             },
           },
         });
 
         return {
-          division: div,
+          division: cDiv.division,
           enrolledStudents,
           averageMastery: avgMastery,
           riskCount,

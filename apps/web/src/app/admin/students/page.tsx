@@ -21,6 +21,8 @@ import {
   BookOpen,
   Filter,
   Plus,
+  ChevronDown,
+  Layers,
 } from 'lucide-react';
 
 interface AuthorizedStudent {
@@ -183,29 +185,30 @@ export default function AdminStudentsPage() {
           </div>
 
           {/* Search & Filter Toolbar */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="relative flex-1 max-w-md">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-4 shadow-xs flex flex-col xl:flex-row xl:items-center justify-between gap-3.5 min-w-0">
+            <div className="relative flex-1 min-w-[240px] max-w-md">
               <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search by name, enrollment # (24CS001), email, or department..."
-                className="w-full pl-10 pr-4 py-2 text-xs bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:border-blue-600 font-medium"
+                className="w-full pl-10 pr-4 py-2 text-xs bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl focus:outline-none focus:border-blue-600 font-medium transition"
               />
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
+              {/* Status Filter */}
               <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
                 <Filter className="w-3.5 h-3.5" />
-                <span>Status:</span>
+                <span className="font-semibold uppercase tracking-wider text-[10px]">Status:</span>
               </div>
               <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl text-xs">
                 {(['ALL', 'ACTIVATED', 'PENDING'] as const).map((st) => (
                   <button
                     key={st}
                     onClick={() => setStatusFilter(st)}
-                    className={`px-3 py-1 rounded-lg font-medium transition ${
+                    className={`px-3 py-1 rounded-lg font-medium transition cursor-pointer ${
                       statusFilter === st
                         ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs font-bold'
                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -216,21 +219,56 @@ export default function AdminStudentsPage() {
                 ))}
               </div>
 
+              {/* Division Filter Dropdown / Pills */}
               {availableDivisions.length > 1 && (
-                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl text-xs overflow-x-auto">
-                  {availableDivisions.map((div) => (
-                    <button
-                      key={div}
-                      onClick={() => setDivisionFilter(div)}
-                      className={`px-2.5 py-1 rounded-lg font-medium transition whitespace-nowrap ${
-                        divisionFilter === div
-                          ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs font-bold'
-                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                      }`}
-                    >
-                      {div === 'ALL' ? 'All Div' : `Div ${div}`}
-                    </button>
-                  ))}
+                <div className="flex items-center gap-1.5 text-xs">
+                  <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
+                    <Layers className="w-3.5 h-3.5" />
+                    <span className="font-semibold uppercase tracking-wider text-[10px]">Division:</span>
+                  </div>
+
+                  {availableDivisions.length <= 4 ? (
+                    <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl text-xs">
+                      {availableDivisions.map((div) => {
+                        const label = div === 'ALL' ? 'All Div' : div.toLowerCase().startsWith('div') ? div : `Div ${div}`;
+                        return (
+                          <button
+                            key={div}
+                            onClick={() => setDivisionFilter(div)}
+                            className={`px-2.5 py-1 rounded-lg font-medium transition cursor-pointer ${
+                              divisionFilter === div
+                                ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs font-bold'
+                                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                            }`}
+                          >
+                            {label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <select
+                        value={divisionFilter}
+                        onChange={(e) => setDivisionFilter(e.target.value)}
+                        className="appearance-none bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 pl-3 pr-8 py-1.5 rounded-xl text-xs font-semibold focus:outline-none focus:border-indigo-500 cursor-pointer shadow-xs max-w-[220px] truncate"
+                      >
+                        <option value="ALL">All Divisions ({students.length})</option>
+                        {availableDivisions
+                          .filter((d) => d !== 'ALL')
+                          .map((div) => {
+                            const count = students.filter((s) => s.division === div).length;
+                            const label = div.toLowerCase().startsWith('div') ? div : `Div ${div}`;
+                            return (
+                              <option key={div} value={div}>
+                                {label} ({count})
+                              </option>
+                            );
+                          })}
+                      </select>
+                      <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    </div>
+                  )}
                 </div>
               )}
             </div>

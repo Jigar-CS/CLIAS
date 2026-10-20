@@ -34,6 +34,7 @@ import {
   Layers,
   BarChart3,
   ExternalLink,
+  ChevronDown,
 } from 'lucide-react';
 
 interface AssignedStudent {
@@ -369,21 +370,44 @@ export default function CounsellorAssignedStudentsPage() {
                 <Filter className="w-3.5 h-3.5" />
                 <span>Division:</span>
               </div>
-              <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl text-xs">
-                {availableDivisions.map((div) => (
-                  <button
-                    key={div}
-                    onClick={() => setDivisionFilter(div)}
-                    className={`px-3 py-1 rounded-lg font-medium transition ${
-                      divisionFilter === div
-                        ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs font-bold'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                    }`}
+              {availableDivisions.length <= 4 ? (
+                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl text-xs">
+                  {availableDivisions.map((div) => (
+                    <button
+                      key={div}
+                      onClick={() => setDivisionFilter(div)}
+                      className={`px-3 py-1 rounded-lg font-medium transition cursor-pointer ${
+                        divisionFilter === div
+                          ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs font-bold'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                      }`}
+                    >
+                      {div === 'ALL' ? 'All Divisions' : div.toLowerCase().startsWith('div') ? div : `Div ${div}`}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="relative">
+                  <select
+                    value={divisionFilter}
+                    onChange={(e) => setDivisionFilter(e.target.value)}
+                    className="appearance-none bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 pl-3 pr-8 py-1.5 rounded-xl text-xs font-semibold focus:outline-none focus:border-indigo-500 cursor-pointer shadow-xs max-w-[200px] truncate"
                   >
-                    {div === 'ALL' ? 'All Divisions' : `Div ${div}`}
-                  </button>
-                ))}
-              </div>
+                    <option value="ALL">All Divisions</option>
+                    {availableDivisions
+                      .filter((d) => d !== 'ALL')
+                      .map((div) => {
+                        const label = div.toLowerCase().startsWith('div') ? div : `Div ${div}`;
+                        return (
+                          <option key={div} value={div}>
+                            {label}
+                          </option>
+                        );
+                      })}
+                  </select>
+                  <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
+              )}
 
               <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl text-xs">
                 {['ALL', 'INTERVENTION_REQUIRED', 'OPTIMAL'].map((st) => (

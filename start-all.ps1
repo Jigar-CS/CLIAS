@@ -5,6 +5,13 @@ Write-Host "===================================================" -ForegroundColo
 
 $root = $PSScriptRoot
 
+# Free lingering dev processes on application ports
+@(8000, 4000, 3000) | ForEach-Object {
+    $p = (Get-NetTCPConnection -LocalPort $_ -State Listen -ErrorAction SilentlyContinue).OwningProcess
+    if ($p) { Stop-Process -Id $p -Force -ErrorAction SilentlyContinue }
+}
+Start-Sleep -Seconds 1
+
 # 1. MySQL on Port 3307
 Write-Host "[1/4] Starting MySQL on Port 3307..." -ForegroundColor Green
 Start-Process powershell -ArgumentList "-NoExit", "-Command", "Write-Host 'CLIAS: MySQL 3307' -ForegroundColor Green; & 'C:\xampp\mysql\bin\mysqld.exe' --defaults-file='C:\xampp\mysql\bin\my.ini' --console"
