@@ -72,7 +72,6 @@ export function SpacedRepetitionQueueDrawer({
                   Ebbinghaus SM-2
                 </span>
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Review scheduled at optimal memory decay points</p>
             </div>
           </div>
           <button

@@ -201,10 +201,6 @@ export default function CLIASHomePage() {
               <span className="block">WITH CLIAS.</span>
             </h1>
 
-            <p className="text-sm sm:text-base text-[#1a2540]/75 dark:text-slate-300 mt-6 max-w-xl leading-relaxed font-sans">
-              A structured educational intelligence system powered by Bayesian Knowledge Tracing, Item Response Theory, and diagnostic learning graphs. Calibrate your true academic potential with precision.
-            </p>
-
             {/* Primary Action Row */}
             <div className="flex flex-wrap items-center gap-3.5 mt-8">
               <Link

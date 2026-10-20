@@ -144,7 +144,6 @@ export default function FacultyDisputesPage() {
           {/* Gleam-Spark Page Intro Banner */}
           <div className="page-intro">
             <div>
-              <p className="mono">FACULTY / MODERATION / 03</p>
               <h1 className="page-title display">
                 QUESTION <span className="coral">DISPUTES.</span>
               </h1>

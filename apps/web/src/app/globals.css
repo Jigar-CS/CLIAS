@@ -681,6 +681,12 @@ html.dark .bg-red-50 {
   margin-bottom: 18px;
 }
 
+.page-intro > div:first-child > p.mono,
+.page-intro > div:first-child > .mono,
+.page-intro > div:first-child > p:first-child {
+  display: none !important;
+}
+
 .page-title {
   font-size: 76px;
   line-height: .94;
@@ -780,8 +786,8 @@ html.dark .bg-red-50 {
   box-shadow: 0 1px 4px rgba(26, 37, 64, 0.05);
   display: flex;
   align-items: center;
-  padding: 26px 24px;
-  gap: 25px;
+  padding: 16px 24px;
+  gap: 20px;
   margin-bottom: 24px;
 }
 
@@ -795,8 +801,10 @@ html.dark .priority-band {
   color: var(--foreground);
 }
 
-.priority-band .priority-content p {
-  color: var(--muted-foreground);
+.priority-band .priority-content p:not(.mono),
+.page-subtitle,
+.page-intro p.subtext {
+  display: none !important;
 }
 
 .priority-symbol {

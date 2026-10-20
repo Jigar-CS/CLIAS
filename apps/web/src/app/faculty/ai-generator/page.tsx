@@ -174,9 +174,6 @@ export default function AiQuestionGeneratorPage() {
           {/* Gleam-Spark Page Intro */}
           <div className="page-intro">
             <div>
-              <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-[9px] uppercase mb-2">
-                ACADEMIC INTELLIGENCE / QUESTION STUDIO / 01
-              </p>
               <h1 className="page-title font-display text-5xl sm:text-6xl text-[#1a2540] dark:text-[#f5f0e8] uppercase tracking-tight">
                 AI QUESTION STUDIO
               </h1>
@@ -243,16 +240,9 @@ export default function AiQuestionGeneratorPage() {
                   <Sparkles className="w-5 h-5" />
                 </div>
                 <div>
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <span className="index-box">AI STUDIO / 01</span>
-                    <span className="text-[10px] font-mono text-[#4a6fa5] uppercase tracking-wider">GROUNDED GENERATION</span>
-                  </div>
                   <h2 className="font-display text-2xl text-[#1a2540] dark:text-[#f5f0e8] uppercase tracking-tight">
                     Curriculum-Grounded Question Generator
                   </h2>
-                  <p className="text-xs text-[#4a6fa5] dark:text-[#6a90c5] font-mono mt-0.5">
-                    Generate Bloom-taxonomy aligned assessment items. All items are held in staging for human instructor approval.
-                  </p>
                 </div>
               </div>
             </div>

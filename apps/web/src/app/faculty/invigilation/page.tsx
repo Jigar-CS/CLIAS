@@ -224,7 +224,6 @@ export default function FacultyInvigilationPage() {
           {/* Gleam-Spark Page Intro Banner */}
           <div className="page-intro">
             <div>
-              <p className="mono">FACULTY / PROCTORING / 04</p>
               <h1 className="page-title display">
                 INVIGILATION <span className="coral">CONSOLE.</span>
               </h1>

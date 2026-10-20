@@ -108,7 +108,6 @@ export function CsvImportModal({ isOpen, onClose, onSuccess }: CsvImportModalPro
             </div>
             <div>
               <h3 className="text-lg font-bold text-slate-900">Import Authorized Students</h3>
-              <p className="text-xs text-slate-500">Upload CSV to populate the official institutional student roster</p>
             </div>
           </div>
           <button

@@ -95,11 +95,6 @@ export function MetricCard({
               </span>
             )}
           </div>
-          {subtitle && (
-            <p className="text-[11px] font-mono text-[#6b7fa3] dark:text-[#8ba0c0] mt-1 truncate uppercase tracking-wider">
-              {subtitle}
-            </p>
-          )}
         </div>
 
         <div

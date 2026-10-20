@@ -164,9 +164,6 @@ export default function AdminSettingsPage() {
           <div className="page-intro">
             <div>
               <div className="page-title">SYSTEM SETTINGS.</div>
-              <div className="page-subtitle">
-                INSTITUTIONAL GOVERNANCE • IDENTITY LIFECYCLE • AI INTEGRATION ENDPOINTS
-              </div>
             </div>
             <div className="readiness">
               <div className="readiness-score">100%</div>

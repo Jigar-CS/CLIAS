@@ -107,7 +107,6 @@ export default function FacultyDashboard() {
           {/* Exact Gleam-Spark Page Intro Banner */}
           <div className="page-intro">
             <div>
-              <p className="mono">FACULTY / OVERVIEW / 04</p>
               <h1 className="page-title display" suppressHydrationWarning>
                 {greeting},<span className="coral">{(user?.name || 'PROF. MEHTA').toUpperCase().startsWith('PROF.') ? (user?.name || 'PROF. MEHTA').toUpperCase() : `PROF. ${(user?.name || 'MEHTA').toUpperCase().split(' ')[0]}.`}</span>
               </h1>

@@ -267,7 +267,6 @@ export default function StudentDashboard() {
           {/* Exact Gleam-Spark Page Intro Banner */}
           <div className="page-intro">
             <div>
-              <p className="mono text-xs font-semibold uppercase mb-2">STUDENT / OVERVIEW / 04</p>
               <h1 className="page-title display" suppressHydrationWarning>
                 {greeting},<span className="coral">{(user?.name || user?.email?.split('@')[0] || 'AARAV').toUpperCase().split(' ')[0]}.</span>
               </h1>

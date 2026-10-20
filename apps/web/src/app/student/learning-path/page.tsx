@@ -210,9 +210,6 @@ export default function StudentLearningPath() {
           {/* Gleam-Spark Page Intro */}
           <div className="page-intro">
             <div>
-              <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-xs font-semibold uppercase mb-2">
-                LEARNING INTELLIGENCE / CURRICULUM ROADMAP / 01
-              </p>
               <h1 className="page-title font-display text-5xl sm:text-6xl text-[#1a2540] dark:text-[#f5f0e8] uppercase tracking-tight">
                 LEARNING PATHWAY
               </h1>

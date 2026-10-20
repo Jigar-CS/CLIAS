@@ -188,9 +188,6 @@ export default function LoginPage() {
           [AUTH // PORTAL]
         </p>
         <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">University Portal Sign In</h1>
-        <p className="font-mono text-[11px] text-slate-500 dark:text-slate-400 mt-1 uppercase tracking-tight">
-          {universityName} Learning Intelligence &amp; Assessment System
-        </p>
       </div>
 
       <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-md relative z-10">
@@ -200,7 +197,7 @@ export default function LoginPage() {
           <div className="mb-5">
             <div className="flex items-center justify-between mb-2">
               <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400">
-                Select Role (Pre-fills Base Credentials):
+                Select Role:
               </span>
               <span className="font-mono text-[9px] uppercase tracking-wider text-emerald-600 dark:text-emerald-400 font-semibold flex items-center gap-1">
                 <ShieldCheck className="w-3 h-3" /> Ready

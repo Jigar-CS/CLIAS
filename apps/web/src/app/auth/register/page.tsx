@@ -230,9 +230,6 @@ export default function RegisterPage() {
         <h1 className="text-2xl font-bold tracking-tight text-[#141c2e] dark:text-white">
           Institutional Registration
         </h1>
-        <p className="text-xs text-[#141c2e]/70 dark:text-slate-400 mt-1.5 font-sans">
-          Verify institutional credentials & activate your {universityName} profile
-        </p>
 
         {/* Step Indicator */}
         <div className="flex items-center justify-center gap-3 mt-5 font-mono">
@@ -329,24 +326,18 @@ export default function RegisterPage() {
 
               {/* Strict Institutional Policy Banner */}
               {isFacultyOrStaff ? (
-                <div className="p-3 rounded-xl bg-teal-500/10 border border-teal-500/20 text-teal-900 dark:text-teal-200 text-[11px] space-y-1">
+                <div className="p-2.5 rounded-xl bg-teal-500/10 border border-teal-500/20 text-teal-900 dark:text-teal-200 text-[11px]">
                   <div className="flex items-center gap-1.5 font-bold font-mono">
                     <ShieldAlert className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
                     <span>Fixed Domain: @charusat.ac.in</span>
                   </div>
-                  <p className="text-teal-950/80 dark:text-teal-300/80 font-sans">
-                    Faculty & staff only need to enter their official ID prefix. Verification code will be dispatched to <strong>[prefix]@charusat.ac.in</strong>.
-                  </p>
                 </div>
               ) : (
-                <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-900 dark:text-amber-200 text-[11px] space-y-1">
+                <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-900 dark:text-amber-200 text-[11px]">
                   <div className="flex items-center gap-1.5 font-bold font-mono">
                     <ShieldAlert className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                     <span>Fixed Domain: @charusat.edu.in</span>
                   </div>
-                  <p className="text-amber-950/80 dark:text-amber-300/80 font-sans">
-                    Students only need to enter their Student ID (e.g. 24CS093). Verification code will be dispatched to <strong>[student_id]@charusat.edu.in</strong>.
-                  </p>
                 </div>
               )}
 

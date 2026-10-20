@@ -491,9 +491,6 @@ export function ProfileView({ forcedRole, roleTitle, roleDescription }: ProfileV
           <div className="panel p-6 md:p-8 space-y-6">
             <div>
               <h3 className="text-base font-bold text-slate-900 dark:text-white">Identity & Contact Information</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Update how your name, profile badge, and contact channels appear across the CLIAS platform.
-              </p>
             </div>
 
             {/* Avatar Theme Picker */}
@@ -602,9 +599,6 @@ export function ProfileView({ forcedRole, roleTitle, roleDescription }: ProfileV
           <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 md:p-8 shadow-sm space-y-5">
             <div>
               <h3 className="text-base font-bold text-slate-900 dark:text-white">Professional &amp; Coding Portfolios</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Connect external profiles for project portfolios, competitive code archives, and verified credentials.
-              </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
@@ -680,11 +674,6 @@ export function ProfileView({ forcedRole, roleTitle, roleDescription }: ProfileV
                 <h3 className="text-base font-bold text-slate-900 dark:text-white">
                   {activeRole === UserRole.STUDENT ? 'Institutional Academic Profile' : 'Professional Faculty Credentials'}
                 </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {activeRole === UserRole.STUDENT
-                    ? 'Curriculum cohorts, verified enrollment data, and technical readiness indicators.'
-                    : 'Departmental assignments, academic ranks, and instructional domains.'}
-                </p>
               </div>
               <span className={`text-xs font-bold px-3 py-1 rounded-full border ${currentRoleStyle.bg} ${currentRoleStyle.text} ${currentRoleStyle.border}`}>
                 {activeRole}
@@ -952,9 +941,6 @@ export function ProfileView({ forcedRole, roleTitle, roleDescription }: ProfileV
                 <KeyRound className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                 <span>Update Account Password</span>
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Enhance your institutional portal security by maintaining strong, non-reused password credentials.
-              </p>
             </div>
 
             {passwordMessage && (
@@ -1100,9 +1086,6 @@ export function ProfileView({ forcedRole, roleTitle, roleDescription }: ProfileV
           <div className="panel p-6 md:p-8 space-y-6">
             <div>
               <h3 className="text-base font-bold text-slate-900 dark:text-white">Communication &amp; Portal Preferences</h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                Configure automated notifications sent to your registered Charusat email address.
-              </p>
             </div>
 
             <div className="space-y-4">

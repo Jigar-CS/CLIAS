@@ -153,7 +153,6 @@ export default function AdminInstitutesPage() {
           {/* Gleam-Spark Page Intro Banner */}
           <div className="page-intro">
             <div>
-              <p className="mono">ADMIN / GOVERNANCE / 03</p>
               <h1 className="page-title display">
                 ACADEMIC <span className="coral">ARCHITECTURE.</span>
               </h1>

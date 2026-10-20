@@ -126,9 +126,6 @@ export default function HeadProgramComparisonPage() {
           <div className="page-intro">
             <div>
               <div className="page-title">ACADEMIC PROGRAMS.</div>
-              <div className="page-subtitle">
-                INSTITUTIONAL CURRICULUM ARCHITECTURE • CROSS-DEPARTMENTAL ACCREDITATION MATRIX
-              </div>
             </div>
             <div className="readiness">
               <div className="readiness-score">{programsList.length > 0 ? `${currentProgram.avgMastery}%` : '94%'}</div>

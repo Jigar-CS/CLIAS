@@ -300,7 +300,6 @@ export default function CounsellorAssignedStudentsPage() {
           {/* Gleam-Spark Page Intro Banner */}
           <div className="page-intro">
             <div>
-              <p className="mono">COUNSELLOR / MENTEES / 02</p>
               <h1 className="page-title display">
                 ASSIGNED <span className="coral">MENTEES.</span>
               </h1>

@@ -155,7 +155,6 @@ export default function CounsellorAlertsPage() {
           {/* Gleam-Spark Page Intro Banner */}
           <div className="page-intro">
             <div>
-              <p className="mono">COUNSELLOR / WARNING / 03</p>
               <h1 className="page-title display">
                 INTERVENTION <span className="coral">ALERTS.</span>
               </h1>

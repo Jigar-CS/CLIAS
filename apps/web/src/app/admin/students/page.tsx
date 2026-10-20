@@ -119,7 +119,6 @@ export default function AdminStudentsPage() {
           {/* Gleam-Spark Page Intro Banner */}
           <div className="page-intro">
             <div>
-              <p className="mono">ADMIN / ROSTER / 02</p>
               <h1 className="page-title display">
                 AUTHORIZED <span className="coral">STUDENTS.</span>
               </h1>

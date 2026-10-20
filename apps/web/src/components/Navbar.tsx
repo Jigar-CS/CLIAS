@@ -532,11 +532,6 @@ export function Navbar({ title, subtitle, isLocked = false, onLockedClick }: Nav
           <h1 className="text-sm sm:text-base md:text-lg font-display text-[#1a2540] dark:text-[#e8edf5] tracking-tight truncate uppercase">
             {title || `${universityName} Learning Intelligence`}
           </h1>
-          {subtitle && (
-            <p className="text-[10px] sm:text-[11px] font-mono text-[#4a6fa5] dark:text-[#6a90c5] font-medium truncate hidden sm:block uppercase tracking-widest">
-              {subtitle}
-            </p>
-          )}
         </div>
       </div>
 

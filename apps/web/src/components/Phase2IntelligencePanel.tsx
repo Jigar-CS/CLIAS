@@ -62,9 +62,6 @@ export function Phase2IntelligencePanel() {
           <h3 className="text-xl md:text-2xl font-bold tracking-tight font-display uppercase text-[#1a2540] dark:text-white">
             Advanced Student Knowledge Modeling
           </h3>
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 mt-1 max-w-2xl font-sans">
-            Mathematical validation across Bayesian Knowledge Tracing (BKT), Item Response Theory (IRT), Ebbinghaus Forgetting Curves, and Multi-Topic Prerequisite DAGs.
-          </p>
         </div>
 
         {/* Tab Navigation */}
