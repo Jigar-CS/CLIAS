@@ -147,6 +147,9 @@ export default function StudentPlacementPage() {
           {/* Gleam-Spark Page Intro */}
           <div className="page-intro">
             <div>
+              <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-xs font-semibold uppercase mb-2">
+                LEARNING INTELLIGENCE / CAREER READINESS / 01
+              </p>
               <h1 className="page-title font-display text-5xl sm:text-6xl text-[#1a2540] dark:text-[#f5f0e8] uppercase tracking-tight">
                 PLACEMENT READINESS
               </h1>
@@ -200,11 +203,10 @@ export default function StudentPlacementPage() {
                   key={r.roleType}
                   onClick={() => handleRoleChange(r.roleType)}
                   disabled={updatingRole}
-                  className={`text-xs font-mono font-bold px-3 py-1.5 uppercase transition ${
-                    selectedRole === r.roleType
+                  className={`text-xs font-mono font-bold px-3 py-1.5 uppercase transition ${selectedRole === r.roleType
                       ? 'bg-[#e05033] text-white'
                       : 'bg-[#1a2540] text-[#8ba0c0] hover:text-white border border-[rgba(106,144,197,0.3)]'
-                  }`}
+                    }`}
                   style={{ borderRadius: 0 }}
                 >
                   {r.roleType.replace('_', ' ')}
@@ -251,13 +253,12 @@ export default function StudentPlacementPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span
-                      className={`text-xs font-bold px-2 py-0.5 rounded-full border ${
-                        analysis?.hiringBarStatus === 'MEETS_BAR'
+                      className={`text-xs font-bold px-2 py-0.5 rounded-full border ${analysis?.hiringBarStatus === 'MEETS_BAR'
                           ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30'
                           : analysis?.hiringBarStatus === 'NEAR_BAR'
-                          ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/30'
-                          : 'bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-500/30'
-                      }`}
+                            ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/30'
+                            : 'bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-500/30'
+                        }`}
                     >
                       {analysis?.hiringBarStatus?.replace('_', ' ') ?? 'DEVELOPING'}
                     </span>
@@ -368,26 +369,24 @@ export default function StudentPlacementPage() {
                             <td className="py-3.5 px-3 text-slate-600 dark:text-slate-300">{item.requiredMastery}%</td>
                             <td className="py-3.5 px-3">
                               <span
-                                className={`font-extrabold ${
-                                  item.gap > 20
+                                className={`font-extrabold ${item.gap > 20
                                     ? 'text-rose-600 dark:text-rose-400'
                                     : item.gap > 10
-                                    ? 'text-amber-600 dark:text-amber-400'
-                                    : 'text-indigo-600 dark:text-indigo-400'
-                                }`}
+                                      ? 'text-amber-600 dark:text-amber-400'
+                                      : 'text-indigo-600 dark:text-indigo-400'
+                                  }`}
                               >
                                 -{item.gap}%
                               </span>
                             </td>
                             <td className="py-3.5 px-3">
                               <span
-                                className={`px-2 py-0.5 rounded-full text-xs font-bold border ${
-                                  item.priority === 'HIGH'
+                                className={`px-2 py-0.5 rounded-full text-xs font-bold border ${item.priority === 'HIGH'
                                     ? 'bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/30'
                                     : item.priority === 'MEDIUM'
-                                    ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30'
-                                    : 'bg-indigo-50 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-500/30'
-                                }`}
+                                      ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30'
+                                      : 'bg-indigo-50 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border-indigo-200 dark:border-indigo-500/30'
+                                  }`}
                               >
                                 {item.priority === 'HIGH' ? 'Critical Gap' : 'Needs Practice'}
                               </span>

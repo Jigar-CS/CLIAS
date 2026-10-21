@@ -153,6 +153,7 @@ export default function AdminInstitutesPage() {
           {/* Gleam-Spark Page Intro Banner */}
           <div className="page-intro">
             <div>
+              <p className="mono">ADMIN / GOVERNANCE / 03</p>
               <h1 className="page-title display">
                 ACADEMIC <span className="coral">ARCHITECTURE.</span>
               </h1>
@@ -229,20 +230,18 @@ export default function AdminInstitutesPage() {
                   <button
                     key={inst.id}
                     onClick={() => setSelectedInstituteId(inst.id)}
-                    className={`p-4 rounded-2xl border text-left transition-all ${
-                      isSelected
+                    className={`p-4 rounded-2xl border text-left transition-all ${isSelected
                         ? 'bg-blue-600 text-white border-blue-600 shadow-md ring-2 ring-blue-500/30'
                         : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-600'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center justify-between">
                       <span className={`text-lg font-black ${isSelected ? 'text-white' : 'text-slate-900 dark:text-white'}`}>
                         {inst.code}
                       </span>
                       <span
-                        className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${
-                          isSelected ? 'bg-white/20 text-white' : 'bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300'
-                        }`}
+                        className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${isSelected ? 'bg-white/20 text-white' : 'bg-blue-50 dark:bg-blue-950 text-blue-700 dark:text-blue-300'
+                          }`}
                       >
                         Est. {inst.establishedYear}
                       </span>

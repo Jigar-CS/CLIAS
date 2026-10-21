@@ -557,6 +557,9 @@ export default function PracticePage() {
           {/* Gleam-Spark Page Intro */}
           <div className="page-intro">
             <div>
+              <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-xs font-semibold uppercase mb-2">
+                LEARNING INTELLIGENCE / PRACTICE ARENA / 01
+              </p>
               <h1 className="page-title font-display text-5xl sm:text-6xl text-[#1a2540] dark:text-[#f5f0e8] uppercase tracking-tight">
                 ADAPTIVE PRACTICE
               </h1>
@@ -953,10 +956,10 @@ export default function PracticePage() {
                     Difficulty:{' '}
                     <span
                       className={`font-bold px-2 py-0.5 rounded-md text-[11px] border ${(currentQuestion?.difficulty || selectedDifficulty) === 'EASY'
-                          ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30'
-                          : (currentQuestion?.difficulty || selectedDifficulty) === 'MEDIUM'
-                            ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30'
-                            : 'bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/30'
+                        ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30'
+                        : (currentQuestion?.difficulty || selectedDifficulty) === 'MEDIUM'
+                          ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30'
+                          : 'bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/30'
                         }`}
                     >
                       {currentQuestion?.difficulty || selectedDifficulty}
@@ -1079,8 +1082,8 @@ export default function PracticePage() {
                           type="button"
                           onClick={() => setSummaryFilter('WRONG')}
                           className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 ${summaryFilter === 'WRONG'
-                              ? 'bg-rose-500 text-white shadow-xs'
-                              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                            ? 'bg-rose-500 text-white shadow-xs'
+                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                             }`}
                         >
                           <XCircle className="w-3.5 h-3.5" />
@@ -1090,8 +1093,8 @@ export default function PracticePage() {
                           type="button"
                           onClick={() => setSummaryFilter('ALL')}
                           className={`px-3 py-1.5 rounded-lg transition flex items-center gap-1.5 ${summaryFilter === 'ALL'
-                              ? 'bg-indigo-600 text-white shadow-xs'
-                              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                            ? 'bg-indigo-600 text-white shadow-xs'
+                            : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                             }`}
                         >
                           <span>All Questions ({sessionAttemptSummaries.length})</span>
@@ -1122,16 +1125,16 @@ export default function PracticePage() {
                           <div
                             key={attempt.questionId + '-' + attempt.questionNumber}
                             className={`p-5 rounded-2xl border transition ${attempt.isCorrect
-                                ? 'bg-slate-50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800'
-                                : 'bg-rose-50/40 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900/40'
+                              ? 'bg-slate-50 dark:bg-slate-950/50 border-slate-200 dark:border-slate-800'
+                              : 'bg-rose-50/40 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900/40'
                               }`}
                           >
                             {/* Card Header */}
                             <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
                               <div className="flex items-center gap-2">
                                 <span className={`w-6 h-6 rounded-lg flex items-center justify-center text-xs font-bold ${attempt.isCorrect
-                                    ? 'bg-emerald-500 text-white'
-                                    : 'bg-rose-500 text-white'
+                                  ? 'bg-emerald-500 text-white'
+                                  : 'bg-rose-500 text-white'
                                   }`}>
                                   Q{attempt.questionNumber}
                                 </span>
@@ -1140,10 +1143,10 @@ export default function PracticePage() {
                                 </span>
                                 <span
                                   className={`text-xs font-bold px-2 py-0.5 rounded-md border ${attempt.difficulty === 'EASY'
-                                      ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30'
-                                      : attempt.difficulty === 'MEDIUM'
-                                        ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30'
-                                        : 'bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/30'
+                                    ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30'
+                                    : attempt.difficulty === 'MEDIUM'
+                                      ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30'
+                                      : 'bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/30'
                                     }`}
                                 >
                                   {attempt.difficulty}
@@ -1156,8 +1159,8 @@ export default function PracticePage() {
                                 </span>
                                 <span
                                   className={`px-2 py-0.5 rounded-md text-xs font-extrabold uppercase ${attempt.isCorrect
-                                      ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300'
-                                      : 'bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300'
+                                    ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300'
+                                    : 'bg-rose-100 dark:bg-rose-900/40 text-rose-700 dark:text-rose-300'
                                     }`}
                                 >
                                   {attempt.isCorrect ? 'Correct' : 'Incorrect'}
@@ -1175,8 +1178,8 @@ export default function PracticePage() {
                               {/* Student's answer */}
                               <div
                                 className={`p-3 rounded-xl border flex items-start gap-2.5 ${attempt.isCorrect
-                                    ? 'bg-emerald-50/60 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800/40 text-emerald-950 dark:text-emerald-200'
-                                    : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800/50 text-rose-950 dark:text-rose-200'
+                                  ? 'bg-emerald-50/60 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800/40 text-emerald-950 dark:text-emerald-200'
+                                  : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800/50 text-rose-950 dark:text-rose-200'
                                   }`}
                               >
                                 {attempt.isCorrect ? (
@@ -1316,8 +1319,8 @@ export default function PracticePage() {
                     <div className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800">
                       <div
                         className={`p-5 rounded-2xl border ${attemptResult.isCorrect
-                            ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-500/30 text-emerald-900 dark:text-emerald-200'
-                            : 'bg-rose-50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-500/30 text-rose-900 dark:text-rose-200'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-500/30 text-emerald-900 dark:text-emerald-200'
+                          : 'bg-rose-50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-500/30 text-rose-900 dark:text-rose-200'
                           }`}
                       >
                         <div className="flex items-center justify-between mb-2">

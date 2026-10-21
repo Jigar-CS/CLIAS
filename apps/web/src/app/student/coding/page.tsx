@@ -199,6 +199,9 @@ export default function CodingProblemsPage() {
           {/* Gleam-Spark Page Intro */}
           <div className="page-intro">
             <div>
+              <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-xs font-semibold uppercase mb-2">
+                LEARNING INTELLIGENCE / CODING ARENA / 01
+              </p>
               <h1 className="page-title font-display text-5xl sm:text-6xl text-[#1a2540] dark:text-[#f5f0e8] uppercase tracking-tight">
                 CODING ARENA
               </h1>
@@ -256,11 +259,10 @@ export default function CodingProblemsPage() {
           {/* Feedback Alert */}
           {feedbackMessage && (
             <div
-              className={`p-4 rounded-xl border flex items-center justify-between transition-all ${
-                feedbackMessage.type === 'success'
+              className={`p-4 rounded-xl border flex items-center justify-between transition-all ${feedbackMessage.type === 'success'
                   ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800 text-emerald-800 dark:text-emerald-200'
                   : 'bg-rose-50 dark:bg-rose-950/40 border-rose-300 dark:border-rose-800 text-rose-800 dark:text-rose-200'
-              }`}
+                }`}
             >
               <div className="flex items-center gap-3">
                 {feedbackMessage.type === 'success' ? (
@@ -284,22 +286,20 @@ export default function CodingProblemsPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setActiveTab('challenges')}
-                className={`text-xs font-bold px-4 py-2 rounded-xl transition-all flex items-center gap-2 ${
-                  activeTab === 'challenges'
+                className={`text-xs font-bold px-4 py-2 rounded-xl transition-all flex items-center gap-2 ${activeTab === 'challenges'
                     ? 'bg-[var(--primary)] text-white shadow-xs'
                     : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
+                  }`}
               >
                 <Terminal className="w-4 h-4" />
                 <span>Coding Challenges ({problems.length})</span>
               </button>
               <button
                 onClick={() => setActiveTab('submissions')}
-                className={`text-xs font-bold px-4 py-2 rounded-xl transition-all flex items-center gap-2 ${
-                  activeTab === 'submissions'
+                className={`text-xs font-bold px-4 py-2 rounded-xl transition-all flex items-center gap-2 ${activeTab === 'submissions'
                     ? 'bg-[var(--primary)] text-white shadow-xs'
                     : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
+                  }`}
               >
                 <Clock className="w-4 h-4" />
                 <span>My Past Submissions ({submissions.length})</span>
@@ -352,11 +352,10 @@ export default function CodingProblemsPage() {
                     <button
                       key={filter}
                       onClick={() => setSubmissionFilter(filter)}
-                      className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all ${
-                        submissionFilter === filter
+                      className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all ${submissionFilter === filter
                           ? 'bg-[var(--primary)] border-[var(--primary)] text-white shadow-xs'
                           : 'bg-white dark:bg-slate-900/80 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-                      }`}
+                        }`}
                     >
                       {filter === 'ALL' ? 'All' : filter === 'ACCEPTED' ? 'Accepted' : 'Failed / Wrong Answer'}
                     </button>
@@ -396,13 +395,12 @@ export default function CodingProblemsPage() {
                             </Link>
 
                             <span
-                              className={`px-2 py-0.5 rounded text-xs font-bold border ${
-                                isAccepted
+                              className={`px-2 py-0.5 rounded text-xs font-bold border ${isAccepted
                                   ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30'
                                   : sub.status === 'COMPILATION_ERROR'
-                                  ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/30'
-                                  : 'bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-500/30'
-                              }`}
+                                    ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/30'
+                                    : 'bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-500/30'
+                                }`}
                             >
                               {sub.status.replace(/_/g, ' ')}
                             </span>
@@ -463,11 +461,10 @@ export default function CodingProblemsPage() {
                   <button
                     key={diff}
                     onClick={() => setSelectedDifficulty(diff)}
-                    className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all ${
-                      selectedDifficulty === diff
+                    className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all ${selectedDifficulty === diff
                         ? 'bg-[var(--primary)] border-[var(--primary)] text-white shadow-xs'
                         : 'bg-white dark:bg-slate-900/80 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'
-                    }`}
+                      }`}
                   >
                     {diff}
                   </button>
@@ -482,11 +479,10 @@ export default function CodingProblemsPage() {
                     return (
                       <div
                         key={problem.id}
-                        className={`bg-white dark:bg-slate-900/90 border rounded-xl p-5 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 group shadow-xs ${
-                          isSolved
+                        className={`bg-white dark:bg-slate-900/90 border rounded-xl p-5 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 group shadow-xs ${isSolved
                             ? 'border-emerald-300 dark:border-emerald-800/60 bg-emerald-50/20 dark:bg-emerald-950/10 hover:border-emerald-500/60'
                             : 'border-slate-200 dark:border-slate-800 hover:border-[var(--primary)]/50'
-                        }`}
+                          }`}
                       >
                         <div className="space-y-1.5">
                           <div className="flex items-center gap-2.5">
@@ -507,13 +503,12 @@ export default function CodingProblemsPage() {
                               </span>
                             )}
                             <span
-                              className={`px-2 py-0.5 rounded text-xs font-bold border ${
-                                problem.difficulty === 'EASY'
+                              className={`px-2 py-0.5 rounded text-xs font-bold border ${problem.difficulty === 'EASY'
                                   ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30'
                                   : problem.difficulty === 'MEDIUM'
-                                  ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30'
-                                  : 'bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/30'
-                              }`}
+                                    ? 'bg-amber-50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-200 dark:border-amber-500/30'
+                                    : 'bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/30'
+                                }`}
                             >
                               {problem.difficulty}
                             </span>
@@ -605,11 +600,10 @@ export default function CodingProblemsPage() {
                                   </span>
                                 )}
                                 <span
-                                  className={`px-2 py-0.5 rounded text-xs font-bold border ${
-                                    sub.status === 'ACCEPTED'
+                                  className={`px-2 py-0.5 rounded text-xs font-bold border ${sub.status === 'ACCEPTED'
                                       ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30'
                                       : 'bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-500/30'
-                                  }`}
+                                    }`}
                                 >
                                   {sub.status.replace(/_/g, ' ')}
                                 </span>
@@ -742,15 +736,14 @@ export default function CodingProblemsPage() {
                           type="button"
                           onClick={() => setAiDifficulty(diff)}
                           disabled={isGenerating}
-                          className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all text-center ${
-                            aiDifficulty === diff
+                          className={`py-2 px-3 rounded-xl text-xs font-bold border transition-all text-center ${aiDifficulty === diff
                               ? diff === 'EASY'
                                 ? 'bg-emerald-600 border-emerald-500 text-white'
                                 : diff === 'MEDIUM'
-                                ? 'bg-amber-600 border-amber-500 text-white'
-                                : 'bg-rose-600 border-rose-500 text-white'
+                                  ? 'bg-amber-600 border-amber-500 text-white'
+                                  : 'bg-rose-600 border-rose-500 text-white'
                               : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-                          }`}
+                            }`}
                         >
                           {diff}
                         </button>
@@ -823,13 +816,12 @@ export default function CodingProblemsPage() {
                         {inspectedSubmission.problem?.title || 'Historical Submission Code'}
                       </h3>
                       <span
-                        className={`px-2 py-0.5 rounded text-xs font-bold border ${
-                          inspectedSubmission.status === 'ACCEPTED'
+                        className={`px-2 py-0.5 rounded text-xs font-bold border ${inspectedSubmission.status === 'ACCEPTED'
                             ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20'
                             : inspectedSubmission.status === 'COMPILATION_ERROR'
-                            ? 'bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-500/20'
-                            : 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20'
-                        }`}
+                              ? 'bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-500/20'
+                              : 'bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20'
+                          }`}
                       >
                         {inspectedSubmission.status.replace(/_/g, ' ')}
                       </span>

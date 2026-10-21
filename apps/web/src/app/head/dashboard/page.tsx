@@ -78,6 +78,9 @@ export default function HeadDashboard() {
           {/* Gleam-Spark Page Intro */}
           <div className="page-intro">
             <div>
+              <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-[9px] uppercase mb-2">
+                ACADEMIC INTELLIGENCE / INSTITUTIONAL OVERVIEW / 01
+              </p>
               <h1 className="page-title font-display text-5xl sm:text-6xl text-[#1a2540] dark:text-[#f5f0e8] uppercase tracking-tight">
                 INSTITUTIONAL OVERVIEW
               </h1>
@@ -189,11 +192,10 @@ export default function HeadDashboard() {
                   <button
                     key={b.code}
                     onClick={() => setSelectedBranch(b.code)}
-                    className={`p-4 rounded-xl border text-left transition-all ${
-                      isSelected
+                    className={`p-4 rounded-xl border text-left transition-all ${isSelected
                         ? 'bg-blue-50 dark:bg-blue-950/60 border-blue-500 dark:border-blue-500 shadow-xs ring-1 ring-blue-500'
                         : 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 hover:border-slate-300'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center justify-between">
                       <span className={`font-black text-sm ${isSelected ? 'text-blue-700 dark:text-blue-300' : 'text-slate-900 dark:text-white'}`}>

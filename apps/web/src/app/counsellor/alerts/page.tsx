@@ -90,13 +90,13 @@ export default function CounsellorAlertsPage() {
         prev.map((a) =>
           a.id === alertId
             ? {
-                ...a,
-                status: newStatus,
-                resolvedAt: newStatus === 'RESOLVED' ? new Date().toISOString() : a.resolvedAt,
-                actionNotes:
-                  a.actionNotes ||
-                  `Intervention status updated to ${newStatus} on ${new Date().toLocaleDateString()}`,
-              }
+              ...a,
+              status: newStatus,
+              resolvedAt: newStatus === 'RESOLVED' ? new Date().toISOString() : a.resolvedAt,
+              actionNotes:
+                a.actionNotes ||
+                `Intervention status updated to ${newStatus} on ${new Date().toLocaleDateString()}`,
+            }
             : a
         )
       );
@@ -155,6 +155,7 @@ export default function CounsellorAlertsPage() {
           {/* Gleam-Spark Page Intro Banner */}
           <div className="page-intro">
             <div>
+              <p className="mono">COUNSELLOR / WARNING / 03</p>
               <h1 className="page-title display">
                 INTERVENTION <span className="coral">ALERTS.</span>
               </h1>
@@ -216,11 +217,10 @@ export default function CounsellorAlertsPage() {
                   <button
                     key={st}
                     onClick={() => setStatusFilter(st)}
-                    className={`px-3 py-1 rounded-lg font-medium transition ${
-                      statusFilter === st
+                    className={`px-3 py-1 rounded-lg font-medium transition ${statusFilter === st
                         ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs font-bold'
                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                    }`}
+                      }`}
                   >
                     {st.replace('_', ' ')}
                   </button>
@@ -235,11 +235,10 @@ export default function CounsellorAlertsPage() {
                   <button
                     key={sev}
                     onClick={() => setSeverityFilter(sev)}
-                    className={`px-2.5 py-1 rounded-lg font-medium transition ${
-                      severityFilter === sev
+                    className={`px-2.5 py-1 rounded-lg font-medium transition ${severityFilter === sev
                         ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-xs font-bold'
                         : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                    }`}
+                      }`}
                   >
                     {sev}
                   </button>

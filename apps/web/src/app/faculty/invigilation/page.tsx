@@ -132,8 +132,8 @@ export default function FacultyInvigilationPage() {
       (decision === 'APPROVED'
         ? 'Approved & cleared by Invigilator — false positive benign events.'
         : decision === 'FLAGGED'
-        ? 'Flagged for formal disciplinary review by Invigilator.'
-        : 'Invalidated by Invigilator due to academic integrity breach.');
+          ? 'Flagged for formal disciplinary review by Invigilator.'
+          : 'Invalidated by Invigilator due to academic integrity breach.');
 
     try {
       const res = await api.patch<any>(`/proctoring/invigilator/sessions/${selectedSession.id}/review`, {
@@ -167,8 +167,8 @@ export default function FacultyInvigilationPage() {
           decision === 'APPROVED'
             ? 'Submission approved & cleared! Trust index restored to 100% and student notified.'
             : decision === 'FLAGGED'
-            ? 'Submission flagged for formal disciplinary review.'
-            : 'Submission invalidated due to integrity breach.',
+              ? 'Submission flagged for formal disciplinary review.'
+              : 'Submission invalidated due to integrity breach.',
       });
     } catch (err: any) {
       console.error('Failed to submit invigilator review:', err);
@@ -224,6 +224,7 @@ export default function FacultyInvigilationPage() {
           {/* Gleam-Spark Page Intro Banner */}
           <div className="page-intro">
             <div>
+              <p className="mono">FACULTY / PROCTORING / 04</p>
               <h1 className="page-title display">
                 INVIGILATION <span className="coral">CONSOLE.</span>
               </h1>
@@ -280,302 +281,297 @@ export default function FacultyInvigilationPage() {
             </button>
           </div>
 
-      {/* Main Grid: Sessions List + Detail Audit Log */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Sessions Roster */}
-        <div className="lg:col-span-5 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-              Exam Submissions ({filteredSessions.length})
-            </h2>
+          {/* Main Grid: Sessions List + Detail Audit Log */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Sessions Roster */}
+            <div className="lg:col-span-5 space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                  Exam Submissions ({filteredSessions.length})
+                </h2>
 
-            <div className="flex bg-slate-100 dark:bg-slate-900/90 p-1 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px]">
-              {(['ALL', 'FLAGGED', 'IN_PROGRESS', 'COMPLETED'] as const).map((st) => (
-                <button
-                  key={st}
-                  onClick={() => setStatusFilter(st)}
-                  className={`px-2.5 py-1 rounded-lg font-medium transition-colors ${
-                    statusFilter === st
-                      ? 'bg-amber-600 text-white shadow-xs font-semibold'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                  }`}
-                >
-                  {st.replace('_', ' ')}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            {loading ? (
-              <div className="p-8 text-center text-slate-500 text-sm rounded-xl bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800">
-                Loading live proctoring telemetry...
-              </div>
-            ) : filteredSessions.length === 0 ? (
-              <div className="p-8 text-center text-slate-500 text-sm rounded-xl bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 space-y-2">
-                <Camera className="w-8 h-8 mx-auto text-slate-400 dark:text-slate-600 mb-2" />
-                <div className="font-semibold text-slate-700 dark:text-slate-300">No Proctored Telemetry Sessions</div>
-                <div className="text-xs text-slate-500 max-w-xs mx-auto">
-                  No active or historical exam proctoring sessions match this filter. Live telemetry streams dynamically as students take proctored assessments.
-                </div>
-              </div>
-            ) : (
-              filteredSessions.map((session) => (
-                <div
-                  key={session.id}
-                  onClick={() => setSelectedSession(session)}
-                  className={`p-4 rounded-xl border transition-all cursor-pointer shadow-xs ${
-                    selectedSession?.id === session.id
-                      ? 'bg-amber-500/10 dark:bg-amber-500/15 border-amber-500 ring-2 ring-amber-500/20 shadow-sm'
-                      : 'bg-white dark:bg-slate-900/70 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-2 mb-1.5">
-                    <div>
-                      <span className="font-bold text-slate-900 dark:text-white text-sm block">{session.studentName}</span>
-                      <span className="text-xs text-slate-500 dark:text-slate-400 font-mono font-medium">{session.enrollmentNumber}</span>
-                    </div>
-                    <div className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold border ${getScoreColor(session.trustScore)}`}>
-                      {session.trustScore}% Trust
-                    </div>
-                  </div>
-
-                  <div className="text-xs text-slate-600 dark:text-slate-300 line-clamp-1 mb-2 font-medium">
-                    {session.assessmentTitle}
-                  </div>
-
-                  <div className="flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-400 pt-2 border-t border-slate-200 dark:border-slate-800/80">
-                    <span className="flex items-center gap-1 font-medium">
-                      <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
-                      {session.violationsCount} Anomaly Flags
-                    </span>
-                    <span className={`px-2 py-0.5 rounded-full font-bold uppercase text-[10px] ${
-                      session.status === 'FLAGGED'
-                        ? 'bg-rose-100 text-rose-700 border border-rose-300 dark:bg-rose-500/20 dark:text-rose-300 dark:border-rose-500/30'
-                        : session.status === 'COMPLETED'
-                        ? 'bg-emerald-100 text-emerald-700 border border-emerald-300 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30'
-                        : 'bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700'
-                    }`}>
-                      {session.status}
-                    </span>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        {/* Selected Session Audit Detail */}
-        <div className="lg:col-span-7 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 space-y-6 shadow-xs">
-          {selectedSession ? (
-            <>
-              {/* Session Top Card */}
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-lg font-bold text-slate-900 dark:text-white">{selectedSession.studentName}</h3>
-                    <span className="font-mono text-xs text-slate-500 dark:text-slate-400">({selectedSession.enrollmentNumber})</span>
-                    {selectedSession.faceEnrollmentVerified && (
-                      <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30 flex items-center gap-1">
-                        <CheckCircle2 className="w-3 h-3" /> Face Enrolled
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-400">{selectedSession.assessmentTitle}</p>
-                </div>
-
-                <div className="text-right">
-                  <div className="text-2xl font-black font-mono text-slate-900 dark:text-white">
-                    {selectedSession.trustScore}
-                    <span className="text-xs font-normal text-slate-500 dark:text-slate-400"> / 100</span>
-                  </div>
-                  <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Integrity Trust Index</div>
+                <div className="flex bg-slate-100 dark:bg-slate-900/90 p-1 rounded-xl border border-slate-200 dark:border-slate-800 text-[11px]">
+                  {(['ALL', 'FLAGGED', 'IN_PROGRESS', 'COMPLETED'] as const).map((st) => (
+                    <button
+                      key={st}
+                      onClick={() => setStatusFilter(st)}
+                      className={`px-2.5 py-1 rounded-lg font-medium transition-colors ${statusFilter === st
+                          ? 'bg-amber-600 text-white shadow-xs font-semibold'
+                          : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                        }`}
+                    >
+                      {st.replace('_', ' ')}
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              {/* Behavioral Anomaly Timeline */}
               <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                    <Clock className="w-3.5 h-3.5 text-slate-500" />
-                    Objective Behavioral Timeline ({selectedSession.violations.length} Events)
-                  </h4>
-                  {selectedSession.status === 'COMPLETED' && (
-                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30 flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3" /> All Cleared
-                    </span>
-                  )}
-                </div>
-
-                {selectedSession.status === 'COMPLETED' && (
-                  <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-200 text-xs font-medium flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                    <span>Integrity Verified: All anomalous behavioral events have been reviewed and approved by the faculty invigilator.</span>
+                {loading ? (
+                  <div className="p-8 text-center text-slate-500 text-sm rounded-xl bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800">
+                    Loading live proctoring telemetry...
                   </div>
-                )}
-
-                {selectedSession.status === 'INVALIDATED' && (
-                  <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 text-rose-800 dark:text-rose-200 text-xs font-medium flex items-center gap-2">
-                    <XCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
-                    <span>Submission Invalidated: Exam integrity failed under formal faculty invigilator review.</span>
-                  </div>
-                )}
-
-                {selectedSession.violations.length > 0 ? (
-                  <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-2">
-                    {selectedSession.violations.map((v) => {
-                      const snapshotMatch = v.details?.match(/\[SNAPSHOT:(data:image\/[a-zA-Z]+;base64,[^\]]+)\]/);
-                      const cleanDetails = v.details ? v.details.replace(/\[SNAPSHOT:.*?\]/g, '').trim() : '';
-                      const snapshotData = snapshotMatch ? snapshotMatch[1] : null;
-                      const isCleared = selectedSession.status === 'COMPLETED';
-
-                      return (
-                        <div
-                          key={v.id}
-                          className={`p-3.5 rounded-xl border space-y-2 ${
-                            isCleared
-                              ? 'bg-emerald-50/40 dark:bg-slate-950/50 border-emerald-200 dark:border-emerald-500/20'
-                              : 'bg-slate-50 dark:bg-slate-950/70 border-slate-200 dark:border-slate-800'
-                          }`}
-                        >
-                          <div className="flex items-center justify-between text-xs">
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold text-amber-700 dark:text-amber-400 font-mono">{v.type}</span>
-                              {isCleared && (
-                                <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30">
-                                  Cleared
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                                {Math.round(v.confidence * 100)}% Confidence
-                              </span>
-                              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
-                                {new Date(v.timestamp).toLocaleTimeString()}
-                              </span>
-                            </div>
-                          </div>
-                          {cleanDetails && (
-                            <p className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed font-sans">{cleanDetails}</p>
-                          )}
-                          {snapshotData && (
-                            <div className="pt-1.5">
-                              <div className="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider mb-1 flex items-center gap-1">
-                                <Camera className="w-3 h-3" /> Captured Lab Video Evidence
-                              </div>
-                              <div className="relative group inline-block rounded-lg overflow-hidden border border-rose-300 dark:border-rose-500/30 bg-black max-w-xs shadow-md">
-                                {/* eslint-disable-next-line @next/next/no-img-element */}
-                                <img
-                                  src={snapshotData}
-                                  alt="Violation evidence snapshot"
-                                  className="w-48 h-auto object-cover rounded cursor-pointer hover:scale-105 transition-transform duration-200"
-                                  onClick={() => window.open(snapshotData, '_blank')}
-                                />
-                                <span className="text-[9px] text-slate-300 px-1.5 py-0.5 bg-black/70 absolute bottom-1 right-1 rounded">
-                                  Click to inspect
-                                </span>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                ) : filteredSessions.length === 0 ? (
+                  <div className="p-8 text-center text-slate-500 text-sm rounded-xl bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 space-y-2">
+                    <Camera className="w-8 h-8 mx-auto text-slate-400 dark:text-slate-600 mb-2" />
+                    <div className="font-semibold text-slate-700 dark:text-slate-300">No Proctored Telemetry Sessions</div>
+                    <div className="text-xs text-slate-500 max-w-xs mx-auto">
+                      No active or historical exam proctoring sessions match this filter. Live telemetry streams dynamically as students take proctored assessments.
+                    </div>
                   </div>
                 ) : (
-                  <div className="p-6 text-center text-slate-500 text-sm rounded-xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/60">
-                    No integrity anomalies recorded during this evaluation session.
-                  </div>
+                  filteredSessions.map((session) => (
+                    <div
+                      key={session.id}
+                      onClick={() => setSelectedSession(session)}
+                      className={`p-4 rounded-xl border transition-all cursor-pointer shadow-xs ${selectedSession?.id === session.id
+                          ? 'bg-amber-500/10 dark:bg-amber-500/15 border-amber-500 ring-2 ring-amber-500/20 shadow-sm'
+                          : 'bg-white dark:bg-slate-900/70 border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                        }`}
+                    >
+                      <div className="flex items-start justify-between gap-2 mb-1.5">
+                        <div>
+                          <span className="font-bold text-slate-900 dark:text-white text-sm block">{session.studentName}</span>
+                          <span className="text-xs text-slate-500 dark:text-slate-400 font-mono font-medium">{session.enrollmentNumber}</span>
+                        </div>
+                        <div className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold border ${getScoreColor(session.trustScore)}`}>
+                          {session.trustScore}% Trust
+                        </div>
+                      </div>
+
+                      <div className="text-xs text-slate-600 dark:text-slate-300 line-clamp-1 mb-2 font-medium">
+                        {session.assessmentTitle}
+                      </div>
+
+                      <div className="flex items-center justify-between text-[11px] text-slate-600 dark:text-slate-400 pt-2 border-t border-slate-200 dark:border-slate-800/80">
+                        <span className="flex items-center gap-1 font-medium">
+                          <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+                          {session.violationsCount} Anomaly Flags
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-full font-bold uppercase text-[10px] ${session.status === 'FLAGGED'
+                            ? 'bg-rose-100 text-rose-700 border border-rose-300 dark:bg-rose-500/20 dark:text-rose-300 dark:border-rose-500/30'
+                            : session.status === 'COMPLETED'
+                              ? 'bg-emerald-100 text-emerald-700 border border-emerald-300 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30'
+                              : 'bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700'
+                          }`}>
+                          {session.status}
+                        </span>
+                      </div>
+                    </div>
+                  ))
                 )}
               </div>
-
-              {/* Invigilator Review Action Box */}
-              <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
-                  Human Invigilator Academic Review
-                </h4>
-
-                {selectedSession.invigilatorNotes && (
-                  <div className="p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300">
-                    <span className="font-bold text-slate-900 dark:text-slate-100">Current Notes: </span>
-                    {selectedSession.invigilatorNotes}
-                  </div>
-                )}
-
-                <textarea
-                  rows={2}
-                  value={reviewNotes}
-                  onChange={(e) => setReviewNotes(e.target.value)}
-                  placeholder="Record formal invigilator observation notes (e.g. verified student connectivity drop, benign window swap, or disciplinary referral)..."
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500"
-                />
-
-                {reviewFeedback && (
-                  <div
-                    className={`p-2.5 rounded-lg text-xs font-semibold flex items-center gap-2 ${
-                      reviewFeedback.type === 'success'
-                        ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-500/30'
-                        : 'bg-rose-50 dark:bg-rose-500/20 text-rose-800 dark:text-rose-200 border border-rose-300 dark:border-rose-500/30'
-                    }`}
-                  >
-                    {reviewFeedback.type === 'success' ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                    ) : (
-                      <XCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
-                    )}
-                    <span>{reviewFeedback.message}</span>
-                  </div>
-                )}
-
-                <div className="flex flex-wrap gap-2 pt-1">
-                  <button
-                    onClick={() => handleReviewAction('APPROVED')}
-                    disabled={isSubmittingReview}
-                    className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-60"
-                  >
-                    {isSubmittingReview ? (
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                    )}
-                    <span>Approve & Clear</span>
-                  </button>
-
-                  <button
-                    onClick={() => handleReviewAction('FLAGGED')}
-                    disabled={isSubmittingReview}
-                    className="px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-60"
-                  >
-                    {isSubmittingReview ? (
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <AlertTriangle className="w-3.5 h-3.5" />
-                    )}
-                    <span>Flag for Disciplinary Review</span>
-                  </button>
-
-                  <button
-                    onClick={() => handleReviewAction('INVALIDATED')}
-                    disabled={isSubmittingReview}
-                    className="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-60"
-                  >
-                    {isSubmittingReview ? (
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    ) : (
-                      <XCircle className="w-3.5 h-3.5" />
-                    )}
-                    <span>Invalidate Submission</span>
-                  </button>
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="p-12 text-center text-slate-500">
-              Select an exam submission to inspect the proctoring audit log.
             </div>
-          )}
-        </div>
-      </div>
+
+            {/* Selected Session Audit Detail */}
+            <div className="lg:col-span-7 bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 space-y-6 shadow-xs">
+              {selectedSession ? (
+                <>
+                  {/* Session Top Card */}
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
+                    <div>
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white">{selectedSession.studentName}</h3>
+                        <span className="font-mono text-xs text-slate-500 dark:text-slate-400">({selectedSession.enrollmentNumber})</span>
+                        {selectedSession.faceEnrollmentVerified && (
+                          <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-300 dark:border-emerald-500/30 flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3" /> Face Enrolled
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-slate-600 dark:text-slate-400">{selectedSession.assessmentTitle}</p>
+                    </div>
+
+                    <div className="text-right">
+                      <div className="text-2xl font-black font-mono text-slate-900 dark:text-white">
+                        {selectedSession.trustScore}
+                        <span className="text-xs font-normal text-slate-500 dark:text-slate-400"> / 100</span>
+                      </div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Integrity Trust Index</div>
+                    </div>
+                  </div>
+
+                  {/* Behavioral Anomaly Timeline */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5 text-slate-500" />
+                        Objective Behavioral Timeline ({selectedSession.violations.length} Events)
+                      </h4>
+                      {selectedSession.status === 'COMPLETED' && (
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30 flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3" /> All Cleared
+                        </span>
+                      )}
+                    </div>
+
+                    {selectedSession.status === 'COMPLETED' && (
+                      <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 text-emerald-800 dark:text-emerald-200 text-xs font-medium flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        <span>Integrity Verified: All anomalous behavioral events have been reviewed and approved by the faculty invigilator.</span>
+                      </div>
+                    )}
+
+                    {selectedSession.status === 'INVALIDATED' && (
+                      <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 text-rose-800 dark:text-rose-200 text-xs font-medium flex items-center gap-2">
+                        <XCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+                        <span>Submission Invalidated: Exam integrity failed under formal faculty invigilator review.</span>
+                      </div>
+                    )}
+
+                    {selectedSession.violations.length > 0 ? (
+                      <div className="space-y-2.5 max-h-[300px] overflow-y-auto pr-2">
+                        {selectedSession.violations.map((v) => {
+                          const snapshotMatch = v.details?.match(/\[SNAPSHOT:(data:image\/[a-zA-Z]+;base64,[^\]]+)\]/);
+                          const cleanDetails = v.details ? v.details.replace(/\[SNAPSHOT:.*?\]/g, '').trim() : '';
+                          const snapshotData = snapshotMatch ? snapshotMatch[1] : null;
+                          const isCleared = selectedSession.status === 'COMPLETED';
+
+                          return (
+                            <div
+                              key={v.id}
+                              className={`p-3.5 rounded-xl border space-y-2 ${isCleared
+                                  ? 'bg-emerald-50/40 dark:bg-slate-950/50 border-emerald-200 dark:border-emerald-500/20'
+                                  : 'bg-slate-50 dark:bg-slate-950/70 border-slate-200 dark:border-slate-800'
+                                }`}
+                            >
+                              <div className="flex items-center justify-between text-xs">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-bold text-amber-700 dark:text-amber-400 font-mono">{v.type}</span>
+                                  {isCleared && (
+                                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-500/30">
+                                      Cleared
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                                    {Math.round(v.confidence * 100)}% Confidence
+                                  </span>
+                                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
+                                    {new Date(v.timestamp).toLocaleTimeString()}
+                                  </span>
+                                </div>
+                              </div>
+                              {cleanDetails && (
+                                <p className="text-xs text-slate-700 dark:text-slate-200 leading-relaxed font-sans">{cleanDetails}</p>
+                              )}
+                              {snapshotData && (
+                                <div className="pt-1.5">
+                                  <div className="text-[10px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                                    <Camera className="w-3 h-3" /> Captured Lab Video Evidence
+                                  </div>
+                                  <div className="relative group inline-block rounded-lg overflow-hidden border border-rose-300 dark:border-rose-500/30 bg-black max-w-xs shadow-md">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img
+                                      src={snapshotData}
+                                      alt="Violation evidence snapshot"
+                                      className="w-48 h-auto object-cover rounded cursor-pointer hover:scale-105 transition-transform duration-200"
+                                      onClick={() => window.open(snapshotData, '_blank')}
+                                    />
+                                    <span className="text-[9px] text-slate-300 px-1.5 py-0.5 bg-black/70 absolute bottom-1 right-1 rounded">
+                                      Click to inspect
+                                    </span>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div className="p-6 text-center text-slate-500 text-sm rounded-xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/60">
+                        No integrity anomalies recorded during this evaluation session.
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Invigilator Review Action Box */}
+                  <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 space-y-3">
+                    <h4 className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
+                      Human Invigilator Academic Review
+                    </h4>
+
+                    {selectedSession.invigilatorNotes && (
+                      <div className="p-3 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-700 dark:text-slate-300">
+                        <span className="font-bold text-slate-900 dark:text-slate-100">Current Notes: </span>
+                        {selectedSession.invigilatorNotes}
+                      </div>
+                    )}
+
+                    <textarea
+                      rows={2}
+                      value={reviewNotes}
+                      onChange={(e) => setReviewNotes(e.target.value)}
+                      placeholder="Record formal invigilator observation notes (e.g. verified student connectivity drop, benign window swap, or disciplinary referral)..."
+                      className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500"
+                    />
+
+                    {reviewFeedback && (
+                      <div
+                        className={`p-2.5 rounded-lg text-xs font-semibold flex items-center gap-2 ${reviewFeedback.type === 'success'
+                            ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-800 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-500/30'
+                            : 'bg-rose-50 dark:bg-rose-500/20 text-rose-800 dark:text-rose-200 border border-rose-300 dark:border-rose-500/30'
+                          }`}
+                      >
+                        {reviewFeedback.type === 'success' ? (
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        ) : (
+                          <XCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+                        )}
+                        <span>{reviewFeedback.message}</span>
+                      </div>
+                    )}
+
+                    <div className="flex flex-wrap gap-2 pt-1">
+                      <button
+                        onClick={() => handleReviewAction('APPROVED')}
+                        disabled={isSubmittingReview}
+                        className="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-60"
+                      >
+                        {isSubmittingReview ? (
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                        )}
+                        <span>Approve & Clear</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleReviewAction('FLAGGED')}
+                        disabled={isSubmittingReview}
+                        className="px-3.5 py-1.5 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-60"
+                      >
+                        {isSubmittingReview ? (
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <AlertTriangle className="w-3.5 h-3.5" />
+                        )}
+                        <span>Flag for Disciplinary Review</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleReviewAction('INVALIDATED')}
+                        disabled={isSubmittingReview}
+                        className="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors disabled:opacity-60"
+                      >
+                        {isSubmittingReview ? (
+                          <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <XCircle className="w-3.5 h-3.5" />
+                        )}
+                        <span>Invalidate Submission</span>
+                      </button>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <div className="p-12 text-center text-slate-500">
+                  Select an exam submission to inspect the proctoring audit log.
+                </div>
+              )}
+            </div>
+          </div>
         </main>
       </div>
     </div>
