@@ -272,16 +272,16 @@ export default function HodDashboard() {
           </div>
 
           {/* Sub Navigation */}
-          <div className="flex border-b border-slate-800 gap-6">
+          <div className="flex border-b border-slate-200 dark:border-slate-800 gap-6">
             <button
               onClick={() => setActiveTab('obe')}
               className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors ${
                 activeTab === 'obe'
-                  ? 'border-purple-500 text-purple-400'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
+                  ? 'border-purple-600 dark:border-purple-400 text-purple-700 dark:text-purple-400 font-bold'
+                  : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
-              <Award className="w-4 h-4" />
+              <Award className="w-4 h-4 text-purple-600 dark:text-purple-400" />
               Outcome-Based Education (CO-PO Matrix)
             </button>
 
@@ -289,11 +289,11 @@ export default function HodDashboard() {
               onClick={() => setActiveTab('divisions')}
               className={`pb-3 text-sm font-semibold flex items-center gap-2 border-b-2 transition-colors ${
                 activeTab === 'divisions'
-                  ? 'border-purple-500 text-purple-400'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
+                  ? 'border-purple-600 dark:border-purple-400 text-purple-700 dark:text-purple-400 font-bold'
+                  : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
-              <BarChart3 className="w-4 h-4" />
+              <BarChart3 className="w-4 h-4 text-purple-600 dark:text-purple-400" />
               Division Comparative Benchmark
             </button>
           </div>
@@ -302,21 +302,20 @@ export default function HodDashboard() {
           {activeTab === 'obe' && obeData && (
             <div className="space-y-6">
               {/* Course Outcome Attainment Table */}
-              <div className="bg-slate-900/80 rounded-2xl border border-slate-800 shadow-xl p-6 space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs p-6 space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 dark:border-slate-800 pb-3">
                   <div>
-                    <h3 className="text-base font-bold text-white flex items-center gap-2">
-                      <Layers className="w-5 h-5 text-indigo-400" />
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                      <Layers className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                       Course Outcome (CO) Direct Attainment — {obeData.courseCode} {obeData.courseName}
                     </h3>
-                    
                   </div>
                   <div className="flex items-center gap-2">
                     {courses.length > 0 && (
                       <select
                         value={selectedCourseId}
                         onChange={(e) => handleCourseChange(e.target.value)}
-                        className="px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-950 text-purple-300 border border-slate-800 outline-none cursor-pointer hover:border-purple-500 transition"
+                        className="px-3 py-1.5 text-xs font-bold rounded-xl bg-white dark:bg-slate-950 text-slate-900 dark:text-purple-300 border border-slate-300 dark:border-slate-800 outline-none cursor-pointer hover:border-purple-500 transition"
                       >
                         {courses.map((c: any) => (
                           <option key={c.id} value={c.id}>
@@ -325,15 +324,15 @@ export default function HodDashboard() {
                         ))}
                       </select>
                     )}
-                    <span className="text-xs font-mono font-bold px-2.5 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-300">
+                    <span className="text-xs font-mono font-bold px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300">
                       Target: 70%
                     </span>
                   </div>
                 </div>
 
-                <div className="overflow-x-auto border border-slate-800 rounded-xl">
+                <div className="overflow-x-auto border border-slate-200 dark:border-slate-800 rounded-xl">
                   <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-950 border-b border-slate-800 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+                    <thead className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-[10px]">
                       <tr>
                         <th className="p-3 w-16">CO Code</th>
                         <th className="p-3">Course Outcome Statement</th>
@@ -343,29 +342,29 @@ export default function HodDashboard() {
                         <th className="p-3">Accreditation Status</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-slate-800 font-medium text-slate-300">
+                    <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium text-slate-700 dark:text-slate-300">
                       {obeData.courseOutcomes && obeData.courseOutcomes.length > 0 ? (
                         obeData.courseOutcomes.map((co: CourseOutcome) => (
-                          <tr key={co.id} className="hover:bg-slate-800/40">
-                            <td className="p-3 font-bold font-mono text-purple-400">{co.code}</td>
-                            <td className="p-3 text-slate-200">{co.description}</td>
+                          <tr key={co.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40">
+                            <td className="p-3 font-bold font-mono text-purple-600 dark:text-purple-400">{co.code}</td>
+                            <td className="p-3 text-slate-800 dark:text-slate-200">{co.description}</td>
                             <td className="p-3">
                               <div className="flex gap-1">
                                 {co.programOutcomes.map((p, idx) => (
                                   <span
                                     key={idx}
-                                    className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-800 text-indigo-300 border border-slate-700"
+                                    className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 dark:bg-slate-800 text-indigo-700 dark:text-indigo-300 border border-slate-200 dark:border-slate-700"
                                   >
                                     {p.poCode} ({p.correlationLevel})
                                   </span>
                                 ))}
                               </div>
                             </td>
-                            <td className="p-3 font-mono text-slate-400">{co.targetAttainment}%</td>
-                            <td className="p-3 font-mono font-bold text-white">
+                            <td className="p-3 font-mono text-slate-500 dark:text-slate-400">{co.targetAttainment}%</td>
+                            <td className="p-3 font-mono font-bold text-slate-900 dark:text-white">
                               <div className="flex items-center gap-2">
                                 <span>{co.actualAttainment}%</span>
-                                <div className="w-16 bg-slate-800 rounded-full h-1.5">
+                                <div className="w-16 bg-slate-200 dark:bg-slate-800 rounded-full h-1.5">
                                   <div
                                     className={`h-1.5 rounded-full ${
                                       co.actualAttainment >= co.targetAttainment ? 'bg-emerald-500' : 'bg-amber-500'
@@ -379,8 +378,8 @@ export default function HodDashboard() {
                               <span
                                 className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
                                   co.status === 'ATTAINED'
-                                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
-                                    : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                                    ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20'
+                                    : 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20'
                                 }`}
                               >
                                 {co.status.replace('_', ' ')}
@@ -390,7 +389,7 @@ export default function HodDashboard() {
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={6} className="p-8 text-center text-slate-400">
+                          <td colSpan={6} className="p-8 text-center text-slate-500 dark:text-slate-400">
                             No Course Outcomes mapped for {obeData.courseCode || 'this course'} yet.
                           </td>
                         </tr>
@@ -401,14 +400,13 @@ export default function HodDashboard() {
               </div>
 
               {/* Program Outcome Matrix */}
-              <div className="bg-slate-900/80 rounded-2xl border border-slate-800 shadow-xl p-6 space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs p-6 space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
                   <div>
-                    <h3 className="text-base font-bold text-white flex items-center gap-2">
-                      <Award className="w-5 h-5 text-purple-400" />
+                    <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                      <Award className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                       Program Outcome (PO) Correlation Attainment Matrix (NBA Standards)
                     </h3>
-                   
                   </div>
                 </div>
 
@@ -417,29 +415,29 @@ export default function HodDashboard() {
                     obeData.programOutcomesMatrix.map((po: ProgramOutcomeMatrixItem) => (
                       <div
                         key={po.code}
-                        className="p-4 rounded-xl bg-slate-950/70 border border-slate-800 space-y-2"
+                        className="p-4 rounded-xl bg-slate-50/70 dark:bg-slate-950/70 border border-slate-200 dark:border-slate-800 space-y-2"
                       >
                         <div className="flex items-center justify-between">
-                          <span className="text-base font-bold font-mono text-purple-400">{po.code}</span>
+                          <span className="text-base font-bold font-mono text-purple-700 dark:text-purple-400">{po.code}</span>
                           <span
                             className={`px-2 py-0.5 text-[10px] font-bold rounded-full border ${
                               po.accreditationThresholdMet
-                                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
-                                : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                                ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20'
+                                : 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/20'
                             }`}
                           >
                             {po.accreditationThresholdMet ? 'Threshold Met' : 'Review Needed'}
                           </span>
                         </div>
-                        <div className="text-xs text-slate-300 font-semibold">{po.nbaCategory}</div>
-                        <div className="flex items-baseline justify-between pt-2 border-t border-slate-800">
-                          <span className="text-xs text-slate-400">Calculated:</span>
-                          <span className="text-lg font-bold text-white font-mono">{po.calculatedAttainment}%</span>
+                        <div className="text-xs text-slate-700 dark:text-slate-300 font-semibold">{po.nbaCategory}</div>
+                        <div className="flex items-baseline justify-between pt-2 border-t border-slate-200 dark:border-slate-800">
+                          <span className="text-xs text-slate-500 dark:text-slate-400">Calculated:</span>
+                          <span className="text-lg font-bold text-slate-900 dark:text-white font-mono">{po.calculatedAttainment}%</span>
                         </div>
                       </div>
                     ))
                   ) : (
-                    <div className="col-span-4 p-8 text-center text-slate-400">
+                    <div className="col-span-4 p-8 text-center text-slate-500 dark:text-slate-400">
                       No Program Outcomes mapped for this course yet.
                     </div>
                   )}
@@ -450,41 +448,40 @@ export default function HodDashboard() {
 
           {/* TAB 2: Division Benchmarking (Strictly 2 Divisions: Div 1 and Div 2) */}
           {activeTab === 'divisions' && (
-            <div className="bg-slate-900/80 rounded-2xl border border-slate-800 shadow-xl p-6 space-y-5">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs p-6 space-y-5">
               <div>
-                <h3 className="text-base font-bold text-white flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5 text-cyan-400" />
+                <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5 text-teal-600 dark:text-cyan-400" />
                   Division-to-Division Comparative Benchmark
                 </h3>
-                
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {normalizedDivisionBenchmarks.map((div: any) => (
                   <div
                     key={div.division}
-                    className="p-6 rounded-2xl bg-slate-950/80 border border-slate-800 hover:border-cyan-500/40 transition space-y-4 shadow-sm"
+                    className="p-6 rounded-2xl bg-slate-50/70 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 hover:border-teal-500/40 dark:hover:border-cyan-500/40 transition space-y-4 shadow-xs"
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center font-mono font-bold text-cyan-400 text-xs">
+                        <div className="w-8 h-8 rounded-lg bg-teal-500/10 dark:bg-cyan-500/10 border border-teal-500/20 dark:border-cyan-500/20 flex items-center justify-center font-mono font-bold text-teal-700 dark:text-cyan-400 text-xs">
                           {div.division === 'Div 1' ? '01' : '02'}
                         </div>
-                        <span className="text-xl font-extrabold text-white tracking-tight">
+                        <span className="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
                           {div.label}
                         </span>
                       </div>
-                      <span className="px-3 py-1 rounded-lg text-xs font-mono font-bold bg-slate-800 text-cyan-300 border border-slate-700">
+                      <span className="px-3 py-1 rounded-lg text-xs font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-cyan-300 border border-slate-200 dark:border-slate-700">
                         {div.enrolledStudents} Students
                       </span>
                     </div>
 
                     <div className="space-y-1.5 pt-1">
                       <div className="flex justify-between text-xs">
-                        <span className="text-slate-400">Average Mastery</span>
-                        <span className="font-bold text-emerald-400 text-sm font-mono">{div.averageMastery}%</span>
+                        <span className="text-slate-600 dark:text-slate-400 font-medium">Average Mastery</span>
+                        <span className="font-bold text-emerald-600 dark:text-emerald-400 text-sm font-mono">{div.averageMastery}%</span>
                       </div>
-                      <div className="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden">
+                      <div className="w-full bg-slate-200 dark:bg-slate-800 rounded-full h-2.5 overflow-hidden">
                         <div
                           className="bg-gradient-to-r from-emerald-500 to-teal-400 h-2.5 rounded-full transition-all duration-500"
                           style={{ width: `${div.averageMastery}%` }}
@@ -492,9 +489,9 @@ export default function HodDashboard() {
                       </div>
                     </div>
 
-                    <div className="flex items-center justify-between pt-3 border-t border-slate-800/80 text-xs">
-                      <span className="text-slate-400">At-Risk Students:</span>
-                      <span className={`font-bold font-mono ${div.riskCount > 2 ? 'text-rose-400' : 'text-amber-400'}`}>
+                    <div className="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800 text-xs">
+                      <span className="text-slate-600 dark:text-slate-400 font-medium">At-Risk Students:</span>
+                      <span className={`font-bold font-mono ${div.riskCount > 2 ? 'text-rose-600 dark:text-rose-400' : 'text-amber-600 dark:text-amber-400'}`}>
                         {div.riskCount} Students Flagged
                       </span>
                     </div>
@@ -505,11 +502,11 @@ export default function HodDashboard() {
           )}
 
           {/* Architecture Guarantee */}
-          <div className="p-5 rounded-2xl bg-purple-950/30 border border-purple-500/20 text-purple-200 flex items-start gap-4">
-            <ShieldCheck className="w-5 h-5 text-purple-400 shrink-0 mt-0.5" />
+          <div className="p-5 rounded-2xl bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-500/20 text-purple-900 dark:text-purple-200 flex items-start gap-4">
+            <ShieldCheck className="w-5 h-5 text-purple-600 dark:text-purple-400 shrink-0 mt-0.5" />
             <div className="text-xs space-y-1">
-              <h4 className="font-bold text-white">NBA/NAAC Accreditation Continuous Improvement Model</h4>
-              <p className="text-purple-300/80 leading-relaxed">
+              <h4 className="font-bold text-slate-900 dark:text-white">NBA/NAAC Accreditation Continuous Improvement Model</h4>
+              <p className="text-slate-600 dark:text-purple-300/80 leading-relaxed font-sans">
                 As required by NBA Tier-I/II criteria, Course Outcome attainment is evaluated continuously from granular student assessment submissions rather than superficial end-of-semester subjective surveys.
               </p>
             </div>
