@@ -209,7 +209,7 @@ export default function HodDashboard() {
           <div className="priority-band">
             <div className="priority-symbol">!</div>
             <div className="priority-content">
-              <p className="mono text-[#e05033] text-[9px]">DEPARTMENT OBE & CURRICULUM INTELLIGENCE</p>
+             
               <h2 className="font-display text-xl uppercase tracking-wide">{departmentTitle.toUpperCase()}</h2>
               <p className="text-xs text-[#8ba0c0] font-sans">
                 Outcome-Based Education metrics, NBA/NAAC CO-PO attainment matrices, and faculty workload delegation.
@@ -309,9 +309,7 @@ export default function HodDashboard() {
                       <Layers className="w-5 h-5 text-indigo-400" />
                       Course Outcome (CO) Direct Attainment — {obeData.courseCode} {obeData.courseName}
                     </h3>
-                    <p className="text-xs text-slate-400">
-                      Evaluated directly from student assessment question submissions and adaptive practice attempts.
-                    </p>
+                    
                   </div>
                   <div className="flex items-center gap-2">
                     {courses.length > 0 && (
@@ -410,9 +408,7 @@ export default function HodDashboard() {
                       <Award className="w-5 h-5 text-purple-400" />
                       Program Outcome (PO) Correlation Attainment Matrix (NBA Standards)
                     </h3>
-                    <p className="text-xs text-slate-400">
-                      Weighted attainment calculated using correlation level weights (1: Low, 2: Moderate, 3: Substantial).
-                    </p>
+                   
                   </div>
                 </div>
 
@@ -460,9 +456,7 @@ export default function HodDashboard() {
                   <BarChart3 className="w-5 h-5 text-cyan-400" />
                   Division-to-Division Comparative Benchmark
                 </h3>
-                <p className="text-xs text-slate-400 mt-1">
-                  Comparative mastery analysis across the two academic cohorts enabling targeted pedagogical interventions.
-                </p>
+                
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

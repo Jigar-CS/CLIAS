@@ -198,7 +198,7 @@ export default function CounsellorAlertsPage() {
           <div className="priority-band">
             <div className="priority-symbol">!</div>
             <div className="priority-content">
-              <p className="mono">BAYESIAN EARLY WARNING / MITIGATION</p>
+             
               <h2 className="display">AUTOMATED INTERVENTION &amp; DECAY MITIGATION</h2>
               <p>Automated Bayesian Knowledge Tracing flags students when mastery decay occurs or misconception error rate exceeds 50%.</p>
             </div>

@@ -196,7 +196,6 @@ export default function CounsellorDashboard() {
           <div className="priority-band">
             <div className="priority-symbol">!</div>
             <div className="priority-content">
-              <p className="mono text-[#e05033] text-[9px]">EARLY WARNING DIAGNOSTICS</p>
               <h2 className="font-display text-xl uppercase tracking-wide">MENTORSHIP COHORT & INTERVENTION QUEUE</h2>
               <p className="text-xs text-[#8ba0c0] font-sans">
                 Algorithmic detection flagging learning disengagement, mastery decay, and persistent prerequisite gaps.
@@ -263,9 +262,7 @@ export default function CounsellorDashboard() {
                   <AlertTriangle className="w-5 h-5 text-amber-400" />
                   Predictive At-Risk Student Intervention Queue
                 </h3>
-                <p className="text-xs text-slate-400">
-                  Triggered automatically when student mastery drops below 35%, practice stops for &gt; 5 days, or misconception failure rate exceeds 50%.
-                </p>
+               
               </div>
 
               {/* Status Filter */}

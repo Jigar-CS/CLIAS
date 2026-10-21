@@ -150,9 +150,7 @@ export function CounsellorAssignmentModal({
               <h2 className="text-xl font-extrabold text-slate-900 dark:text-white">
                 Upload Counsellor-Student Allocations
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Upload PDF or Excel file with counsellor names and student ID ranges / names
-              </p>
+             
             </div>
           </div>
           <button

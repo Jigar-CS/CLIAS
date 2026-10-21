@@ -342,7 +342,7 @@ export default function CounsellorAssignedStudentsPage() {
           <div className="priority-band">
             <div className="priority-symbol">!</div>
             <div className="priority-content">
-              <p className="mono">ACADEMIC TELEMETRY / MENTORSHIP</p>
+             
               <h2 className="display">DIRECT MENTEE COHORT MONITORING</h2>
               <p>Continuous academic progress telemetry, live practice tracking, and AI proctoring integrity auditing strictly for your assigned students.</p>
             </div>
