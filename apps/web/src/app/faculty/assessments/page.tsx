@@ -1195,7 +1195,7 @@ export default function FacultyAssessmentsPage() {
           <div className="priority-band">
             <div className="priority-symbol">!</div>
             <div className="priority-content">
-              <p className="mono text-[#e05033] text-[9px]">DEPARTMENT ASSESSMENT AUTHORING</p>
+              
               <h2 className="font-display text-xl uppercase tracking-wide">CONFIGURE & DISPATCH ASSESSMENTS</h2>
               <p className="text-xs text-[#8ba0c0] font-sans">
                 Author formal quizzes, scheduled mid-terms, and evaluate class performance with automated proctoring.

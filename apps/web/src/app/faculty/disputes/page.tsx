@@ -144,7 +144,7 @@ export default function FacultyDisputesPage() {
           {/* Gleam-Spark Page Intro Banner */}
           <div className="page-intro">
             <div>
-              <p className="mono">FACULTY / MODERATION / 03</p>
+             
               <h1 className="page-title display">
                 QUESTION <span className="coral">DISPUTES.</span>
               </h1>
@@ -187,7 +187,7 @@ export default function FacultyDisputesPage() {
           <div className="priority-band">
             <div className="priority-symbol">!</div>
             <div className="priority-content">
-              <p className="mono">HUMAN-IN-THE-LOOP / QUALITY ASSURANCE</p>
+             
               <h2 className="display">CURRICULUM ITEM DISPUTE MODERATION</h2>
               <p>When students dispute a question or AI reasoning, review their claims here. Approving a dispute retroactively adjusts their topic mastery score.</p>
             </div>

@@ -304,7 +304,6 @@ export default function FacultyQuestionBankPage() {
           <div className="print:hidden priority-band">
             <div className="priority-symbol">!</div>
             <div className="priority-content">
-              <p className="mono text-[#e05033] text-[9px]">INSTITUTIONAL ASSESSMENT REPOSITORY</p>
               <h2 className="font-display text-xl uppercase tracking-wide">CURRICULUM ITEM BANK & EXPORT</h2>
               <p className="text-xs text-[#8ba0c0] font-sans">
                 Curriculum-aligned item bank with psychometric calibration parameters and automated PDF paper generator.

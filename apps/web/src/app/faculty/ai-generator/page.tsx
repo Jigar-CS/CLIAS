@@ -215,7 +215,7 @@ export default function AiQuestionGeneratorPage() {
           <div className="priority-band">
             <div className="priority-symbol">!</div>
             <div className="priority-content">
-              <p className="mono text-[#e05033] text-[9px]">CURRICULUM-GROUNDED GENERATION PIPELINE</p>
+              
               <h2 className="font-display text-xl uppercase tracking-wide">SYNTHESIZE CALIBRATED ITEMS</h2>
               <p className="text-xs text-[#8ba0c0] font-sans">
                 Generates 1 mathematically verified key and 3 diagnostic misconception distractors. All items require instructor approval.
@@ -461,9 +461,7 @@ export default function AiQuestionGeneratorPage() {
               </div>
 
               <div className="flex items-center justify-between pt-2">
-                <span className="text-[11px] text-slate-400">
-                  Target focus: <em>{bloomDescriptions[bloomLevel]}</em>
-                </span>
+               
 
                 <button
                   type="submit"

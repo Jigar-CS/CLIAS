@@ -385,7 +385,7 @@ export default function FacultyClassAnalyticsPage() {
           <div className="priority-band">
             <div className="priority-symbol">!</div>
             <div className="priority-content">
-              <p className="mono text-[#e05033] text-[9px]">PSYCHOMETRIC COHORT TELEMETRY</p>
+              
               <h2 className="font-display text-xl uppercase tracking-wide">CURRICULUM & CLASS INTELLIGENCE</h2>
               <p className="text-xs text-[#8ba0c0] font-sans">
                 Longitudinal Bayesian Knowledge Tracing across syllabus topics with automated prerequisite deficit detection.
@@ -533,13 +533,7 @@ export default function FacultyClassAnalyticsPage() {
                     <h3 className="text-base font-bold text-slate-900 dark:text-white">
                       Cohort Knowledge Distribution (Quartiles)
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                      Breakdown of{' '}
-                      {summaryData?.activeAssessedCount ||
-                        summaryData?.enrolledStudentsCount ||
-                        0}{' '}
-                      active students grouped by current estimated knowledge ability
-                    </p>
+                   
                   </div>
                 </div>
 
@@ -609,9 +603,7 @@ export default function FacultyClassAnalyticsPage() {
                         <UserCheck className="w-4 h-4 text-indigo-600" />
                         <span>Enrolled Student Performance Roster</span>
                       </h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        Select any student to inspect longitudinal learning curves and personalized telemetry
-                      </p>
+                      
                     </div>
                   </div>
 
@@ -668,9 +660,7 @@ export default function FacultyClassAnalyticsPage() {
                     <h3 className="text-base font-bold text-slate-900 dark:text-white">
                       Curriculum Topic Mastery &amp; Struggle Heatmap
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                      Identifies conceptual bottlenecks and recurring distractor trap patterns
-                    </p>
+                   
                   </div>
                 </div>
 

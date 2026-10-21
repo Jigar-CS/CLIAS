@@ -177,7 +177,6 @@ export default function FacultyDashboard() {
           <div className="priority-band">
             <div className="priority-symbol">!</div>
             <div className="priority-content">
-              <p className="mono">INSTRUCTOR-ACTION / DISPATCH</p>
               <h2 className="display">DISPATCH ADAPTIVE DRILL ON WEAK TOPICS</h2>
               <p>Target students scoring &lt;60% on recent diagnostics with automated remedial problem sets.</p>
             </div>
@@ -218,17 +217,10 @@ export default function FacultyDashboard() {
                     {selectedCourse ? `${selectedCourse.name} (${selectedCourse.code})` : 'Curriculum Console'}
                   </h2>
                 )}
-                <span className="text-[9px] font-mono font-bold px-2 py-0.5 bg-[rgba(74,111,165,0.1)] text-[#4a6fa5] dark:text-[#6a90c5] border border-[rgba(74,111,165,0.3)] uppercase tracking-wider" style={{borderRadius:0}}>
-                  {user?.name || 'Faculty Member'}
-                </span>
-                <span className="text-[9px] font-mono font-bold px-2.5 py-0.5 bg-emerald-50/80 text-emerald-800 dark:text-emerald-400 border border-emerald-200 flex items-center gap-1.5" style={{borderRadius:0}}>
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                  Teaching Subject
-                </span>
+               
+               
               </div>
-              <p className="text-xs text-slate-500 mt-0.5">
-                {(selectedCourse as any)?.department?.name || (user as any)?.department?.name || 'Department of Computer Science & Engineering'} • {(selectedCourse as any)?.department?.institute?.name || (user as any)?.institute?.name || 'CHARUSAT'}
-              </p>
+              
             </div>
 
             <div className="flex items-center gap-2">
@@ -253,7 +245,6 @@ export default function FacultyDashboard() {
           <div id="bank" className="bg-[#faf7f2] dark:bg-[#121b30] border border-[rgba(74,111,165,0.25)] dark:border-[rgba(106,144,197,0.2)] shadow-sm p-6 space-y-4" style={{borderRadius:0}}>
             <div>
               <h3 className="text-base font-bold text-slate-900">Curriculum Topic Health</h3>
-              <p className="text-xs text-slate-500">Live knowledge distribution across class cohort</p>
             </div>
 
             {topicList.length > 0 ? (

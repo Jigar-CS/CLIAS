@@ -267,7 +267,7 @@ export default function FacultyInvigilationPage() {
           <div className="priority-band">
             <div className="priority-symbol">!</div>
             <div className="priority-content">
-              <p className="mono">AI PROCTORING / REAL-TIME TELEMETRY</p>
+             
               <h2 className="display">REAL-TIME BEHAVIORAL AUDITING &amp; LOGGING</h2>
               <p>AI-assisted exam integrity monitoring with browser focus tracking, continuous facial verification, and human invigilator oversight.</p>
             </div>
