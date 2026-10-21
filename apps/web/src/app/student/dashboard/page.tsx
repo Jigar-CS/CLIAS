@@ -19,7 +19,6 @@ import {
   AlertTriangle,
   ArrowRight,
   Clock,
-  Sparkles,
   Award,
   Layers,
   BookOpen,
@@ -339,13 +338,7 @@ export default function StudentDashboard() {
           <div className="priority-band">
             <div className="priority-symbol">!</div>
             <div className="priority-content">
-              <p className="mono">
-                {remediationNudge
-                  ? 'INSTRUCTOR-ASSIGNED / PRIORITY'
-                  : summary?.weakTopics && summary.weakTopics.length > 0
-                    ? 'ADAPTIVE RECOMMENDATION / WEAK AREA'
-                    : 'RECOMMENDED ACTION / GET STARTED'}
-              </p>
+             
               <h2 className="display">
                 {remediationNudge
                   ? `REINFORCE ${(remediationNudge.meta?.topicName || 'ASSIGNED TOPIC').toUpperCase()}`
@@ -473,7 +466,7 @@ export default function StudentDashboard() {
             <section className="panel bg-[#faf7f2] dark:bg-[#121b30]">
               <header className="panel-head">
                 <div>
-                  <p className="mono">KNOWLEDGE MODEL / LIVE</p>
+                
                   <h2 className="display">TOPIC MASTERY</h2>
                 </div>
                 <span className="panel-meta mono coral">AVG {summary?.overallMastery ?? 0}%</span>
@@ -660,68 +653,6 @@ export default function StudentDashboard() {
             </Link>
           </div>
 
-          {/* Cognitive Intelligence Advice Banner */}
-          {summary?.cognitiveAdvice && (
-            <div className="panel p-5 md:p-6 bg-[#faf7f2] dark:bg-[#121b30] border border-[var(--strong-border)] shadow-xs relative overflow-hidden">
-              <div className="relative z-10">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 bg-[#e05033] text-white flex items-center justify-center font-bold shrink-0">
-                      <Sparkles className="w-4 h-4 text-white" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="text-xs sm:text-sm font-mono font-bold tracking-wider text-slate-900 dark:text-white uppercase">
-                          Cognitive Intelligence Advice
-                        </h3>
-                        <span
-                          className={`px-2.5 py-0.5 text-xs font-mono font-bold uppercase tracking-wider border ${
-                            summary.cognitiveAdvice.urgency === 'HIGH'
-                              ? 'bg-[#e05033]/15 text-[#e05033] border-[#e05033]/40'
-                              : summary.cognitiveAdvice.urgency === 'MEDIUM'
-                              ? 'bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-500/40'
-                              : 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border-emerald-500/40'
-                          }`}
-                        >
-                          {summary.cognitiveAdvice.focusType.replace(/_/g, ' ')}
-                        </span>
-                      </div>
-                      <p className="text-xs sm:text-sm font-bold text-[#4a6fa5] dark:text-[#6a90c5] mt-0.5">
-                        {summary.cognitiveAdvice.headline}
-                      </p>
-                    </div>
-                  </div>
-
-                  {summary.cognitiveAdvice.targetTopicId && (
-                    <Link
-                      href={`/student/practice?topicId=${summary.cognitiveAdvice.targetTopicId}`}
-                      className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-[#e05033] hover:bg-[#c8432b] text-white text-xs font-mono font-bold uppercase tracking-wider transition shadow-xs shrink-0"
-                    >
-                      <span>Practice {summary.cognitiveAdvice.targetTopicName}</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </Link>
-                  )}
-                </div>
-
-                <p className="text-xs md:text-sm text-slate-700 dark:text-slate-300 leading-relaxed mb-4 font-sans">
-                  {summary.cognitiveAdvice.advice}
-                </p>
-
-                {summary.cognitiveAdvice.actionItems && summary.cognitiveAdvice.actionItems.length > 0 && (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-3 border-t border-[var(--border)]">
-                    {summary.cognitiveAdvice.actionItems.map((item: string, idx: number) => (
-                      <div key={idx} className="flex items-start gap-2.5 text-xs text-slate-800 dark:text-slate-200">
-                        <span className="w-4 h-4 bg-[#4a6fa5] text-white flex items-center justify-center font-mono font-bold shrink-0 text-xs mt-0.5">
-                          {idx + 1}
-                        </span>
-                        <span className="leading-snug font-medium">{item}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
 
           {/* Phase 2: Bayesian Knowledge Tracing, Forgetting Curves & Prerequisite DAG */}
           <Phase2IntelligencePanel />

@@ -119,7 +119,7 @@ export default function AdminDashboardPage() {
           <div className="priority-band">
             <div className="priority-symbol">!</div>
             <div className="priority-content">
-              <p className="mono text-[#e05033] text-[9px]">INSTITUTIONAL GOVERNANCE & ARCHITECTURE</p>
+             
               <h2 className="font-display text-xl uppercase tracking-wide">SYSTEM ARCHITECTURE & PLATFORM OVERVIEW</h2>
               <p className="text-xs text-[#8ba0c0] font-sans">
                 Role-based access delegation, student roster synchronization, and live academic cluster infrastructure monitoring.
@@ -178,9 +178,7 @@ export default function AdminDashboardPage() {
                   <Server className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   Infrastructure Health &amp; Microservices Telemetry
                 </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Real-time status of backend API, AI inference engines, and persistence layers
-                </p>
+               
               </div>
               <span className="text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
                 100% Uptime

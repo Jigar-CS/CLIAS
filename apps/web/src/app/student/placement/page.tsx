@@ -188,7 +188,7 @@ export default function StudentPlacementPage() {
           <div className="priority-band">
             <div className="priority-symbol">!</div>
             <div className="priority-content">
-              <p className="mono text-[#e05033] text-xs font-bold">CAMPUS RECRUITMENT BENCHMARK</p>
+              
               <h2 className="font-display text-xl uppercase tracking-wide">COGNITIVE SKILL GAP ANALYSIS</h2>
               <p className="text-xs text-[#8ba0c0] font-sans">
                 Real-time benchmarking comparing your course knowledge against campus placement technical rounds.

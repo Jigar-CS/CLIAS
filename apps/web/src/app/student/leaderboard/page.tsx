@@ -230,7 +230,7 @@ export default function StudentLeaderboardPage() {
           <div className="priority-band">
             <div className="priority-symbol">!</div>
             <div className="priority-content">
-              <p className="mono text-[#e05033] text-xs font-bold">COMPETITIVE STANDING / CHARUSAT CSPIT</p>
+              
               <h2 className="font-display text-xl uppercase tracking-wide">SEMESTER {metaInfo?.semester || 4} ACADEMIC STANDINGS</h2>
               <p className="text-xs sm:text-sm text-[#8ba0c0] font-sans">
                 Real-time percentile rankings calculated from assessment performance, adaptive practice drills, and consistency.

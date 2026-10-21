@@ -12,7 +12,6 @@ import {
   RefreshCw,
   TrendingDown,
   Layers,
-  ChevronRight,
   ShieldCheck,
   Loader2,
 } from 'lucide-react';
@@ -121,68 +120,7 @@ export function Phase2IntelligencePanel() {
             {/* TAB 1: BKT & IRT BENCHMARK */}
             {activeTab === 'bkt' && bktData && (
               <div className="space-y-6">
-                {/* Dynamic Cognitive Intelligence Advice Card */}
-                {bktData.cognitiveAdvice && (
-                  <div className="p-5 bg-[#faf7f2] dark:bg-[#0c1220] border border-[rgba(74,111,165,0.3)] shadow-xs" style={{borderRadius:0}}>
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-8 h-8 bg-[#e05033] text-white flex items-center justify-center font-bold" style={{borderRadius:0}}>
-                          <Sparkles className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h4 className="text-xs sm:text-sm font-mono font-bold uppercase tracking-wider text-slate-900 dark:text-white">
-                              Cognitive Intelligence Advice
-                            </h4>
-                            <span
-                              className={`px-2.5 py-0.5 text-xs font-mono font-bold uppercase tracking-wider border ${
-                                bktData.cognitiveAdvice.urgency === 'HIGH'
-                                  ? 'bg-[#e05033]/15 text-[#e05033] border-[#e05033]/40'
-                                  : bktData.cognitiveAdvice.urgency === 'MEDIUM'
-                                  ? 'bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/40'
-                                  : 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/40'
-                              }`}
-                              style={{borderRadius:0}}
-                            >
-                              {bktData.cognitiveAdvice.focusType.replace('_', ' ')}
-                            </span>
-                          </div>
-                          <p className="text-xs sm:text-sm font-bold text-[#4a6fa5] dark:text-[#6a90c5] mt-0.5">
-                            {bktData.cognitiveAdvice.headline}
-                          </p>
-                        </div>
-                      </div>
 
-                      {bktData.cognitiveAdvice.targetTopicId && (
-                        <a
-                          href={`/student/practice?topicId=${bktData.cognitiveAdvice.targetTopicId}`}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#e05033] text-white text-xs font-mono font-bold uppercase tracking-wider hover:bg-[#c93f25] transition shadow-xs shrink-0"
-                          style={{borderRadius:0}}
-                        >
-                          <span>Practice {bktData.cognitiveAdvice.targetTopicName}</span>
-                          <ChevronRight className="w-3.5 h-3.5" />
-                        </a>
-                      )}
-                    </div>
-
-                    <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed mb-3 font-sans">
-                      {bktData.cognitiveAdvice.advice}
-                    </p>
-
-                    {bktData.cognitiveAdvice.actionItems && bktData.cognitiveAdvice.actionItems.length > 0 && (
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 pt-2 border-t border-[rgba(74,111,165,0.2)]">
-                        {bktData.cognitiveAdvice.actionItems.map((item: string, idx: number) => (
-                          <div key={idx} className="flex items-start gap-2 text-xs text-slate-800 dark:text-slate-200">
-                            <span className="w-4 h-4 bg-[#4a6fa5] text-white flex items-center justify-center font-bold shrink-0 text-xs mt-0.5" style={{borderRadius:0}}>
-                              {idx + 1}
-                            </span>
-                            <span>{item}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
 
                 {/* Latent Ability Banner */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

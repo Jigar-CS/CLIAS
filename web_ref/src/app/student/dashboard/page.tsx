@@ -19,7 +19,6 @@ import {
   AlertTriangle,
   ArrowRight,
   Clock,
-  Sparkles,
   Award,
   Layers,
   BookOpen,
@@ -636,62 +635,7 @@ export default function StudentDashboard() {
               </Link>
             </div>
 
-          {/* Cognitive Intelligence Advice Banner */}
-          {summary?.cognitiveAdvice && (
-            <div className="p-5 md:p-6 rounded-3xl bg-gradient-to-r from-indigo-900 via-slate-900 to-indigo-950 text-white shadow-xl shadow-indigo-950/10 border border-indigo-500/20 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-80 h-full bg-gradient-to-l from-indigo-500/10 to-transparent pointer-events-none" />
 
-              <div className="relative z-10">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-3">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-xl bg-indigo-500/30 border border-indigo-400/40 text-indigo-300 flex items-center justify-center font-bold shadow-md">
-                      <Sparkles className="w-4 h-4 text-indigo-300" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-sm font-black tracking-tight text-white uppercase">
-                          Cognitive Intelligence Advice
-                        </h3>
-                        <span className="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-white/10 border border-white/20 text-indigo-200">
-                          {summary.cognitiveAdvice.focusType.replace('_', ' ')}
-                        </span>
-                      </div>
-                      <p className="text-xs font-bold text-indigo-300 mt-0.5">
-                        {summary.cognitiveAdvice.headline}
-                      </p>
-                    </div>
-                  </div>
-
-                  {summary.cognitiveAdvice.targetTopicId && (
-                    <Link
-                      href={`/student/practice?topicId=${summary.cognitiveAdvice.targetTopicId}`}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-500 hover:bg-indigo-400 text-white text-xs font-black transition shadow-lg shrink-0"
-                    >
-                      <span>Practice {summary.cognitiveAdvice.targetTopicName}</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </Link>
-                  )}
-                </div>
-
-                <p className="text-xs md:text-sm text-indigo-100/90 leading-relaxed mb-4 max-w-4xl">
-                  {summary.cognitiveAdvice.advice}
-                </p>
-
-                {summary.cognitiveAdvice.actionItems && summary.cognitiveAdvice.actionItems.length > 0 && (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-3 border-t border-indigo-500/20">
-                    {summary.cognitiveAdvice.actionItems.map((item: string, idx: number) => (
-                      <div key={idx} className="flex items-start gap-2 text-xs text-indigo-200">
-                        <span className="w-4 h-4 rounded-full bg-white/10 border border-white/20 text-white flex items-center justify-center font-bold shrink-0 text-[10px] mt-0.5">
-                          {idx + 1}
-                        </span>
-                        <span>{item}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
 
           {/* Phase 2: Bayesian Knowledge Tracing, Forgetting Curves & Prerequisite DAG */}
           <Phase2IntelligencePanel />
