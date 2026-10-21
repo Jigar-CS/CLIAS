@@ -32,6 +32,13 @@ export interface KnowledgeGraphNode {
   status: 'MASTERED' | 'READY_FOR_PRACTICE' | 'NEEDS_PREREQUISITE' | 'BLOCKED';
   isPrerequisiteSatisfied: boolean;
   prerequisites: string[]; // List of prerequisite slugs
+  missingPrerequisites?: {
+    prerequisiteSlug: string;
+    prerequisiteName: string;
+    currentMastery: number;
+    requiredMastery: number;
+    deficit: number;
+  }[];
 }
 
 export interface KnowledgeGraphEdge {
@@ -363,6 +370,7 @@ export class KnowledgeGraphEngine {
         status: prereqCheck.status,
         isPrerequisiteSatisfied: prereqCheck.isReady,
         prerequisites: directPrereqs,
+        missingPrerequisites: prereqCheck.missingPrerequisites,
       };
     });
 

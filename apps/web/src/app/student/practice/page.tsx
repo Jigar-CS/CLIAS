@@ -193,6 +193,35 @@ export default function PracticePage() {
 
   const [isRemediationMode, setIsRemediationMode] = useState<boolean>(false);
   const [isLearningPathDrillMode, setIsLearningPathDrillMode] = useState<boolean>(false);
+  const [isPlacementMode, setIsPlacementMode] = useState<boolean>(false);
+  const [unlockedTopicIds, setUnlockedTopicIds] = useState<Set<string>>(new Set());
+  const [knowledgeGraphNodes, setKnowledgeGraphNodes] = useState<any[]>([]);
+  const [autoCalibratedNotice, setAutoCalibratedNotice] = useState<{
+    requestedTopicName: string;
+    prereqTopicName: string;
+    prereqTopicId: string;
+    reason: string;
+  } | null>(null);
+
+  const loadCourseKnowledgeGraph = async (course: any): Promise<{ nodes: any[]; unlocked: Set<string> }> => {
+    try {
+      const kgRes = await api.get(`/analytics/student/me/knowledge-graph?courseCode=${course.code}`);
+      if (kgRes?.nodes) {
+        setKnowledgeGraphNodes(kgRes.nodes);
+        const unlocked = new Set<string>();
+        kgRes.nodes.forEach((n: any) => {
+          if (n.isPrerequisiteSatisfied || n.status === 'READY_FOR_PRACTICE' || n.status === 'MASTERED') {
+            unlocked.add(n.id);
+          }
+        });
+        setUnlockedTopicIds(unlocked);
+        return { nodes: kgRes.nodes, unlocked };
+      }
+    } catch (err) {
+      console.warn('Failed to load course knowledge graph', err);
+    }
+    return { nodes: [], unlocked: new Set<string>() };
+  };
 
   const loadCourses = async () => {
     try {
@@ -204,37 +233,121 @@ export default function PracticePage() {
         const queryCourseCode = params?.get('courseCode');
         const queryTopicId = params?.get('topicId');
         const queryTopicSlug = params?.get('topicSlug');
+        const queryTopicQuery = params?.get('topicQuery');
         const fromLearningPath = params?.get('from') === 'learning-path';
+        const fromPlacement = params?.get('from') === 'placement';
 
-        const targetCourse =
+        if (fromPlacement) {
+          setIsPlacementMode(true);
+        }
+
+        let targetCourse =
           (queryCourseId && data.find((c: any) => c.id === queryCourseId || c.code.toLowerCase() === queryCourseId.toLowerCase())) ||
           (queryCourseCode && data.find((c: any) => c.code.toLowerCase() === queryCourseCode.toLowerCase())) ||
-          data[0];
+          null;
+
+        // If from placement or queryTopicQuery, find which course owns this topic if targetCourse wasn't matched
+        if (!targetCourse && (queryTopicQuery || queryTopicSlug || queryTopicId)) {
+          const searchVal = (queryTopicQuery || queryTopicSlug || queryTopicId || '').toLowerCase();
+          for (const c of data) {
+            const hasTopic = c.topics?.some((t: any) =>
+              t.id === queryTopicId ||
+              t.slug?.toLowerCase() === searchVal ||
+              t.name?.toLowerCase().includes(searchVal) ||
+              searchVal.includes(t.name?.toLowerCase())
+            );
+            if (hasTopic) {
+              targetCourse = c;
+              break;
+            }
+          }
+        }
+
+        if (!targetCourse) {
+          targetCourse = data[0];
+        }
 
         setSelectedCourseId(targetCourse.id);
 
+        // Fetch course knowledge graph to determine prerequisite fulfillment
+        const { nodes: kgNodes, unlocked: unlockedIds } = await loadCourseKnowledgeGraph(targetCourse);
+
         let targetTopic = null;
         if (targetCourse.topics?.length > 0) {
-          targetTopic =
-            (queryTopicId &&
-              targetCourse.topics.find(
-                (t: any) =>
-                  t.id === queryTopicId ||
-                  t.slug === queryTopicId ||
-                  t.name.toLowerCase() === queryTopicId.toLowerCase(),
-              )) ||
-            (queryTopicSlug && targetCourse.topics.find((t: any) => t.slug === queryTopicSlug)) ||
-            targetCourse.topics[0];
+          // Find matching topic requested
+          if (queryTopicId) {
+            targetTopic = targetCourse.topics.find((t: any) => t.id === queryTopicId || t.slug === queryTopicId);
+          }
+          if (!targetTopic && queryTopicSlug) {
+            targetTopic = targetCourse.topics.find((t: any) => t.slug === queryTopicSlug);
+          }
+          if (!targetTopic && queryTopicQuery) {
+            const qLower = queryTopicQuery.toLowerCase().trim();
+            targetTopic = targetCourse.topics.find((t: any) =>
+              t.name.toLowerCase() === qLower ||
+              t.slug.toLowerCase() === qLower ||
+              t.name.toLowerCase().includes(qLower) ||
+              qLower.includes(t.name.toLowerCase()) ||
+              t.slug.toLowerCase().includes(qLower)
+            );
+          }
+          if (!targetTopic) {
+            // Default to first unlocked topic
+            targetTopic = targetCourse.topics.find((t: any) => unlockedIds.has(t.id)) || targetCourse.topics[0];
+          }
 
           if (targetTopic) {
-            setSelectedTopicId(targetTopic.id);
-            setIsCustomTopicMode(false);
-            loadCalibration(targetTopic.id);
+            // Check if this topic has unmet prerequisites!
+            const node = kgNodes.find((n: any) => n.id === targetTopic.id || n.slug === targetTopic.slug);
+            if (node && !node.isPrerequisiteSatisfied) {
+              // Prerequisites NOT cleared!
+              // Automatically calibrate to the prerequisite!
+              let prereqTopic = null;
+              const missing = node.missingPrerequisites?.[0];
+              if (missing) {
+                prereqTopic = targetCourse.topics.find((t: any) =>
+                  t.slug === missing.prerequisiteSlug ||
+                  t.slug?.includes(missing.prerequisiteSlug) ||
+                  missing.prerequisiteSlug?.includes(t.slug) ||
+                  t.name.toLowerCase().includes(missing.prerequisiteName.toLowerCase())
+                );
+              }
+              if (!prereqTopic && node.prerequisites?.length > 0) {
+                const firstPrereq = node.prerequisites[0];
+                prereqTopic = targetCourse.topics.find((t: any) =>
+                  t.name === firstPrereq || t.slug === firstPrereq
+                );
+              }
+              if (!prereqTopic) {
+                prereqTopic = targetCourse.topics.find((t: any) => unlockedIds.has(t.id)) || targetCourse.topics[0];
+              }
+
+              if (prereqTopic) {
+                setSelectedTopicId(prereqTopic.id);
+                setIsCustomTopicMode(false);
+                loadCalibration(prereqTopic.id);
+                setAutoCalibratedNotice({
+                  requestedTopicName: targetTopic.name,
+                  prereqTopicName: prereqTopic.name,
+                  prereqTopicId: prereqTopic.id,
+                  reason: missing
+                    ? `Prerequisite topic "${missing.prerequisiteName}" requires ${missing.requiredMastery}% mastery (current: ${missing.currentMastery}%). Practice has been automatically calibrated to "${prereqTopic.name}".`
+                    : `Prerequisites for "${targetTopic.name}" are not yet cleared. Practice has been automatically calibrated to "${prereqTopic.name}".`,
+                });
+              }
+            } else {
+              // Prerequisites cleared!
+              setSelectedTopicId(targetTopic.id);
+              setIsCustomTopicMode(false);
+              loadCalibration(targetTopic.id);
+              setAutoCalibratedNotice(null);
+            }
           }
+
           if (fromLearningPath) {
             setIsLearningPathDrillMode(true);
             setIsRemediationMode(false);
-          } else if (queryTopicId) {
+          } else if (queryTopicId && !fromPlacement) {
             setIsRemediationMode(true);
           }
         }
@@ -261,6 +374,21 @@ export default function PracticePage() {
 
     const targetCourseId = overrideCourseId || selectedCourseId;
     const targetTopicId = overrideTopicId || selectedTopicId;
+
+    // Prerequisite guard: if topic is locked, block starting session
+    if (unlockedTopicIds.size > 0 && targetTopicId && !unlockedTopicIds.has(targetTopicId)) {
+      const course = courses.find((c) => c.id === targetCourseId);
+      const topic = course?.topics?.find((t: any) => t.id === targetTopicId);
+      const node = knowledgeGraphNodes.find((n: any) => n.id === targetTopicId || n.slug === topic?.slug);
+      setPrerequisiteError({
+        message: `You cannot practice "${topic?.name || 'this topic'}" until all foundational prerequisites are cleared.`,
+        topicName: topic?.name,
+        readinessScore: 0,
+        missingPrerequisites: node?.missingPrerequisites || [],
+      });
+      setLoadingQuestion(false);
+      return;
+    }
 
     try {
       let firstQ = null;
@@ -774,13 +902,67 @@ export default function PracticePage() {
                 </div>
               )}
 
+              {/* Placement Readiness Bridge Gap Banner */}
+              {isPlacementMode && (
+                <div className="p-4 bg-emerald-50/95 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-base shadow-xs shrink-0">
+                      💼
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-0.5 rounded-md text-xs font-extrabold bg-emerald-600 text-white uppercase tracking-wider">
+                          Placement Bridge Gap
+                        </span>
+                        <h4 className="text-xs font-bold text-emerald-950 dark:text-emerald-200">
+                          Target Competency Adaptive Drill
+                        </h4>
+                      </div>
+                      <p className="text-[11px] text-slate-700 dark:text-slate-300 mt-0.5 leading-relaxed font-medium">
+                        Calibrating adaptive practice to close verified skill gaps for your chosen career benchmark.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Prerequisite Auto-Calibration Alert Card */}
+              {autoCalibratedNotice && (
+                <div className="p-4.5 rounded-2xl bg-amber-500/10 border-2 border-amber-500/30 text-amber-900 dark:text-amber-200 flex items-start justify-between gap-3 shadow-xs">
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-base shadow-xs shrink-0 mt-0.5">
+                      <Lock className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="px-2 py-0.5 rounded text-[11px] bg-amber-500/25 text-amber-800 dark:text-amber-200 font-extrabold uppercase tracking-wider">
+                          Prerequisite Incomplete
+                        </span>
+                        <span className="text-xs font-bold text-amber-950 dark:text-amber-100">
+                          Auto-Calibrated to Required Foundation: {autoCalibratedNotice.prereqTopicName}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-700 dark:text-slate-300 mt-1 leading-relaxed font-medium">
+                        {autoCalibratedNotice.reason}
+                      </p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setAutoCalibratedNotice(null)}
+                    className="text-amber-700 dark:text-amber-300 hover:text-amber-900 dark:hover:text-white p-1"
+                    title="Dismiss alert"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+
               <div>
-                
                 <h2 className="font-display text-2xl uppercase tracking-wide text-[#1a2540] dark:text-white flex items-center gap-2">
                   <BrainCircuit className="w-5 h-5 text-[#e05033]" />
                   CONFIGURE PRACTICE SESSION
                 </h2>
-               
               </div>
 
               {/* Adaptive Calibration preview if topic is selected */}
@@ -801,13 +983,19 @@ export default function PracticePage() {
                   </label>
                   <select
                     value={selectedCourseId}
-                    onChange={(e) => {
-                      setSelectedCourseId(e.target.value);
-                      const course = courses.find((c) => c.id === e.target.value);
+                    onChange={async (e) => {
+                      const newCourseId = e.target.value;
+                      setSelectedCourseId(newCourseId);
+                      const course = courses.find((c) => c.id === newCourseId);
                       if (course && course.topics?.length > 0) {
-                        setSelectedTopicId(course.topics[0].id);
+                        const { nodes, unlocked } = await loadCourseKnowledgeGraph(course);
+                        const firstUnlocked = course.topics.find((t: any) => unlocked.has(t.id)) || course.topics[0];
+                        setSelectedTopicId(firstUnlocked.id);
+                        setAutoCalibratedNotice(null);
+                        loadCalibration(firstUnlocked.id);
                       } else {
                         setSelectedTopicId('');
+                        setAutoCalibratedNotice(null);
                       }
                     }}
                     className="w-full p-3 font-mono text-xs sm:text-sm bg-[var(--background)] border border-[var(--border)] focus:outline-none focus:border-[#e05033] text-[#1a2540] dark:text-[#e8edf5]"
@@ -820,7 +1008,7 @@ export default function PracticePage() {
                   </select>
                 </div>
 
-                {/* Topic Selector - Clean, ONLY Topic Name + Custom Topic Mode */}
+                {/* Topic Selector - Clean, ONLY Unlocked Topics + Custom Topic Mode */}
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <label className="block font-mono text-xs text-[#4a6fa5] dark:text-[#6a90c5] uppercase tracking-wider font-bold">
@@ -844,18 +1032,88 @@ export default function PracticePage() {
                       className="w-full p-3 font-mono text-xs sm:text-sm bg-[var(--background)] border border-[var(--border)] focus:outline-none focus:border-[#e05033] text-[#1a2540] dark:text-[#e8edf5]"
                     />
                   ) : (
-                    <select
-                      value={selectedTopicId}
-                      onChange={(e) => setSelectedTopicId(e.target.value)}
-                      className="w-full p-3 font-mono text-xs sm:text-sm bg-[var(--background)] border border-[var(--border)] focus:outline-none focus:border-[#e05033] text-[#1a2540] dark:text-[#e8edf5]"
-                    >
-                      <option value="" className="bg-[var(--background)] text-[#1a2540] dark:text-[#e8edf5]">All Topics (Curriculum-wide)</option>
-                      {selectedCourse?.topics?.map((topic: any) => (
-                        <option key={topic.id} value={topic.id} className="bg-[var(--background)] text-[#1a2540] dark:text-[#e8edf5]">
-                          {topic.name}
+                    <>
+                      <select
+                        value={selectedTopicId}
+                        onChange={(e) => {
+                          const newTopicId = e.target.value;
+                          const topic = selectedCourse?.topics?.find((t: any) => t.id === newTopicId);
+                          if (!topic) {
+                            setSelectedTopicId(newTopicId);
+                            setAutoCalibratedNotice(null);
+                            return;
+                          }
+                          const node = knowledgeGraphNodes.find((n: any) => n.id === topic.id || n.slug === topic.slug);
+                          if (node && !node.isPrerequisiteSatisfied) {
+                            let prereqTopic = null;
+                            const missing = node.missingPrerequisites?.[0];
+                            if (missing) {
+                              prereqTopic = selectedCourse?.topics?.find((t: any) =>
+                                t.slug === missing.prerequisiteSlug ||
+                                t.slug?.includes(missing.prerequisiteSlug) ||
+                                missing.prerequisiteSlug?.includes(t.slug) ||
+                                t.name.toLowerCase().includes(missing.prerequisiteName.toLowerCase())
+                              );
+                            }
+                            if (!prereqTopic && node.prerequisites?.length > 0) {
+                              const firstPrereq = node.prerequisites[0];
+                              prereqTopic = selectedCourse?.topics?.find((t: any) =>
+                                t.name === firstPrereq || t.slug === firstPrereq
+                              );
+                            }
+                            if (!prereqTopic) {
+                              prereqTopic = selectedCourse?.topics?.find((t: any) => unlockedTopicIds.has(t.id)) || selectedCourse?.topics?.[0];
+                            }
+                            if (prereqTopic) {
+                              setSelectedTopicId(prereqTopic.id);
+                              loadCalibration(prereqTopic.id);
+                              setAutoCalibratedNotice({
+                                requestedTopicName: topic.name,
+                                prereqTopicName: prereqTopic.name,
+                                prereqTopicId: prereqTopic.id,
+                                reason: missing
+                                  ? `Topic "${topic.name}" requires foundation in "${missing.prerequisiteName}" (${missing.requiredMastery}% required). Calibration has been automatically set to "${prereqTopic.name}".`
+                                  : `Prerequisites for "${topic.name}" are not cleared. Calibration has been automatically set to "${prereqTopic.name}".`,
+                              });
+                              return;
+                            }
+                          }
+                          setSelectedTopicId(newTopicId);
+                          setAutoCalibratedNotice(null);
+                          loadCalibration(newTopicId);
+                        }}
+                        className="w-full p-3 font-mono text-xs sm:text-sm bg-[var(--background)] border border-[var(--border)] focus:outline-none focus:border-[#e05033] text-[#1a2540] dark:text-[#e8edf5]"
+                      >
+                        <option value="" className="bg-[var(--background)] text-[#1a2540] dark:text-[#e8edf5]">
+                          All Topics (Curriculum-wide)
                         </option>
-                      ))}
-                    </select>
+                        {selectedCourse?.topics?.map((topic: any) => {
+                          const isUnlocked =
+                            unlockedTopicIds.size === 0 ||
+                            unlockedTopicIds.has(topic.id) ||
+                            topic.id === selectedTopicId;
+                          return (
+                            <option
+                              key={topic.id}
+                              value={topic.id}
+                              disabled={!isUnlocked}
+                              className={`bg-[var(--background)] ${
+                                !isUnlocked
+                                  ? 'text-slate-400 dark:text-slate-600 italic'
+                                  : 'text-[#1a2540] dark:text-[#e8edf5]'
+                              }`}
+                            >
+                              {isUnlocked ? topic.name : `🔒 ${topic.name} (Prerequisite Required)`}
+                            </option>
+                          );
+                        })}
+                      </select>
+                      {unlockedTopicIds.size > 0 && (
+                        <span className="font-mono text-[10px] text-[#4a6fa5] dark:text-[#6a90c5] font-semibold block mt-1 uppercase">
+                          {unlockedTopicIds.size} topics unlocked. Locked topics require prerequisite completion.
+                        </span>
+                      )}
+                    </>
                   )}
                 </div>
 

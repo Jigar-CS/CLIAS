@@ -4,6 +4,9 @@ import { CareerRoleType, SubmissionStatus } from '@prisma/client';
 
 export interface SkillGapItem {
   skill: string;
+  topicId?: string;
+  topicSlug?: string;
+  courseId?: string;
   studentMastery: number;
   requiredMastery: number;
   gap: number;
@@ -251,14 +254,24 @@ export class PlacementService {
 
       // 1. Direct slug or name match
       let studentMastery: number | null = null;
+      let matchedTopicId: string | undefined = undefined;
+      let matchedTopicSlug: string | undefined = undefined;
+      let matchedCourseId: string | undefined = undefined;
+
       for (const m of masteries) {
         if (!m.topic) continue;
         const mSlug = (m.topic.slug || '').toLowerCase().trim();
         const mName = (m.topic.name || '').toLowerCase().trim();
         if (skillSlug && (mSlug === skillSlug || skillSlug.includes(mSlug) || mSlug.includes(skillSlug))) {
           studentMastery = Math.max(studentMastery ?? 0, m.masteryScore ?? 0);
+          matchedTopicId = m.topic.id;
+          matchedTopicSlug = m.topic.slug;
+          matchedCourseId = m.topic.courseId;
         } else if (lowerSkillName && (mName === lowerSkillName || lowerSkillName.includes(mName) || mName.includes(lowerSkillName))) {
           studentMastery = Math.max(studentMastery ?? 0, m.masteryScore ?? 0);
+          matchedTopicId = m.topic.id;
+          matchedTopicSlug = m.topic.slug;
+          matchedCourseId = m.topic.courseId;
         }
       }
 
@@ -283,6 +296,11 @@ export class PlacementService {
 
           if (matched.length > 0) {
             studentMastery = Math.max(...matched.map((m) => m.masteryScore ?? 0));
+            if (!matchedTopicId && matched[0].topic) {
+              matchedTopicId = matched[0].topic.id;
+              matchedTopicSlug = matched[0].topic.slug;
+              matchedCourseId = matched[0].topic.courseId;
+            }
           }
         }
       }
@@ -312,6 +330,9 @@ export class PlacementService {
           finalMastery === 0 || gap > 25 ? 'HIGH' : gap > 12 ? 'MEDIUM' : 'LOW';
         skillGaps.push({
           skill: skillName,
+          topicId: matchedTopicId,
+          topicSlug: matchedTopicSlug,
+          courseId: matchedCourseId,
           studentMastery: finalMastery,
           requiredMastery,
           gap,

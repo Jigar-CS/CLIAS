@@ -42,6 +42,9 @@ interface Benchmark {
 
 interface SkillGap {
   skill: string;
+  topicId?: string;
+  topicSlug?: string;
+  courseId?: string;
   studentMastery: number;
   requiredMastery: number;
   gap: number;
@@ -388,7 +391,7 @@ export default function StudentPlacementPage() {
                             </td>
                             <td className="py-3.5 px-3 text-right">
                               <Link
-                                href="/student/practice"
+                                href={`/student/practice?topicId=${item.topicId || ''}&topicSlug=${encodeURIComponent(item.topicSlug || '')}&topicQuery=${encodeURIComponent(item.skill)}&courseId=${item.courseId || ''}&from=placement`}
                                 className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white transition-all shadow-xs"
                               >
                                 Bridge Gap
