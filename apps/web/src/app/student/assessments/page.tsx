@@ -159,7 +159,6 @@ export default function StudentAssessmentsPage() {
           <div className="priority-band">
             <div className="priority-symbol">!</div>
             <div className="priority-content">
-              <p className="mono text-[#e05033] text-xs font-bold">INSTRUCTOR-SCHEDULED EVALUATION</p>
               <h2 className="font-display text-xl uppercase tracking-wide">DEPARTMENT TIMED ASSESSMENTS</h2>
               <p className="text-xs text-[#8ba0c0] font-sans">
                 Official assessments assigned by course faculty. Ensure stable connection before beginning your timed attempt.

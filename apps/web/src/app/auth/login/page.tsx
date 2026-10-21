@@ -184,9 +184,6 @@ export default function LoginPage() {
           </div>
           <span className="text-2xl font-display tracking-tight text-[#1a2540] dark:text-[#e8edf5] uppercase">CLIAS</span>
         </Link>
-        <p className="font-mono text-[11px] font-bold uppercase tracking-widest text-red-600 dark:text-red-400 mb-1">
-          [AUTH // PORTAL]
-        </p>
         <h1 className="text-xl font-bold text-slate-900 dark:text-white tracking-tight">University Portal Sign In</h1>
       </div>
 

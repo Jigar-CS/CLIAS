@@ -147,9 +147,6 @@ export default function StudentPlacementPage() {
           {/* Gleam-Spark Page Intro */}
           <div className="page-intro">
             <div>
-              <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-xs font-semibold uppercase mb-2">
-                LEARNING INTELLIGENCE / CAREER READINESS / 01
-              </p>
               <h1 className="page-title font-display text-5xl sm:text-6xl text-[#1a2540] dark:text-[#f5f0e8] uppercase tracking-tight">
                 PLACEMENT READINESS
               </h1>
@@ -335,9 +332,7 @@ export default function StudentPlacementPage() {
                         <BarChart3 className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                         Skill Gap Matrix & Required Thresholds
                       </h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        Continuous telemetry based on syllabus tests, homework quizzes, and proctored coding assessments.
-                      </p>
+                      
                     </div>
                     <span className="text-xs px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 font-semibold">
                       {analysis?.skillGaps.length ?? 0} Gap(s) Identified
@@ -436,9 +431,6 @@ export default function StudentPlacementPage() {
                       <Sparkles className="w-5 h-5 text-purple-600 dark:text-purple-400" />
                       Bridge Learning Roadmap
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                      Algorithmic milestones generated to reach the hiring bar within 4 weeks.
-                    </p>
 
                     <div className="mt-6 space-y-4">
                       {analysis?.personalizedRoadmap.map((step, idx) => (
@@ -474,9 +466,7 @@ export default function StudentPlacementPage() {
                       <ShieldCheck className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                       Industry-Standard Placement Mock Assessments
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                      Timed technical screening assessments equipped with AI Proctoring and code execution telemetry.
-                    </p>
+                    
                   </div>
                 </div>
 

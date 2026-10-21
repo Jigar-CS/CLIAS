@@ -406,7 +406,7 @@ export default function StudentDashboard() {
             <section className="panel bg-[#faf7f2] dark:bg-[#121b30]">
               <header className="panel-head">
                 <div>
-                  <p className="mono">PERFORMANCE TRAJECTORY</p>
+                  
                   <h2 className="display">LEARNING VELOCITY</h2>
                 </div>
                 <div className="flex items-center gap-2">
@@ -504,10 +504,8 @@ export default function StudentDashboard() {
             <section className="panel bg-[#faf7f2] dark:bg-[#121b30]">
               <header className="panel-head">
                 <div>
-                  <p className="mono">COGNITIVE DIAGNOSTICS</p>
                   <h2 className="display">SKILL MATRIX</h2>
                 </div>
-                <span className="panel-meta mono blue">UPDATED REAL-TIME</span>
               </header>
               {skillMatrixRows.length > 0 ? (
                 <table className="skill-table">
@@ -554,10 +552,8 @@ export default function StudentDashboard() {
             <section className="panel bg-[#faf7f2] dark:bg-[#121b30]">
               <header className="panel-head">
                 <div>
-                  <p className="mono">AI RECOMMENDATIONS</p>
                   <h2 className="display">NEXT BEST ACTIONS</h2>
                 </div>
-                <span className="panel-meta mono blue">{recommendations.length.toString().padStart(2, '0')} ITEMS</span>
               </header>
               {recommendations.map(([name, meta, topicId, actionUrl], i) => (
                 <Link
@@ -583,10 +579,6 @@ export default function StudentDashboard() {
                 <Target className="w-4 h-4 text-rose-500" />
                 Conceptual Focus Areas
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
-                Topics automatically classified by knowledge depth (&lt;70% focus vs &ge;70% mastered)
-              </p>
-
               {/* Priority Weak Topics */}
               <div className="mb-5">
                 <span className="text-xs font-extrabold text-rose-600 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1.5 mb-2">
@@ -741,9 +733,6 @@ export default function StudentDashboard() {
                 <h3 className="text-base font-bold text-slate-900 dark:text-white tracking-tight">
                   Detailed Topic Mastery Breakdown
                 </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Real-time knowledge states across curriculum subjects
-                </p>
               </div>
 
               <Link
@@ -783,9 +772,6 @@ export default function StudentDashboard() {
                   <Clock className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   Recent Practice Activity
                 </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Detailed timeline of recent question attempts and accuracy
-                </p>
               </div>
             </div>
 

@@ -601,7 +601,6 @@ export default function PracticePage() {
           <div className="priority-band">
             <div className="priority-symbol">!</div>
             <div className="priority-content">
-              <p className="mono text-[#e05033] text-xs font-bold">RECOMMENDED PRACTICE FOCUS / ADAPTIVE</p>
               <h2 className="font-display text-xl uppercase tracking-wide">REINFORCE TARGETED WEAK CONCEPTS</h2>
               <p className="text-xs sm:text-sm text-[#8ba0c0] font-sans">
                 Personalized conceptual drills dynamically calibrate difficulty after every attempt using Item Response Theory.
@@ -730,9 +729,7 @@ export default function PracticePage() {
                           Targeted Concept: {courses.find((c) => c.id === selectedCourseId)?.topics?.find((t: any) => t.id === selectedTopicId)?.name || 'Selected Concept'} ({courses.find((c) => c.id === selectedCourseId)?.code || 'Course'})
                         </h4>
                       </div>
-                      <p className="text-[11px] text-slate-700 dark:text-slate-300 mt-0.5 leading-relaxed font-medium">
-                        Course and concept parameters are pre-configured. Review your desired question count or difficulty below and click <strong>Begin Standard Session</strong>.
-                      </p>
+                      
                     </div>
                   </div>
                   <button
@@ -778,16 +775,12 @@ export default function PracticePage() {
               )}
 
               <div>
-                <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-xs font-semibold uppercase mb-1">
-                  CONFIGURATION / ENGINE MATRIX
-                </p>
+                
                 <h2 className="font-display text-2xl uppercase tracking-wide text-[#1a2540] dark:text-white flex items-center gap-2">
                   <BrainCircuit className="w-5 h-5 text-[#e05033]" />
                   CONFIGURE PRACTICE SESSION
                 </h2>
-                <p className="text-xs text-[#6b7fa3] font-sans mt-1">
-                  Select your target curriculum area and difficulty level. Questions dynamically calibrate to your real-time mastery.
-                </p>
+               
               </div>
 
               {/* Adaptive Calibration preview if topic is selected */}

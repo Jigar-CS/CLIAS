@@ -420,9 +420,7 @@ export function Phase2IntelligencePanel() {
                     <h4 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
                       {graphData.courseName} ({graphData.courseCode}) Directed Acyclic Graph
                     </h4>
-                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
-                      Pedagogical prerequisite dependency tree enforcing mastery continuity before advanced concepts.
-                    </p>
+              
                   </div>
                   <div className="flex items-center gap-2 shrink-0 font-mono">
                     <span className="text-xs font-bold px-3 py-1 bg-emerald-100 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800" style={{borderRadius:0}}>

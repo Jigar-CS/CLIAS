@@ -457,12 +457,6 @@ export default function CLIASHomePage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-[rgba(74,111,165,0.2)] gap-4">
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-mono text-[10px] font-bold text-[#e05033] uppercase tracking-widest">
-                  [ENGINE // PREVIEW 2026-27]
-                </span>
-                <span className="font-mono text-[10px] text-[#4a6fa5] dark:text-[#6a90c5] bg-[#ede8df] dark:bg-[#162038] px-2 py-0.5 border border-[rgba(74,111,165,0.2)] uppercase" style={{borderRadius:0}}>
-                  Academic Year 2026-27
-                </span>
               </div>
               <h2 className="text-xl sm:text-2xl font-bold font-display uppercase text-[#1a2540] dark:text-white mt-1 tracking-tight">
                 Explore The Learning Intelligence Engine

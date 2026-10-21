@@ -118,24 +118,6 @@ export default function CLIASHomePage() {
 
           {/* Quick Portal Links & Auth */}
           <div className="flex items-center gap-3">
-            <span className="hidden lg:inline-flex items-center gap-1.5 font-mono text-[10px] uppercase font-bold text-[#4a6fa5] dark:text-[#6a90c5] mr-2">
-              <span className="inline-block w-2 h-2 rounded-full bg-[#e05033] animate-pulse" />
-              CHARUSAT CLUSTER OPERATIONAL
-            </span>
-
-            <Link
-              href="/student/dashboard"
-              className="hidden md:inline-flex font-mono text-[11px] font-semibold uppercase tracking-wider text-[#1a2540]/70 dark:text-slate-300 hover:text-[#e05033] dark:hover:text-[#e8604a] px-2.5 py-1 transition"
-            >
-              Student Portal
-            </Link>
-            <Link
-              href="/faculty/dashboard"
-              className="hidden md:inline-flex font-mono text-[11px] font-semibold uppercase tracking-wider text-[#1a2540]/70 dark:text-slate-300 hover:text-[#e05033] dark:hover:text-[#e8604a] px-2.5 py-1 transition"
-            >
-              Faculty Intelligence
-            </Link>
-
             {/* Theme Toggle Button */}
             <button
               onClick={toggleTheme}
@@ -169,31 +151,13 @@ export default function CLIASHomePage() {
           </div>
         </div>
       </header>
-
-      {/* Top Technical Metadata Bar (Cardio & Gleam-spark reference) */}
-      <div className="border-b border-[rgba(74,111,165,0.2)] bg-[#f5f0e8]/80 dark:bg-[#0c1220]/80 py-2 px-6">
-        <div className="max-w-7xl mx-auto flex items-center justify-between font-mono text-[11px] text-[#4a6fa5] dark:text-[#6a90c5]">
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-[#1a2540] dark:text-white uppercase">(A) — LEARNING INTELLIGENCE &amp; ADAPTIVE ASSESSMENT</span>
-            <span className="hidden sm:inline opacity-30">|</span>
-            <span className="hidden sm:inline uppercase">COGNITIVE MODELING ENGINE</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="inline-block w-2 h-2 rounded-full bg-[#e05033] animate-pulse" />
-            <span className="text-[#e05033] font-bold uppercase">SYSTEM CONNECTED</span>
-          </div>
-        </div>
-      </div>
-
       {/* 2. Hero Section (Cardio + Gleam-spark Reference: Two-column, Anton Typography, 2D Radar Matrix) */}
       <section className="relative z-10 max-w-7xl mx-auto px-6 pt-10 sm:pt-14 pb-14 border-b border-[rgba(74,111,165,0.25)]">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
 
           {/* Left Column: Big Condensed Typography & CTA */}
           <div className="lg:col-span-7 flex flex-col justify-center text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-[rgba(224,80,51,0.1)] border border-[rgba(224,80,51,0.3)] text-[#e05033] font-mono text-[10px] font-bold uppercase tracking-widest mb-4 w-fit" style={{ borderRadius: 0 }}>
-              <span>(A) — DIAGNOSTIC &amp; ADAPTIVE MATRIX</span>
-            </div>
+            
 
             <h1 className="text-6xl sm:text-7xl md:text-8xl lg:text-9xl font-display font-black uppercase leading-[0.88] tracking-tight text-[#1a2540] dark:text-white select-none">
               <span className="block">LEARN</span>
@@ -316,10 +280,6 @@ export default function CLIASHomePage() {
               </div>
             </div>
 
-            {/* Scientific Figure Caption */}
-            <div className="w-full text-right mt-1 font-mono text-[10px] uppercase text-[#e05033] font-bold tracking-wider">
-              FIG. 01 COGNITIVE MATRIX ARCHITECTURE
-            </div>
           </div>
         </div>
       </section>
@@ -453,12 +413,6 @@ export default function CLIASHomePage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-[rgba(74,111,165,0.2)] gap-4">
             <div>
               <div className="flex items-center gap-2">
-                <span className="font-mono text-[10px] font-bold text-[#e05033] uppercase tracking-widest">
-                  [ENGINE // PREVIEW 2026-27]
-                </span>
-                <span className="font-mono text-[10px] text-[#4a6fa5] dark:text-[#6a90c5] bg-[#ede8df] dark:bg-[#162038] px-2 py-0.5 border border-[rgba(74,111,165,0.2)] uppercase" style={{ borderRadius: 0 }}>
-                  Academic Year 2026-27
-                </span>
               </div>
               <h2 className="text-xl sm:text-2xl font-bold font-display uppercase text-[#1a2540] dark:text-white mt-1 tracking-tight">
                 Explore The Learning Intelligence Engine
@@ -662,7 +616,6 @@ export default function CLIASHomePage() {
                 <div className="flex items-center justify-between pb-3 border-b border-[rgba(74,111,165,0.2)]">
                   <div>
                     <h3 className="text-sm font-bold text-slate-900 dark:text-white">Knowledge Gaps Matrix</h3>
-                    <p className="font-mono text-[10px] uppercase tracking-wider text-[#4a6fa5] dark:text-[#6a90c5]">Subtopic cognitive diagnostics</p>
                   </div>
                   <span className="font-mono text-[10px] uppercase font-bold text-[#e05033] bg-[rgba(224,80,51,0.1)] px-2.5 py-0.5 border border-[rgba(224,80,51,0.3)]" style={{ borderRadius: 0 }}>
                     ● Triage Active

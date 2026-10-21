@@ -251,7 +251,6 @@ export default function StudentLearningPath() {
           <div className="priority-band">
             <div className="priority-symbol">!</div>
             <div className="priority-content">
-              <p className="mono text-[#e05033] text-xs font-bold">DIRECTED ACYCLIC GRAPH / KNOWLEDGE TOPOLOGY</p>
               <h2 className="font-display text-xl uppercase tracking-wide">ADAPTIVE PREREQUISITE SEQUENCING</h2>
               <p className="text-xs text-[#8ba0c0] font-sans">
                 Topic nodes dynamically unlock as prerequisite masteries are verified by Bayesian Knowledge Tracing.
@@ -324,7 +323,6 @@ export default function StudentLearningPath() {
                       / {graph?.nodes.length || 0} Topics
                     </span>
                   </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 font-medium mt-2">Prerequisites permanently satisfied</p>
                 </div>
 
                 <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-xs">
@@ -336,11 +334,7 @@ export default function StudentLearningPath() {
                     {graph?.unlockedTopicsCount || 0}
                     <span className="text-xs text-slate-600 dark:text-slate-400 font-medium ml-1.5">Available for drill</span>
                   </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 font-medium mt-2">
-                    {(graph?.nodes.filter((n) => n.status === 'MASTERED').length || 0) > 0
-                      ? 'Foundations validated by engine'
-                      : 'Foundational topics ready for drill'}
-                  </p>
+                  
                 </div>
 
                 <div className="p-5 rounded-2xl bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-slate-800 shadow-xs">
@@ -352,9 +346,7 @@ export default function StudentLearningPath() {
                     {courseDueReviews.length}
                     <span className="text-xs text-slate-600 dark:text-slate-400 font-medium ml-1.5">Topics Due</span>
                   </div>
-                  <p className="text-xs text-slate-600 dark:text-slate-400 font-medium mt-2">
-                    {courseDueReviews.length > 0 ? 'Ebbinghaus retention decay active' : 'Prerequisites & retention healthy'}
-                  </p>
+                 
                 </div>
               </div>
 
@@ -367,7 +359,6 @@ export default function StudentLearningPath() {
                       <Layers className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
                       Sequential Curriculum Knowledge Tree
                     </h2>
-                    <span className="text-xs text-slate-500 dark:text-slate-400">Ordered by Pedagogical DAG</span>
                   </div>
 
                   <div className="space-y-3">
@@ -463,9 +454,6 @@ export default function StudentLearningPath() {
                     <div className="p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-5 sticky top-6 shadow-xs">
                       <div className="flex items-start justify-between">
                         <div>
-                          <span className="text-xs font-mono text-slate-700 dark:text-slate-300 font-bold uppercase tracking-wider block">
-                            Inspecting Concept Node
-                          </span>
                           <h3 className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">{selectedNode.name}</h3>
                         </div>
                         {getStatusBadge(selectedNode.status)}

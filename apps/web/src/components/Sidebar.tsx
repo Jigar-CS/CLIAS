@@ -332,12 +332,7 @@ export function Sidebar({ isLocked = false, onLockedClick }: SidebarProps = {}) 
           /* Normal single role badge */
           isExpanded ? (
             <div className="px-5 py-3 border-b border-[rgba(74,111,165,0.22)] bg-[rgba(74,111,165,0.03)] animate-in fade-in duration-200">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-mono uppercase tracking-wider font-semibold text-[#4a6fa5] dark:text-[#6a90c5]">Current Role</span>
-                <span className="text-[10px] font-mono uppercase tracking-wider font-bold px-2 py-0.5 bg-[rgba(224,80,51,0.1)] text-[#e05033] dark:text-[#e8604a] border border-[rgba(224,80,51,0.3)]" style={{ borderRadius: 0 }}>
-                  {user.role}
-                </span>
-              </div>
+              
             </div>
           ) : (
             <div className="py-2 border-b border-[rgba(74,111,165,0.22)] flex justify-center">

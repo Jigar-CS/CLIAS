@@ -199,9 +199,6 @@ export default function CodingProblemsPage() {
           {/* Gleam-Spark Page Intro */}
           <div className="page-intro">
             <div>
-              <p className="mono text-[#4a6fa5] dark:text-[#6a90c5] tracking-widest text-xs font-semibold uppercase mb-2">
-                LEARNING INTELLIGENCE / CODING ARENA / 01
-              </p>
               <h1 className="page-title font-display text-5xl sm:text-6xl text-[#1a2540] dark:text-[#f5f0e8] uppercase tracking-tight">
                 CODING ARENA
               </h1>
@@ -243,7 +240,7 @@ export default function CodingProblemsPage() {
           <div className="priority-band">
             <div className="priority-symbol">!</div>
             <div className="priority-content">
-              <p className="mono text-[#e05033] text-xs font-bold">DSA SPRINT / REAL SANDBOX EXECUTION</p>
+              
               <h2 className="font-display text-xl uppercase tracking-wide">ALGORITHMIC TEST EVALUATION</h2>
               <p className="text-xs text-[#8ba0c0] font-sans">
                 Curated algorithmic problems evaluated against hidden boundary cases, time complexity limits, and memory constraints.
@@ -643,9 +640,6 @@ export default function CodingProblemsPage() {
                       <Cpu className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                       Judge Execution Environment
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                      Code is evaluated in isolated sandbox workers with strict memory and time boundaries.
-                    </p>
                     <div className="text-xs space-y-1.5 text-slate-700 dark:text-slate-300 pt-2 border-t border-slate-200 dark:border-slate-800">
                       <div className="flex justify-between">
                         <span className="text-slate-500 dark:text-slate-400">Python:</span>

@@ -529,9 +529,7 @@ export default function StudentLeaderboardPage() {
                 <Users className="w-4 h-4 text-[#4a6fa5] dark:text-blue-400" />
                 <span>Full Semester Roster Standings ({filteredRankings.length} Students)</span>
               </h3>
-              <span className="text-xs text-slate-600 dark:text-slate-400">
-                Sorted by {calculationType === 'composite' ? 'Hybrid Score' : calculationType === 'assessments' ? 'Faculty Marks' : 'Practice Mastery'}
-              </span>
+              
             </div>
 
             <div className="overflow-x-auto">
