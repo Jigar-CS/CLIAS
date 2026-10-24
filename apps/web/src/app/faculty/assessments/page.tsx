@@ -285,19 +285,23 @@ export default function FacultyAssessmentsPage() {
   const [sheetStrokes, setSheetStrokes] = useState<any[]>([]);
   const [sheetLoading, setSheetLoading] = useState(false);
   const sheetCanvasRef = React.useRef<HTMLCanvasElement | null>(null);
-  const [sheetDocDimensions, setSheetDocDimensions] = useState({ width: 900, height: 2400 });
+  const sheetScrollContainerRef = React.useRef<HTMLDivElement | null>(null);
+  const [sheetCurrentPage, setSheetCurrentPage] = useState<number>(1);
+  const [sheetViewMode, setSheetViewMode] = useState<'fit' | '100'>('fit');
 
-  useEffect(() => {
-    let w = 900;
-    let h = 2400;
+  const PAGE_HEIGHT = 750;
+  const sheetTotalPages = React.useMemo(() => {
+    let maxY = 0;
     for (const stroke of sheetStrokes) {
       const pts = stroke.points || stroke.pts || [];
       for (const p of pts) {
-        if (p.x + 50 > w) w = Math.ceil(p.x + 50);
-        if (p.y + 80 > h) h = Math.ceil(p.y + 80);
+        const py = Number(p.y) || 0;
+        if (py > maxY) maxY = py;
       }
     }
-    setSheetDocDimensions({ width: w, height: h });
+    // If student wrote only on 1 page (or empty), show only 1 page (750px)
+    // If student wrote across page 1 boundary (> 750px), calculate exact total pages
+    return Math.max(1, Math.ceil((maxY > 0 ? maxY + 40 : 1) / PAGE_HEIGHT));
   }, [sheetStrokes]);
 
   // Interactive Faculty Grading State
@@ -591,6 +595,10 @@ export default function FacultyAssessmentsPage() {
 
   const loadSheetStrokes = async (sessionId: string, qId: string) => {
     setSheetLoading(true);
+    setSheetCurrentPage(1);
+    if (sheetScrollContainerRef.current) {
+      sheetScrollContainerRef.current.scrollTo({ top: 0 });
+    }
     try {
       const res = await fetch(`/api/v1/companion/strokes?sessionId=${sessionId}&questionId=${qId}`);
       if (res.ok) {
@@ -614,56 +622,80 @@ export default function FacultyAssessmentsPage() {
   };
 
   useEffect(() => {
-    if (!sheetModalOpen || !sheetCanvasRef.current) return;
+    if (!sheetModalOpen) return;
     const canvas = sheetCanvasRef.current;
+    if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    let docWidth = 900;
-    let docHeight = 2400;
-    for (const stroke of sheetStrokes) {
-      const pts = stroke.points || stroke.pts || [];
-      for (const p of pts) {
-        if (p.x + 50 > docWidth) docWidth = Math.ceil(p.x + 50);
-        if (p.y + 80 > docHeight) docHeight = Math.ceil(p.y + 80);
-      }
-    }
-    if (canvas.width !== docWidth || canvas.height !== docHeight) {
-      canvas.width = docWidth;
-      canvas.height = docHeight;
+    const totalHeight = sheetTotalPages * PAGE_HEIGHT;
+    if (canvas.width !== 900 || canvas.height !== totalHeight) {
+      canvas.width = 900;
+      canvas.height = totalHeight;
     }
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Draw clean ruled paper lines
+    // 1. Draw clean white ruled notebook paper background
     ctx.fillStyle = '#FFFFFF';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(0, 0, 900, totalHeight);
 
-    // Subtle horizontal notebook ruled lines (starting at y=48 with 36px spacing)
+    // 2. Subtle horizontal notebook ruled guidelines (starting at y=48 with 36px spacing)
     const lineSpacing = 36;
     ctx.strokeStyle = 'rgba(148, 163, 184, 0.35)';
     ctx.lineWidth = 1.0;
-    for (let y = 48; y < canvas.height; y += lineSpacing) {
+    for (let y = 48; y < totalHeight; y += lineSpacing) {
       ctx.beginPath();
       ctx.moveTo(0, y);
-      ctx.lineTo(canvas.width, y);
+      ctx.lineTo(900, y);
       ctx.stroke();
     }
 
-    // Vertical red margin rule at x = 60
+    // 3. Vertical red margin rule at x = 60
     ctx.strokeStyle = 'rgba(239, 68, 68, 0.45)';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     ctx.moveTo(60, 0);
-    ctx.lineTo(60, canvas.height);
+    ctx.lineTo(60, totalHeight);
     ctx.stroke();
 
-    // Render student's handwritten ink strokes
+    // 4. Page Break Dividers between pages (at y = 750, 1500, etc.)
+    for (let p = 1; p < sheetTotalPages; p++) {
+      const py = p * PAGE_HEIGHT;
+
+      // Distinct page break line
+      ctx.save();
+      ctx.strokeStyle = '#6366F1';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([8, 5]);
+      ctx.beginPath();
+      ctx.moveTo(0, py);
+      ctx.lineTo(900, py);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Page marker badge: e.g. "— PAGE 2 OF 3 • Q1 —"
+      ctx.fillStyle = '#EEF2FF';
+      ctx.fillRect(280, py - 13, 340, 26);
+      ctx.strokeStyle = '#C7D2FE';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(280, py - 13, 340, 26);
+
+      ctx.fillStyle = '#4F46E5';
+      ctx.font = 'bold 11px monospace';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(`— PAGE ${p + 1} OF ${sheetTotalPages} • ${sheetActiveQ} —`, 450, py);
+      ctx.restore();
+    }
+
+    // 5. Render ALL handwritten student strokes directly with natural coordinates
     for (const stroke of sheetStrokes) {
       const pts = stroke.points || stroke.pts || [];
       if (pts.length === 0) continue;
 
       ctx.save();
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
       const toolType = (stroke.toolType || stroke.tool || 'PEN').toUpperCase();
       if (toolType === 'HIGHLIGHTER') {
         ctx.globalAlpha = 0.4;
@@ -686,8 +718,6 @@ export default function FacultyAssessmentsPage() {
         ctx.strokeStyle = color;
         ctx.lineWidth = stroke.strokeWidth || stroke.w || 3.0;
       }
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
 
       // Handle single point (dots on 'i', periods, commas)
       if (pts.length === 1) {
@@ -716,7 +746,7 @@ export default function FacultyAssessmentsPage() {
       ctx.stroke();
       ctx.restore();
     }
-  }, [sheetModalOpen, sheetStrokes]);
+  }, [sheetModalOpen, sheetStrokes, sheetTotalPages, sheetActiveQ]);
 
   const exportMarksCsv = (analyticsData?: any) => {
     const target = analyticsData || activeAnalytics;
@@ -4109,7 +4139,7 @@ export default function FacultyAssessmentsPage() {
                     const canvas = sheetCanvasRef.current;
                     if (!canvas) return;
                     const link = document.createElement('a');
-                    link.download = `${selectedSubForSheet.studentName || 'Student'}_${sheetActiveQ}_Answer_Sheet.png`;
+                    link.download = `${selectedSubForSheet.studentName || 'Student'}_${sheetActiveQ}_Answer_Sheet_${sheetTotalPages}Page.png`;
                     link.href = canvas.toDataURL('image/png');
                     link.click();
                   }}
@@ -4356,36 +4386,131 @@ export default function FacultyAssessmentsPage() {
                           <strong className="text-emerald-400 font-mono">{sheetStrokes.length} digital ink strokes</strong>
                         </div>
                         <div className="flex justify-between text-xs text-slate-400">
-                          <span>Resolution:</span>
-                          <strong className="text-slate-200 font-mono">900 × 2400 continuous canvas</strong>
+                          <span>Pages Written:</span>
+                          <strong className="text-indigo-400 font-mono font-bold">
+                            {sheetTotalPages} {sheetTotalPages === 1 ? 'Page' : 'Pages'}
+                          </strong>
+                        </div>
+                        <div className="flex justify-between text-xs text-slate-400">
+                          <span>Page Dimensions:</span>
+                          <strong className="text-slate-200 font-mono">
+                            {sheetTotalPages} × (900 × 750 px)
+                          </strong>
                         </div>
                       </div>
                     </div>
 
-                    {/* Right: Answer Sheet Ruled Paper Canvas */}
+                    {/* Right: Answer Sheet Ruled Paper Canvas Pages */}
                     <div className="lg:col-span-7 space-y-2">
-                      <div className="flex items-center justify-between text-xs text-slate-400">
-                        <span className="font-semibold text-slate-300">Student Submitted Answer Sheet</span>
-                        {sheetLoading && (
-                          <span className="flex items-center gap-1.5 text-indigo-400">
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            Loading answer strokes...
+                      <div className="flex items-center justify-between text-xs text-slate-400 flex-wrap gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-slate-300">Student Submitted Answer Sheet</span>
+                          <span className="px-2 py-0.5 rounded-full font-mono text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                            {sheetTotalPages} {sheetTotalPages === 1 ? 'Page' : 'Pages'}
                           </span>
-                        )}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          {/* Page Jump Switcher if student wrote more than 1 page */}
+                          {sheetTotalPages > 1 && (
+                            <div className="flex items-center gap-1 bg-slate-800 p-0.5 rounded-lg border border-slate-700">
+                              {Array.from({ length: sheetTotalPages }, (_, i) => i + 1).map((pNum) => (
+                                <button
+                                  key={pNum}
+                                  type="button"
+                                  onClick={() => {
+                                    if (sheetScrollContainerRef.current) {
+                                      sheetScrollContainerRef.current.scrollTo({
+                                        top: (pNum - 1) * PAGE_HEIGHT,
+                                        behavior: 'smooth',
+                                      });
+                                      setSheetCurrentPage(pNum);
+                                    }
+                                  }}
+                                  className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold transition ${
+                                    sheetCurrentPage === pNum ? 'bg-indigo-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'
+                                  }`}
+                                >
+                                  Page {pNum}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* View sizing mode: Fit width vs 100% natural */}
+                          <div className="flex items-center gap-1 bg-slate-800 p-0.5 rounded-lg border border-slate-700">
+                            <button
+                              type="button"
+                              onClick={() => setSheetViewMode('fit')}
+                              className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold transition ${
+                                sheetViewMode === 'fit' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'
+                              }`}
+                            >
+                              Fit Width
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setSheetViewMode('100')}
+                              className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold transition ${
+                                sheetViewMode === '100' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'
+                              }`}
+                            >
+                              100% Size
+                            </button>
+                          </div>
+                        </div>
                       </div>
 
-                      <div className="relative border-2 border-slate-700 rounded-2xl overflow-hidden shadow-2xl bg-white max-h-[650px] overflow-y-auto">
-                        <canvas
-                          ref={sheetCanvasRef}
-                          width={sheetDocDimensions.width}
-                          height={sheetDocDimensions.height}
-                          className="w-full h-auto block select-none bg-white"
-                        />
+                      <div
+                        ref={sheetScrollContainerRef}
+                        onScroll={(e) => {
+                          const top = e.currentTarget.scrollTop;
+                          const currentP = Math.min(
+                            sheetTotalPages,
+                            Math.max(1, Math.floor(top / PAGE_HEIGHT) + 1)
+                          );
+                          setSheetCurrentPage(currentP);
+                        }}
+                        className="relative border-2 border-slate-700 rounded-2xl overflow-y-auto p-3.5 bg-slate-900/90 shadow-2xl max-h-[660px] space-y-4"
+                      >
+                        {/* Unified Multi-Page Answer Sheet Card */}
+                        <div
+                          className={`bg-white rounded-2xl shadow-xl border-2 border-slate-600/70 overflow-hidden relative transition-all ${
+                            sheetViewMode === '100' ? 'w-[900px] mx-auto' : 'w-full'
+                          }`}
+                        >
+                          {/* Page Header Bar */}
+                          <div className="flex items-center justify-between px-5 py-2.5 bg-slate-100 border-b border-slate-200 text-xs font-mono font-bold text-slate-700">
+                            <div className="flex items-center gap-2">
+                              <span className="w-2.5 h-2.5 rounded-full bg-indigo-600 animate-pulse"></span>
+                              <span>PAGE {sheetCurrentPage} OF {sheetTotalPages}</span>
+                              <span className="text-[10px] px-2 py-0.5 rounded bg-indigo-50 text-indigo-600 border border-indigo-200">
+                                {sheetActiveQ}
+                              </span>
+                            </div>
+                            <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                              CLIAS DIGITAL INK EXAM SHEET ({sheetTotalPages} {sheetTotalPages === 1 ? 'PAGE' : 'PAGES'})
+                            </span>
+                          </div>
+
+                          {/* Ruled Continuous Multi-Page Canvas */}
+                          <canvas
+                            ref={sheetCanvasRef}
+                            className="w-full h-auto block select-none bg-white"
+                          />
+
+                          {/* Page Footer */}
+                          <div className="px-5 py-2.5 bg-slate-50 border-t border-slate-200 flex justify-between items-center text-[10px] font-mono text-slate-500">
+                            <span>{selectedSubForSheet.studentName} ({selectedSubForSheet.enrollmentNumber || selectedSubForSheet.email})</span>
+                            <span>Total Exam Writing: {sheetTotalPages} {sheetTotalPages === 1 ? 'Page' : 'Pages'} • {sheetStrokes.length} Strokes Recorded</span>
+                          </div>
+                        </div>
+
                         {sheetStrokes.length === 0 && !sheetLoading && (
-                          <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center text-slate-500 bg-white/90">
-                            <FileText className="w-12 h-12 text-slate-400 mb-2" />
-                            <p className="font-bold text-sm text-slate-700">No strokes recorded for {sheetActiveQ}</p>
-                            <p className="text-xs text-slate-500 mt-1">The student did not write on this question sheet.</p>
+                          <div className="flex flex-col items-center justify-center p-12 text-center text-slate-400 bg-slate-950/80 rounded-2xl border border-slate-800">
+                            <FileText className="w-12 h-12 text-slate-500 mb-2" />
+                            <p className="font-bold text-sm text-slate-200">No strokes recorded for {sheetActiveQ}</p>
+                            <p className="text-xs text-slate-400 mt-1">The student did not write on this question sheet.</p>
                           </div>
                         )}
                       </div>

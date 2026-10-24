@@ -2,6 +2,8 @@ import { Injectable, OnApplicationBootstrap, Logger } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
 import { WebSocketServer, WebSocket } from 'ws';
 import { URL } from 'url';
+import * as fs from 'fs';
+import * as path from 'path';
 
 export interface StrokePoint {
   x: number;
@@ -32,6 +34,7 @@ export interface AnswerSheetBuffer {
 export class CompanionSyncService implements OnApplicationBootstrap {
   private readonly logger = new Logger('CompanionSyncService');
   private wss: WebSocketServer | null = null;
+  private readonly storageFilePath = path.join(process.cwd(), 'companion_strokes_cache.json');
 
   private viewerSockets: Set<WebSocket> = new Set();
   private mobileSockets: Set<WebSocket> = new Set();
@@ -43,7 +46,40 @@ export class CompanionSyncService implements OnApplicationBootstrap {
 
   constructor(private readonly adapterHost: HttpAdapterHost) {}
 
+  private saveToDisk() {
+    try {
+      const data = {
+        answerSheets: this.answerSheets,
+        activeQuestions: this.activeQuestions,
+        exitPasses: this.exitPasses,
+        submittedSessions: Array.from(this.submittedSessions),
+      };
+      fs.writeFileSync(this.storageFilePath, JSON.stringify(data, null, 2), 'utf8');
+    } catch (e: any) {
+      this.logger.warn(`Failed to persist companion state to disk: ${e?.message}`);
+    }
+  }
+
+  private loadFromDisk() {
+    try {
+      if (fs.existsSync(this.storageFilePath)) {
+        const raw = fs.readFileSync(this.storageFilePath, 'utf8');
+        const parsed = JSON.parse(raw);
+        if (parsed.answerSheets) this.answerSheets = parsed.answerSheets;
+        if (parsed.activeQuestions) this.activeQuestions = parsed.activeQuestions;
+        if (parsed.exitPasses) this.exitPasses = parsed.exitPasses;
+        if (Array.isArray(parsed.submittedSessions)) {
+          this.submittedSessions = new Set(parsed.submittedSessions);
+        }
+        this.logger.log(`💾 Restored companion state from disk: ${Object.keys(this.answerSheets).length} answer sheets`);
+      }
+    } catch (e: any) {
+      this.logger.warn(`Could not load companion state from disk: ${e?.message}`);
+    }
+  }
+
   onApplicationBootstrap() {
+    this.loadFromDisk();
     const httpServer = this.adapterHost?.httpAdapter?.getHttpServer();
     if (!httpServer) {
       this.logger.warn('HttpServer not available to attach Companion WebSocket.');
@@ -176,6 +212,8 @@ export class CompanionSyncService implements OnApplicationBootstrap {
 
       sheet.lastUpdated = Date.now();
       this.answerSheets[key] = sheet;
+      this.answerSheets[`clias-session-9842:${qId}`] = sheet;
+      this.saveToDisk();
 
       // 1. Send ACK back to mobile phone
       if (ws.readyState === WebSocket.OPEN) {
@@ -201,6 +239,8 @@ export class CompanionSyncService implements OnApplicationBootstrap {
       const sId = data.sessionId || defaultSessionId;
       const qId = (data.questionId || 'Q1').toUpperCase();
       this.activeQuestions[sId] = qId;
+      this.activeQuestions['clias-session-9842'] = qId;
+      this.saveToDisk();
 
       this.broadcastToAll({
         type: 'ACTIVE_QUESTION_CHANGED',
@@ -216,6 +256,11 @@ export class CompanionSyncService implements OnApplicationBootstrap {
         this.answerSheets[key].strokes = [];
         this.answerSheets[key].lastUpdated = Date.now();
       }
+      if (this.answerSheets[`clias-session-9842:${qId}`]) {
+        this.answerSheets[`clias-session-9842:${qId}`].strokes = [];
+        this.answerSheets[`clias-session-9842:${qId}`].lastUpdated = Date.now();
+      }
+      this.saveToDisk();
 
       this.broadcastToAll({
         type: 'CANVAS_CLEAR',
@@ -249,8 +294,16 @@ export class CompanionSyncService implements OnApplicationBootstrap {
   public resetSession(sessionId: string) {
     this.logger.log(`🧹 RESET COMPANION SESSION: ${sessionId}`);
     
-    // Clear in-memory answer sheets completely for fresh test attempt
-    this.answerSheets = {};
+    // Clear only active session strokes for fresh test attempt, preserving archived answers
+    for (let i = 1; i <= 5; i++) {
+      const q = `Q${i}`;
+      if (this.answerSheets[`${sessionId}:${q}`]) {
+        this.answerSheets[`${sessionId}:${q}`].strokes = [];
+      }
+      if (this.answerSheets[`clias-session-9842:${q}`]) {
+        this.answerSheets[`clias-session-9842:${q}`].strokes = [];
+      }
+    }
 
     delete this.exitPasses[sessionId];
     delete this.exitPasses['clias-session-9842'];
@@ -259,6 +312,7 @@ export class CompanionSyncService implements OnApplicationBootstrap {
 
     this.activeQuestions[sessionId] = 'Q1';
     this.activeQuestions['clias-session-9842'] = 'Q1';
+    this.saveToDisk();
 
     // Broadcast reset event to all viewers and mobile devices
     this.broadcastToAll({
@@ -275,19 +329,26 @@ export class CompanionSyncService implements OnApplicationBootstrap {
   public getStrokes(sessionId: string, questionId: string) {
     const q = questionId.toUpperCase();
     const key = `${sessionId}:${q}`;
-    if (this.answerSheets[key]) {
+    if (this.answerSheets[key] && this.answerSheets[key].strokes?.length > 0) {
       return this.answerSheets[key];
     }
-    if (this.answerSheets[`clias-session-9842:${q}`]) {
+    if (this.answerSheets[`clias-session-9842:${q}`] && this.answerSheets[`clias-session-9842:${q}`].strokes?.length > 0) {
       return this.answerSheets[`clias-session-9842:${q}`];
     }
-    return { sessionId, questionId: q, strokes: [], lastUpdated: Date.now() };
+    // Fallback: check if any session has non-empty strokes recorded for this question
+    for (const [k, sheet] of Object.entries(this.answerSheets)) {
+      if (k.endsWith(`:${q}`) && sheet.strokes?.length > 0) {
+        return sheet;
+      }
+    }
+    return this.answerSheets[key] || this.answerSheets[`clias-session-9842:${q}`] || { sessionId, questionId: q, strokes: [], lastUpdated: Date.now() };
   }
 
   public switchActiveQuestion(sessionId: string, questionId: string) {
     const q = questionId.toUpperCase();
     this.activeQuestions[sessionId] = q;
     this.activeQuestions['clias-session-9842'] = q;
+    this.saveToDisk();
     this.broadcastToAll({
       type: 'ACTIVE_QUESTION_CHANGED',
       questionId: q,
@@ -306,6 +367,7 @@ export class CompanionSyncService implements OnApplicationBootstrap {
       this.answerSheets[`clias-session-9842:${q}`].strokes = [];
       this.answerSheets[`clias-session-9842:${q}`].lastUpdated = Date.now();
     }
+    this.saveToDisk();
     this.broadcastToAll({
       type: 'CANVAS_CLEAR',
       questionId: q,
@@ -322,6 +384,21 @@ export class CompanionSyncService implements OnApplicationBootstrap {
     this.exitPasses['clias-session-9842'] = randomPass;
     this.submittedSessions.add(sessionId);
     this.submittedSessions.add('clias-session-9842');
+
+    // Duplicate answer sheets to submissionId if different from clias-session-9842
+    if (sessionId !== 'clias-session-9842') {
+      for (let i = 1; i <= 5; i++) {
+        const q = `Q${i}`;
+        const defaultSheet = this.answerSheets[`clias-session-9842:${q}`];
+        if (defaultSheet && defaultSheet.strokes?.length > 0) {
+          this.answerSheets[`${sessionId}:${q}`] = {
+            ...defaultSheet,
+            sessionId,
+          };
+        }
+      }
+    }
+    this.saveToDisk();
 
     this.logger.log(`🎓 EXAM SUBMISSION for session ${sessionId} - Generated Exit Pass: ${randomPass}`);
 
