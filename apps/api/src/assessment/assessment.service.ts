@@ -16,10 +16,31 @@ import {
   AssessmentType,
   SubmissionStatus,
   QuestionType,
+  QuestionDifficulty,
+  QuestionStatus,
   ProgrammingLanguage,
   LearningHistoryReason,
   UserRole,
 } from '@prisma/client';
+
+export interface CreateDescriptiveQuestionDto {
+  title?: string;
+  prompt: string;
+  rubric?: string;
+  points?: number;
+}
+
+export interface GradeAnswerItemDto {
+  questionId: string;
+  pointsAwarded: number;
+  feedback?: string;
+}
+
+export interface GradeSubmissionDto {
+  answers: GradeAnswerItemDto[];
+  overallFeedback?: string;
+  status?: SubmissionStatus;
+}
 
 export interface CreateAssessmentDto {
   title: string;
@@ -40,7 +61,8 @@ export interface CreateAssessmentDto {
   questionIds?: string[];
   codingProblems?: CreateCodingProblemDto[];
   codingProblemIds?: string[];
-  examMode?: 'OBJECTIVE' | 'CODING' | 'HYBRID';
+  descriptiveQuestions?: CreateDescriptiveQuestionDto[];
+  examMode?: 'OBJECTIVE' | 'CODING' | 'DESCRIPTIVE' | 'HYBRID';
   status?: AssessmentStatus;
 }
 
@@ -132,6 +154,7 @@ export function isAssessmentExpired(assessment: {
 export interface SubmitAnswerDto {
   questionId: string;
   selectedOptionId?: string;
+  answerText?: string;
   sourceCode?: string;
   code?: string;
   language?: ProgrammingLanguage;
@@ -219,8 +242,50 @@ export class AssessmentService {
       throw new BadRequestException('Course ID is required.');
     }
 
-    // Resolve combined question IDs from both question bank and authored/selected coding problems
+    // Resolve combined question IDs from both question bank, authored/selected coding problems, and descriptive questions
     let combinedQuestionIds: string[] = [...(dto.questionIds || [])];
+    const descriptivePointsMap = new Map<string, number>();
+
+    // 0. Process custom-authored descriptive questions
+    if (dto.descriptiveQuestions && dto.descriptiveQuestions.length > 0) {
+      let topic = await this.prisma.topic.findFirst({
+        where: { courseId: targetCourseId },
+      });
+      if (!topic) {
+        topic = await this.prisma.topic.create({
+          data: {
+            name: 'Core Curriculum Concepts',
+            slug: 'core-concepts',
+            courseId: targetCourseId,
+          },
+        });
+      }
+
+      for (let i = 0; i < dto.descriptiveQuestions.length; i++) {
+        const dq = dto.descriptiveQuestions[i];
+        const title = dq.title || `Question ${i + 1}`;
+        const rubricText = dq.rubric || 'Accuracy, technical depth, and clear conceptual explanation.';
+        const fullText = `${title}\n\n${dq.prompt}\n\n[Marking Rubric: ${rubricText}]`;
+
+        const createdQ = await this.prisma.question.create({
+          data: {
+            courseId: targetCourseId,
+            topicId: topic.id,
+            type: QuestionType.SHORT_ANSWER,
+            difficulty: QuestionDifficulty.MEDIUM,
+            questionText: fullText,
+            explanation: rubricText,
+            sourceType: 'FACULTY_AUTHORED',
+            status: QuestionStatus.APPROVED,
+          },
+        });
+
+        combinedQuestionIds.push(createdQ.id);
+        if (dq.points && dq.points > 0) {
+          descriptivePointsMap.set(createdQ.id, dq.points);
+        }
+      }
+    }
 
     // 1. Process custom-authored coding problems with full problem statement, sample test cases, and hidden check cases
     if (dto.codingProblems && dto.codingProblems.length > 0) {
@@ -324,6 +389,8 @@ export class AssessmentService {
 
     const finalTitle = dto.examMode === 'CODING' && !dto.title.includes('Coding') && !dto.title.includes('💻')
       ? `💻 ${dto.title} [CODING]`
+      : dto.examMode === 'DESCRIPTIVE' && !dto.title.includes('Descriptive') && !dto.title.includes('📝')
+      ? `📝 ${dto.title} [DESCRIPTIVE]`
       : dto.title;
 
     const durationMinutes = Number(dto.durationMinutes) > 0 ? Number(dto.durationMinutes) : 30;
@@ -367,7 +434,13 @@ export class AssessmentService {
       const assessment = await this.prisma.assessment.create({
         data: {
           title: finalTitle,
-          description: dto.description || (dto.examMode === 'CODING' ? 'Automated In-Browser Coding Assessment' : null),
+          description:
+            dto.description ||
+            (dto.examMode === 'CODING'
+              ? 'Automated In-Browser Coding Assessment'
+              : dto.examMode === 'DESCRIPTIVE'
+              ? 'Continuous Ruled Digital Ink Descriptive Examination'
+              : null),
           code: finalCode,
           courseId: targetCourseId,
           facultyId: resolvedFacultyProfileId,
@@ -387,7 +460,7 @@ export class AssessmentService {
           questions: {
             create: questionIdsToUse.map((qId, idx) => ({
               questionId: qId,
-              points: pointsPerQuestion,
+              points: descriptivePointsMap.get(qId) || pointsPerQuestion,
               order: idx + 1,
             })),
           },
@@ -1196,6 +1269,7 @@ export class AssessmentService {
     }
 
     let totalScore = 0.0;
+    let hasDescriptiveQuestions = false;
     const answerRecords: any[] = [];
 
     for (const ans of answers) {
@@ -1298,8 +1372,28 @@ export class AssessmentService {
         continue;
       }
 
-      // Handle Standard Objective / Multiple Choice Question
+      // Handle DESCRIPTIVE / SHORT ANSWER Question Type (Manual Faculty Evaluation)
       const options = questionOptionsMap.get(ans.questionId) || [];
+      const isDescriptive =
+        question?.type === QuestionType.SHORT_ANSWER ||
+        question?.type === ('DESCRIPTIVE' as any) ||
+        (options.length === 0 && question?.type !== QuestionType.CODING);
+
+      if (isDescriptive) {
+        hasDescriptiveQuestions = true;
+        answerRecords.push({
+          submissionId: submission.id,
+          questionId: ans.questionId,
+          selectedOptionId: null,
+          answerText: ans.answerText || ans.sourceCode || (ans.selectedOptionId ? String(ans.selectedOptionId) : null),
+          isCorrect: false,
+          pointsAwarded: 0.0,
+          timeSpentSeconds: ans.timeSpentSeconds || 0,
+        });
+        continue;
+      }
+
+      // Handle Standard Objective / Multiple Choice Question
       const selectedOpt = options.find((o: any) => o.id === ans.selectedOptionId);
       const isCorrect = selectedOpt ? selectedOpt.isCorrect : false;
       const points = isCorrect ? pointsForQ : 0.0;
@@ -1316,6 +1410,17 @@ export class AssessmentService {
       });
     }
 
+    // Check if the assessment as a whole has descriptive questions (even if student left some unattempted)
+    const assessmentHasDescriptive = submission.assessment.questions.some(
+      (aq) =>
+        aq.question.type === QuestionType.SHORT_ANSWER ||
+        aq.question.type === ('DESCRIPTIVE' as any) ||
+        (!aq.question.options?.length && aq.question.type !== QuestionType.CODING),
+    );
+    if (assessmentHasDescriptive) {
+      hasDescriptiveQuestions = true;
+    }
+
     // Clean up any partial answers and insert clean records atomically
     await this.prisma.submissionAnswer.deleteMany({
       where: { submissionId: submission.id },
@@ -1324,112 +1429,119 @@ export class AssessmentService {
       data: answerRecords,
     });
 
+    const finalStatus = hasDescriptiveQuestions
+      ? SubmissionStatus.SUBMITTED
+      : SubmissionStatus.EVALUATED;
+
     const percentage = Number(((totalScore / submission.assessment.totalMarks) * 100).toFixed(1));
     const passed = percentage >= submission.assessment.passingMarks;
 
     const evaluatedSubmission = await this.prisma.assessmentSubmission.update({
       where: { id: submission.id },
       data: {
-        status: SubmissionStatus.EVALUATED,
+        status: finalStatus,
         totalScore,
         percentage,
         passed,
       },
     });
 
-    // Record topic-level performance to LearningHistory for Knowledge Curve tracking
-    const topicAggregates = new Map<string, { totalPoints: number; earnedPoints: number }>();
-    for (const ans of answerRecords) {
-      const q = questionMap.get(ans.questionId);
-      if (q && q.topicId) {
-        const current = topicAggregates.get(q.topicId) || { totalPoints: 0, earnedPoints: 0 };
-        const qPoints = questionPointsMap.get(ans.questionId) || 0;
-        current.totalPoints += qPoints;
-        current.earnedPoints += ans.pointsAwarded || 0;
-        topicAggregates.set(q.topicId, current);
+    // Only sync topic-level performance to LearningHistory if this is an auto-evaluated test.
+    // Descriptive exams will sync upon manual faculty evaluation via gradeSubmission.
+    if (!hasDescriptiveQuestions) {
+      const topicAggregates = new Map<string, { totalPoints: number; earnedPoints: number }>();
+      for (const ans of answerRecords) {
+        const q = questionMap.get(ans.questionId);
+        if (q && q.topicId) {
+          const current = topicAggregates.get(q.topicId) || { totalPoints: 0, earnedPoints: 0 };
+          const qPoints = questionPointsMap.get(ans.questionId) || 0;
+          current.totalPoints += qPoints;
+          current.earnedPoints += ans.pointsAwarded || 0;
+          topicAggregates.set(q.topicId, current);
+        }
       }
-    }
 
-    const historyEntries: any[] = [];
-    const submissionTimestamp = evaluatedSubmission.submittedAt || new Date();
+      const historyEntries: any[] = [];
+      const submissionTimestamp = evaluatedSubmission.submittedAt || new Date();
 
-    for (const [topicId, stats] of Array.from(topicAggregates.entries())) {
-      const topicPercentage = stats.totalPoints > 0
-        ? Number(((stats.earnedPoints / stats.totalPoints) * 100).toFixed(1))
-        : percentage;
+      for (const [topicId, stats] of Array.from(topicAggregates.entries())) {
+        const topicPercentage = stats.totalPoints > 0
+          ? Number(((stats.earnedPoints / stats.totalPoints) * 100).toFixed(1))
+          : percentage;
 
-      historyEntries.push({
-        studentId: submission.studentId,
-        topicId,
-        masteryScore: topicPercentage,
-        reason: LearningHistoryReason.TEST_RESULT,
-        recordedAt: submissionTimestamp,
-      });
-
-      // Synchronize SkillMastery dynamically from assessment answers
-      const attemptsInTest = answerRecords.filter((a) => {
-        const q = questionMap.get(a.questionId);
-        return q && q.topicId === topicId;
-      });
-      const correctInTest = attemptsInTest.filter((a) => a.isCorrect).length;
-
-      const existingMastery = await this.prisma.skillMastery.findUnique({
-        where: {
-          studentId_topicId: {
-            studentId: submission.studentId,
-            topicId,
-          },
-        },
-      });
-
-      const newScore = existingMastery
-        ? Math.round(((existingMastery.masteryScore * 0.7) + (topicPercentage * 0.3)) * 10) / 10
-        : topicPercentage;
-
-      await this.prisma.skillMastery.upsert({
-        where: {
-          studentId_topicId: {
-            studentId: submission.studentId,
-            topicId,
-          },
-        },
-        update: {
-          masteryScore: newScore,
-          attemptCount: { increment: attemptsInTest.length },
-          correctCount: { increment: correctInTest },
-          lastPracticedAt: submissionTimestamp,
-        },
-        create: {
+        historyEntries.push({
           studentId: submission.studentId,
           topicId,
-          masteryScore: newScore,
-          attemptCount: attemptsInTest.length,
-          correctCount: correctInTest,
-          lastPracticedAt: submissionTimestamp,
-        },
-      });
-    }
+          masteryScore: topicPercentage,
+          reason: LearningHistoryReason.TEST_RESULT,
+          recordedAt: submissionTimestamp,
+        });
 
-    if (historyEntries.length > 0) {
-      await this.prisma.learningHistory.createMany({
-        data: historyEntries,
-      });
-    }
+        // Synchronize SkillMastery dynamically from assessment answers
+        const attemptsInTest = answerRecords.filter((a) => {
+          const q = questionMap.get(a.questionId);
+          return q && q.topicId === topicId;
+        });
+        const correctInTest = attemptsInTest.filter((a) => a.isCorrect).length;
 
-    // Invalidate cohort analytics cache so faculty analytics immediately reflect this assessment activity
-    this.analyticsService?.invalidateCohortCache?.(submission.assessment.courseId);
+        const existingMastery = await this.prisma.skillMastery.findUnique({
+          where: {
+            studentId_topicId: {
+              studentId: submission.studentId,
+              topicId,
+            },
+          },
+        });
+
+        const newScore = existingMastery
+          ? Math.round(((existingMastery.masteryScore * 0.7) + (topicPercentage * 0.3)) * 10) / 10
+          : topicPercentage;
+
+        await this.prisma.skillMastery.upsert({
+          where: {
+            studentId_topicId: {
+              studentId: submission.studentId,
+              topicId,
+            },
+          },
+          update: {
+            masteryScore: newScore,
+            attemptCount: { increment: attemptsInTest.length },
+            correctCount: { increment: correctInTest },
+            lastPracticedAt: submissionTimestamp,
+          },
+          create: {
+            studentId: submission.studentId,
+            topicId,
+            masteryScore: newScore,
+            attemptCount: attemptsInTest.length,
+            correctCount: correctInTest,
+            lastPracticedAt: submissionTimestamp,
+          },
+        });
+      }
+
+      if (historyEntries.length > 0) {
+        await this.prisma.learningHistory.createMany({
+          data: historyEntries,
+        });
+      }
+
+      // Invalidate cohort analytics cache so faculty analytics immediately reflect this assessment activity
+      this.analyticsService?.invalidateCohortCache?.(submission.assessment.courseId);
+    }
 
     // Update linked proctoring session completion status
     const existingProc = await this.prisma.proctoringSession.findUnique({
       where: { submissionId: submission.id },
     });
     if (existingProc) {
-      const finalStatus =
+      const finalProcStatus =
         existingProc.status === 'FLAGGED' ? 'FLAGGED' : 'COMPLETED';
       await this.prisma.proctoringSession.update({
         where: { id: existingProc.id },
         data: {
-          status: finalStatus as any,
+          status: finalProcStatus as any,
           completedAt: new Date(),
         },
       });
@@ -1442,6 +1554,8 @@ export class AssessmentService {
       percentage,
       passed,
       passingMarks: submission.assessment.passingMarks,
+      status: finalStatus,
+      isPendingFacultyGrading: hasDescriptiveQuestions,
       submittedAt: evaluatedSubmission.submittedAt,
     };
   }
@@ -1497,8 +1611,10 @@ export class AssessmentService {
         pointsAwarded: a.pointsAwarded,
         isCorrect: a.isCorrect,
         explanation,
-        selectedOptionText: a.selectedOption?.optionText || (isCoding ? 'Automated Code Submission' : 'Unanswered'),
-        correctOptionText: correctOpt?.optionText || (isCoding ? 'Automated Code Evaluation (Sample & Check Cases)' : ''),
+        selectedOptionText: a.selectedOption?.optionText || (isCoding ? 'Automated Code Submission' : a.answerText || 'Digital Ink Ruled Sheet Submission'),
+        correctOptionText: correctOpt?.optionText || (isCoding ? 'Automated Code Evaluation (Sample & Check Cases)' : 'Graded according to marking rubric by course faculty'),
+        feedback: (a as any).feedback || null,
+        answerText: (a as any).answerText || null,
         options: a.question.options.map((opt) => ({
           id: opt.id,
           text: opt.optionText,
@@ -1513,6 +1629,10 @@ export class AssessmentService {
       assessmentCode: submission.assessment.code,
       courseCode: submission.assessment.course.code,
       attemptNumber: submission.attemptNumber,
+      status: submission.status,
+      isPendingFacultyGrading: submission.status === SubmissionStatus.SUBMITTED,
+      feedback: (submission as any).feedback || null,
+      evaluatedAt: (submission as any).evaluatedAt || null,
       totalScore: submission.totalScore,
       totalMarks: submission.assessment.totalMarks,
       percentage: submission.percentage,
@@ -1521,6 +1641,133 @@ export class AssessmentService {
       submittedAt: submission.submittedAt,
       answers: itemizedAnswers,
     };
+  }
+
+  /**
+   * Faculty: Manually grade descriptive assessment submission
+   */
+  async gradeSubmission(
+    submissionId: string,
+    facultyProfileId: string,
+    dto: GradeSubmissionDto,
+  ) {
+    const submission = await this.prisma.assessmentSubmission.findUnique({
+      where: { id: submissionId },
+      include: {
+        assessment: {
+          include: {
+            questions: {
+              include: { question: true },
+            },
+          },
+        },
+        answers: true,
+      },
+    });
+
+    if (!submission) {
+      throw new NotFoundException('Submission not found.');
+    }
+
+    let totalScore = 0.0;
+    const gradedQIds = new Set((dto.answers || []).map((a) => a.questionId));
+
+    // Update awarded points and faculty remarks for each provided question
+    for (const item of (dto.answers || [])) {
+      const awarded = Math.max(0, Number(item.pointsAwarded) || 0);
+      totalScore += awarded;
+
+      await this.prisma.submissionAnswer.updateMany({
+        where: {
+          submissionId: submission.id,
+          questionId: item.questionId,
+        },
+        data: {
+          pointsAwarded: awarded,
+          feedback: item.feedback || null,
+          evaluatedBy: facultyProfileId,
+          isCorrect: awarded > 0,
+        },
+      });
+    }
+
+    // Retain points for any other answers in this submission not in dto.answers
+    for (const existingAns of submission.answers) {
+      if (!gradedQIds.has(existingAns.questionId)) {
+        totalScore += existingAns.pointsAwarded || 0.0;
+      }
+    }
+
+    const percentage = Number(((totalScore / submission.assessment.totalMarks) * 100).toFixed(1));
+    const passed = percentage >= submission.assessment.passingMarks;
+    const finalStatus = dto.status || SubmissionStatus.EVALUATED;
+
+    const updated = await this.prisma.assessmentSubmission.update({
+      where: { id: submission.id },
+      data: {
+        totalScore,
+        percentage,
+        passed,
+        status: finalStatus,
+        feedback: dto.overallFeedback || (submission as any).feedback || null,
+        evaluatedAt: new Date(),
+      },
+      include: {
+        answers: {
+          include: { question: true },
+        },
+        student: {
+          include: {
+            authorizedStudent: true,
+            user: { select: { email: true } },
+          },
+        },
+      },
+    });
+
+    // Synchronize to student learning history and skill mastery
+    const topicAggregates = new Map<string, { totalPoints: number; earnedPoints: number }>();
+    const updatedAnswers = await this.prisma.submissionAnswer.findMany({
+      where: { submissionId: submission.id },
+      include: { question: true },
+    });
+
+    for (const ans of updatedAnswers) {
+      if (ans.question && ans.question.topicId) {
+        const current = topicAggregates.get(ans.question.topicId) || { totalPoints: 0, earnedPoints: 0 };
+        current.earnedPoints += ans.pointsAwarded || 0;
+        current.totalPoints += 10.0;
+        topicAggregates.set(ans.question.topicId, current);
+      }
+    }
+
+    const historyEntries: any[] = [];
+    for (const [topicId, stats] of Array.from(topicAggregates.entries())) {
+      const topicPercentage = stats.totalPoints > 0
+        ? Number(((stats.earnedPoints / stats.totalPoints) * 100).toFixed(1))
+        : percentage;
+
+      historyEntries.push({
+        studentId: submission.studentId,
+        topicId,
+        masteryScore: topicPercentage,
+        reason: LearningHistoryReason.TEST_RESULT,
+        recordedAt: new Date(),
+      });
+    }
+
+    if (historyEntries.length > 0) {
+      try {
+        await this.prisma.learningHistory.createMany({
+          data: historyEntries,
+        });
+      } catch (_) {}
+    }
+
+    // Invalidate cohort analytics cache so faculty dashboard immediately reflects changes
+    this.analyticsService?.invalidateCohortCache?.(submission.assessment.courseId);
+
+    return updated;
   }
 
   /**
@@ -1537,6 +1784,11 @@ export class AssessmentService {
               include: {
                 authorizedStudent: true,
                 user: { select: { email: true } },
+              },
+            },
+            answers: {
+              include: {
+                question: true,
               },
             },
             proctoringSession: {
@@ -1600,6 +1852,17 @@ export class AssessmentService {
         totalMarks: assessment.totalMarks,
         percentage: s.percentage,
         passed: s.passed,
+        feedback: (s as any).feedback,
+        evaluatedAt: (s as any).evaluatedAt,
+        answers: (s as any).answers?.map((ans: any) => ({
+          id: ans.id,
+          questionId: ans.questionId,
+          pointsAwarded: ans.pointsAwarded,
+          feedback: ans.feedback,
+          answerText: ans.answerText,
+          questionText: ans.question?.questionText,
+          explanation: ans.question?.explanation,
+        })) || [],
         submittedAt: s.submittedAt || s.startedAt,
         trustScore: s.proctoringSession?.trustScore ?? 100.0,
         proctoringStatus: s.proctoringSession?.status || 'COMPLETED',

@@ -202,10 +202,56 @@ export default function FacultyAssessmentsPage() {
   const [leaderboardModalData, setLeaderboardModalData] = useState<{ id: string; title: string } | null>(null);
 
   // Examination Mode & Coding Problem Engine State
-  const [examMode, setExamMode] = useState<'OBJECTIVE' | 'CODING' | 'HYBRID'>('OBJECTIVE');
+  const [examMode, setExamMode] = useState<'OBJECTIVE' | 'CODING' | 'DESCRIPTIVE' | 'HYBRID'>('OBJECTIVE');
   const [authoredCodingProblems, setAuthoredCodingProblems] = useState<any[]>([]);
   const [isProblemAuthorModalOpen, setIsProblemAuthorModalOpen] = useState(false);
   const [editingProblemIdx, setEditingProblemIdx] = useState<number | null>(null);
+
+  // Authored Descriptive Questions State
+  const [authoredDescriptiveQuestions, setAuthoredDescriptiveQuestions] = useState<
+    Array<{ id: string; title: string; prompt: string; rubric: string; points: number }>
+  >([
+    {
+      id: '1',
+      title: 'Question 1: Explain ACID Properties in DBMS',
+      prompt:
+        'Explain the four ACID (Atomicity, Consistency, Isolation, Durability) properties in Database Management Systems (DBMS). Provide a comprehensive real-world banking transaction example illustrating how transaction rollback prevents data inconsistencies.',
+      rubric: 'Atomicity (2.5M) • Consistency (2.5M) • Isolation (2.5M) • Durability (2.5M)',
+      points: 10,
+    },
+    {
+      id: '2',
+      title: 'Question 2: Database Normalization (1NF to BCNF)',
+      prompt:
+        'Explain Database Normalization and anomalies (Insert, Update, Delete) in unnormalized relations. Illustrate progressive decomposition from 1NF, 2NF, 3NF, up to Boyce-Codd Normal Form (BCNF) using an Employee-Project schema.',
+      rubric: 'Anomalies Explanation (2M) • 1NF & 2NF (3M) • 3NF & BCNF (3M) • Lossless Decomposition (2M)',
+      points: 10,
+    },
+    {
+      id: '3',
+      title: 'Question 3: SQL vs NoSQL & CAP Theorem',
+      prompt:
+        'Compare Relational Databases (RDBMS) with NoSQL architectures (Document, Key-Value, Columnar, Graph). State the CAP Theorem (Consistency, Availability, Partition Tolerance) and discuss system design trade-offs in distributed clusters.',
+      rubric: 'SQL vs NoSQL Comparison (3M) • 4 NoSQL Types (3M) • CAP Theorem Proof & Trade-offs (4M)',
+      points: 10,
+    },
+    {
+      id: '4',
+      title: 'Question 4: Database Indexing & B+ Trees',
+      prompt:
+        'Explain how indexing improves query retrieval performance. Compare Clustered vs Non-Clustered Indexes, and describe the internal tree node structure of a B+ Tree index with an insertion and split example.',
+      rubric: 'Clustered vs Non-Clustered (3M) • B+ Tree Architecture (4M) • Performance Impact & Overhead (3M)',
+      points: 10,
+    },
+    {
+      id: '5',
+      title: 'Question 5: Concurrency Control & Two-Phase Locking',
+      prompt:
+        'Describe Concurrency Control in multi-user DBMS environments. Explain Strict Two-Phase Locking (Strict 2PL), Deadlock Detection vs Deadlock Prevention, and contrast 2PL with Timestamp-based Ordering protocols.',
+      rubric: 'Serializability & Concurrency (2M) • Strict 2PL Protocol (4M) • Deadlock Handling (2M) • Timestamp Ordering (2M)',
+      points: 10,
+    },
+  ]);
 
   // Active Coding Problem Authoring Form Fields
   const [cpTitle, setCpTitle] = useState('');
@@ -232,13 +278,20 @@ export default function FacultyAssessmentsPage() {
   const [isInspectModalOpen, setIsInspectModalOpen] = useState(false);
   const [inspectAssessment, setInspectAssessment] = useState<any | null>(null);
 
-  // Handwritten Answer Sheet Review Modal State
+  // Handwritten Answer Sheet Review Modal & Manual Grading State
   const [sheetModalOpen, setSheetModalOpen] = useState(false);
   const [selectedSubForSheet, setSelectedSubForSheet] = useState<any | null>(null);
   const [sheetActiveQ, setSheetActiveQ] = useState<'Q1' | 'Q2' | 'Q3' | 'Q4' | 'Q5'>('Q1');
   const [sheetStrokes, setSheetStrokes] = useState<any[]>([]);
   const [sheetLoading, setSheetLoading] = useState(false);
   const sheetCanvasRef = React.useRef<HTMLCanvasElement | null>(null);
+
+  // Interactive Faculty Grading State
+  const [gradingMarks, setGradingMarks] = useState<Record<string, number>>({});
+  const [gradingFeedback, setGradingFeedback] = useState<Record<string, string>>({});
+  const [overallFeedback, setOverallFeedback] = useState('');
+  const [savingGrades, setSavingGrades] = useState(false);
+  const [gradeSuccessMsg, setGradeSuccessMsg] = useState('');
 
   // New assessment form state
   const [newTitle, setNewTitle] = useState('');
@@ -443,7 +496,83 @@ export default function FacultyAssessmentsPage() {
     setSelectedSubForSheet(sub);
     setSheetActiveQ('Q1');
     setSheetModalOpen(true);
+    setGradeSuccessMsg('');
+
+    // Prepopulate grading marks and feedback from previous evaluation if available
+    const initialMarks: Record<string, number> = {};
+    const initialFeedback: Record<string, string> = {};
+
+    if (sub.answers && Array.isArray(sub.answers)) {
+      sub.answers.forEach((ans: any, idx: number) => {
+        const qKey = `Q${idx + 1}`;
+        initialMarks[qKey] = ans.pointsAwarded ?? 0;
+        initialFeedback[qKey] = ans.feedback || '';
+        if (ans.questionId) {
+          initialMarks[ans.questionId] = ans.pointsAwarded ?? 0;
+          initialFeedback[ans.questionId] = ans.feedback || '';
+        }
+      });
+    }
+
+    setGradingMarks(initialMarks);
+    setGradingFeedback(initialFeedback);
+    setOverallFeedback(sub.feedback || '');
+
     loadSheetStrokes(sub.submissionId || 'clias-session-9842', 'Q1');
+  };
+
+  const handleSaveStudentGrades = async () => {
+    if (!selectedSubForSheet) return;
+    setSavingGrades(true);
+    setGradeSuccessMsg('');
+
+    try {
+      const questionsCount = selectedSubForSheet?.answers?.length || 5;
+      const qKeys = Array.from({ length: questionsCount }, (_, i) => `Q${i + 1}`);
+
+      const answersPayload = qKeys.map((qKey, idx) => {
+        const existingAns = selectedSubForSheet?.answers?.[idx];
+        const qId = existingAns?.questionId || existingAns?.id || `q-${qKey}`;
+        const awarded = gradingMarks[qKey] !== undefined 
+          ? gradingMarks[qKey] 
+          : (gradingMarks[qId] !== undefined ? gradingMarks[qId] : (existingAns?.pointsAwarded ?? 0));
+        const fb = gradingFeedback[qKey] || gradingFeedback[qId] || existingAns?.feedback || '';
+        return {
+          questionId: qId,
+          pointsAwarded: Number(awarded) || 0,
+          feedback: fb,
+        };
+      });
+
+      const res: any = await api.post(`/assessments/submissions/${selectedSubForSheet.submissionId}/grade`, {
+        answers: answersPayload,
+        overallFeedback,
+        status: 'EVALUATED',
+      });
+
+      setGradeSuccessMsg('Evaluation finalized successfully! Total score and grade updated in cohort records.');
+
+      if (res?.submission) {
+        setSelectedSubForSheet((prev: any) => ({
+          ...prev,
+          score: res.submission.totalScore,
+          percentage: res.submission.percentage,
+          status: res.submission.status,
+          feedback: res.submission.feedback,
+        }));
+      }
+
+      // Refresh active analytics modal data
+      if (activeAnalytics?.assessmentId) {
+        const refreshed = await api.get(`/assessments/${activeAnalytics.assessmentId}/analytics`);
+        setActiveAnalytics(refreshed);
+      }
+    } catch (err: any) {
+      console.error('Failed to save grades', err);
+      alert(err.message || 'Failed to submit grade evaluation');
+    } finally {
+      setSavingGrades(false);
+    }
   };
 
   const loadSheetStrokes = async (sessionId: string, qId: string) => {
@@ -1197,6 +1326,10 @@ export default function FacultyAssessmentsPage() {
       alert('Please author or import at least one coding problem for the coding examination.');
       return;
     }
+    if (examMode === 'DESCRIPTIVE' && authoredDescriptiveQuestions.length === 0) {
+      alert('Please author at least one descriptive question for the examination.');
+      return;
+    }
     if (examMode === 'HYBRID' && selectedQuestionIds.length === 0 && authoredCodingProblems.length === 0) {
       alert('Please add at least one question or coding problem for the hybrid examination.');
       return;
@@ -1217,8 +1350,9 @@ export default function FacultyAssessmentsPage() {
         passingMarks: Number(newPassingMarks),
         examMode,
         status: newStatus,
-        questionIds: examMode === 'CODING' ? [] : selectedQuestionIds,
-        codingProblems: examMode === 'OBJECTIVE' ? [] : authoredCodingProblems,
+        questionIds: (examMode === 'CODING' || examMode === 'DESCRIPTIVE') ? [] : selectedQuestionIds,
+        codingProblems: (examMode === 'CODING' || examMode === 'HYBRID') ? authoredCodingProblems : [],
+        descriptiveQuestions: examMode === 'DESCRIPTIVE' ? authoredDescriptiveQuestions : [],
       });
 
       setIsModalOpen(false);
@@ -1617,7 +1751,7 @@ export default function FacultyAssessmentsPage() {
                     Select automated code judge or objective question bank
                   </span>
                 </label>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                   {/* Coding Exam Option */}
                   <button
                     type="button"
@@ -1692,6 +1826,35 @@ export default function FacultyAssessmentsPage() {
                     </div>
                     <p className="text-[11px] text-slate-600 dark:text-slate-400 font-sans leading-snug">
                       Both theoretical questions and practical coding problems
+                    </p>
+                  </button>
+
+                  {/* Descriptive Ink Exam Option */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setExamMode('DESCRIPTIVE');
+                      if (!newTitle.includes('Descriptive') && !newTitle.includes('✍️')) {
+                        setNewTitle(newTitle ? `${newTitle} (Descriptive)` : 'Database Systems Descriptive Mid-Term Examination');
+                      }
+                    }}
+                    className={`p-3.5 border text-left transition-all ${
+                      examMode === 'DESCRIPTIVE'
+                        ? 'bg-[var(--surface-muted)] border-2 border-emerald-500 shadow-xs'
+                        : 'bg-[var(--surface)] border border-[var(--border)] hover:border-[#4a6fa5]'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <span className="font-display text-sm uppercase text-slate-900 dark:text-white flex items-center gap-1.5">
+                        <Edit3 className="w-4 h-4 text-emerald-500" />
+                        Descriptive Ink
+                      </span>
+                      <span className="font-mono text-[9px] font-bold px-1.5 py-0.5 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30">
+                        MANUAL GRADE
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-400 font-sans leading-snug">
+                      Digital ink tablet answers with custom rubrics and manual faculty grading
                     </p>
                   </button>
                 </div>
@@ -2121,6 +2284,155 @@ export default function FacultyAssessmentsPage() {
                       ))}
                     </div>
                   )}
+                </div>
+              )}
+
+              {/* SECTION: Descriptive Questions Authoring & Rubric (For DESCRIPTIVE mode) */}
+              {examMode === 'DESCRIPTIVE' && (
+                <div className="space-y-4 pt-4 border-t border-[var(--border)]">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-[var(--surface-muted)] p-4 border border-[var(--border)]">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <Edit3 className="w-5 h-5 text-emerald-500" />
+                        <h4 className="font-display text-sm uppercase text-slate-900 dark:text-white">Descriptive Examination Questions & Evaluation Rubrics</h4>
+                        <span className="font-mono text-[9px] font-bold px-2 py-0.5 bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30">
+                          {authoredDescriptiveQuestions.length} Questions • {authoredDescriptiveQuestions.reduce((acc, q) => acc + (q.points || 0), 0)} Total Marks
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 font-sans mt-1">
+                        Students write descriptive answers on mobile companion canvas in real-time. Submissions require manual faculty grading.
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newQNum = authoredDescriptiveQuestions.length + 1;
+                        setAuthoredDescriptiveQuestions([
+                          ...authoredDescriptiveQuestions,
+                          {
+                            id: String(newQNum),
+                            title: `Question ${newQNum}: Custom Descriptive Problem`,
+                            prompt: 'Describe the core concept, provide system diagrams, and analyze constraints.',
+                            rubric: 'Conceptual Definition (3M) • Architecture Diagram (4M) • Practical Application (3M)',
+                            points: 10,
+                          },
+                        ]);
+                      }}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-mono font-bold uppercase tracking-wider transition shrink-0"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Add Question</span>
+                    </button>
+                  </div>
+
+                  {/* List of Descriptive Questions */}
+                  <div className="space-y-3">
+                    {authoredDescriptiveQuestions.map((q, idx) => (
+                      <div key={idx} className="p-4 border border-[var(--border)] bg-[var(--surface)] space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="w-6 h-6 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 font-mono text-xs font-bold flex items-center justify-center">
+                              {idx + 1}
+                            </span>
+                            <span className="font-display text-xs font-bold uppercase text-slate-900 dark:text-white">
+                              Question #{idx + 1}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-1.5">
+                              <label className="font-mono text-[10px] text-slate-500 font-bold uppercase">Marks:</label>
+                              <input
+                                type="number"
+                                min={1}
+                                max={50}
+                                value={q.points}
+                                onChange={(e) => {
+                                  const val = Number(e.target.value);
+                                  setAuthoredDescriptiveQuestions((prev) =>
+                                    prev.map((item, i) => (i === idx ? { ...item, points: val } : item))
+                                  );
+                                }}
+                                className="w-16 p-1 text-xs font-mono font-bold text-center bg-[var(--surface-muted)] border border-[var(--border)] text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
+                              />
+                            </div>
+                            {authoredDescriptiveQuestions.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setAuthoredDescriptiveQuestions((prev) => prev.filter((_, i) => i !== idx));
+                                }}
+                                className="p-1 text-rose-500 hover:text-rose-700 hover:bg-rose-500/10 rounded transition"
+                                title="Remove question"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Title input */}
+                        <div>
+                          <label className="block font-mono text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">
+                            Question Title
+                          </label>
+                          <input
+                            type="text"
+                            value={q.title}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setAuthoredDescriptiveQuestions((prev) =>
+                                prev.map((item, i) => (i === idx ? { ...item, title: val } : item))
+                              );
+                            }}
+                            className="w-full p-2 text-xs bg-[var(--surface-muted)] border border-[var(--border)] text-slate-900 dark:text-white font-medium focus:outline-none focus:border-emerald-500"
+                            placeholder="e.g. Question 1: Explain ACID Properties in DBMS"
+                          />
+                        </div>
+
+                        {/* Prompt textarea */}
+                        <div>
+                          <label className="block font-mono text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1">
+                            Question Prompt (Displayed to Student)
+                          </label>
+                          <textarea
+                            rows={3}
+                            value={q.prompt}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setAuthoredDescriptiveQuestions((prev) =>
+                                prev.map((item, i) => (i === idx ? { ...item, prompt: val } : item))
+                              );
+                            }}
+                            className="w-full p-2.5 text-xs bg-[var(--surface-muted)] border border-[var(--border)] text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500 font-sans leading-relaxed"
+                            placeholder="Type the comprehensive theoretical prompt or problem statement..."
+                          />
+                        </div>
+
+                        {/* Rubric input */}
+                        <div>
+                          <label className="block font-mono text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1 flex items-center justify-between">
+                            <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400">
+                              <Sparkles className="w-3 h-3" />
+                              Evaluation Rubric / Marks Breakdown (Displayed during Manual Grading)
+                            </span>
+                          </label>
+                          <input
+                            type="text"
+                            value={q.rubric}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setAuthoredDescriptiveQuestions((prev) =>
+                                prev.map((item, i) => (i === idx ? { ...item, rubric: val } : item))
+                              );
+                            }}
+                            className="w-full p-2 text-xs bg-[var(--surface-muted)] border border-[var(--border)] text-slate-900 dark:text-white font-medium focus:outline-none focus:border-amber-500"
+                            placeholder="e.g. Concept (3M) • Architecture diagram (3M) • Proof & Analysis (4M)"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -3750,112 +4062,272 @@ export default function FacultyAssessmentsPage() {
               </div>
             </div>
 
-            {/* Question Selector Tabs */}
-            <div className="flex items-center gap-2 px-6 py-2.5 bg-[#111827] border-b border-slate-800 overflow-x-auto text-xs font-bold">
-              {[
-                { id: 'Q1', title: 'Q1: ACID Properties' },
-                { id: 'Q2', title: 'Q2: BCNF Normalization' },
-                { id: 'Q3', title: 'Q3: SQL vs NoSQL' },
-                { id: 'Q4', title: 'Q4: B+ Tree Indexing' },
-                { id: 'Q5', title: 'Q5: Two-Phase Locking' },
-              ].map((q) => {
-                const isActive = sheetActiveQ === q.id;
-                return (
-                  <button
-                    key={q.id}
-                    type="button"
-                    onClick={() => handleSheetQuestionChange(q.id as any)}
-                    className={`px-3.5 py-1.5 rounded-xl transition flex items-center gap-1.5 shrink-0 ${
-                      isActive
-                        ? 'bg-indigo-600 text-white shadow-xs'
-                        : 'text-slate-400 hover:text-white hover:bg-slate-800'
-                    }`}
-                  >
-                    <span>{q.title}</span>
-                  </button>
-                );
-              })}
-            </div>
+            {/* Dynamic Question Selector Tabs */}
+            {(() => {
+              const answersList = selectedSubForSheet?.answers || [];
+              const questionsCount = answersList.length > 0 ? answersList.length : 5;
+              const tabs = Array.from({ length: questionsCount }, (_, idx) => {
+                const qKey = `Q${idx + 1}`;
+                const ans = answersList[idx];
+                const rawTitle = ans?.question?.title || `Question ${idx + 1}`;
+                const cleanTitle = rawTitle.replace(/^Question \d+:\s*/, '');
+                return {
+                  id: qKey,
+                  title: `${qKey}: ${cleanTitle.slice(0, 22)}${cleanTitle.length > 22 ? '...' : ''}`,
+                  question: ans?.question,
+                  ansObj: ans,
+                };
+              });
 
-            {/* Content Body: Left question prompt, Right ruled canvas */}
-            <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-              {/* Left: Prompt & Evaluation Rubric */}
-              <div className="lg:col-span-5 space-y-4">
-                <div className="p-5 rounded-2xl bg-[#1E293B] border border-slate-800 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="px-2.5 py-1 rounded-lg bg-indigo-950 text-indigo-300 border border-indigo-800 text-xs font-bold">
-                      {sheetActiveQ} • Descriptive Theory
-                    </span>
-                    <span className="px-2.5 py-1 rounded-lg bg-emerald-950 text-emerald-300 border border-emerald-800 text-xs font-bold">
-                      10 Marks
-                    </span>
+              const activeQIndex = Math.max(0, Number(sheetActiveQ.replace('Q', '')) - 1);
+              const activeAns = answersList[activeQIndex];
+              const activeQuestion = activeAns?.question;
+              const activeMaxPoints = activeQuestion?.points || 10;
+              const totalPossibleMarks = selectedSubForSheet?.totalMarks || (questionsCount * 10);
+              const currentTotalAwarded = Array.from({ length: questionsCount }, (_, i) => {
+                const qK = `Q${i + 1}`;
+                const existingAns = answersList[i];
+                return gradingMarks[qK] !== undefined ? gradingMarks[qK] : (existingAns?.pointsAwarded ?? 0);
+              }).reduce((a, b) => a + Number(b || 0), 0);
+              const totalPercentage = totalPossibleMarks > 0 ? ((currentTotalAwarded / totalPossibleMarks) * 100).toFixed(1) : '0.0';
+
+              return (
+                <>
+                  <div className="flex items-center gap-2 px-6 py-2.5 bg-[#111827] border-b border-slate-800 overflow-x-auto text-xs font-bold">
+                    {tabs.map((q: any) => {
+                      const isActive = sheetActiveQ === q.id;
+                      const awarded = gradingMarks[q.id] !== undefined ? gradingMarks[q.id] : q.ansObj?.pointsAwarded;
+                      return (
+                        <button
+                          key={q.id}
+                          type="button"
+                          onClick={() => handleSheetQuestionChange(q.id as any)}
+                          className={`px-3.5 py-1.5 rounded-xl transition flex items-center gap-2 shrink-0 ${
+                            isActive
+                              ? 'bg-indigo-600 text-white shadow-xs'
+                              : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                          }`}
+                        >
+                          <span>{q.title}</span>
+                          {awarded !== undefined && (
+                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold ${
+                              isActive ? 'bg-white/20 text-white' : 'bg-slate-800 text-emerald-400'
+                            }`}>
+                              {awarded}M
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
 
-                  <h4 className="text-sm font-bold text-white leading-relaxed">
-                    {sheetActiveQ === 'Q1' && 'Explain the ACID properties (Atomicity, Consistency, Isolation, Durability) in Database Management Systems. Provide a concrete banking transaction scenario demonstrating how a crash between debit and credit operations violates Atomicity without Write-Ahead Logging (WAL).'}
-                    {sheetActiveQ === 'Q2' && 'Differentiate between 3NF and Boyce-Codd Normal Form (BCNF). Given the relation R(A, B, C, D) with F = { A -> B, B -> C, C -> D, D -> A }, identify candidate keys and show step-by-step lossless join decomposition.'}
-                    {sheetActiveQ === 'Q3' && 'Contrast Relational DBMS with NoSQL distributed systems. Discuss the CAP Theorem and analyze why traditional RDBMS prioritizes ACID while systems like MongoDB and Cassandra adopt BASE.'}
-                    {sheetActiveQ === 'Q4' && 'Describe the internal structure of a B+ Tree index in relational database engines. Why do database storage engines prefer B+ Trees over BSTs and B-Trees for disk-based storage? Illustrate node splitting during order 3 insertion.'}
-                    {sheetActiveQ === 'Q5' && 'Explain Concurrency Control in multi-user DBMS environments. Detail the Two-Phase Locking (2PL) protocol, distinguishing between Strict 2PL and Rigorous 2PL. Draw a lock acquisition graph proving conflict serializability.'}
-                  </h4>
+                  {/* Content Body: Left question prompt & evaluation, Right ruled canvas */}
+                  <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                    {/* Left: Prompt & Evaluation Rubric */}
+                    <div className="lg:col-span-5 space-y-4">
+                      <div className="p-5 rounded-2xl bg-[#1E293B] border border-slate-800 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="px-2.5 py-1 rounded-lg bg-indigo-950 text-indigo-300 border border-indigo-800 text-xs font-bold">
+                            {sheetActiveQ} • {activeQuestion?.title || 'Descriptive Theory'}
+                          </span>
+                          <span className="px-2.5 py-1 rounded-lg bg-emerald-950 text-emerald-300 border border-emerald-800 text-xs font-bold">
+                            {activeMaxPoints} Marks
+                          </span>
+                        </div>
 
-                  <div className="p-3.5 rounded-xl bg-[#0F172A] border border-slate-800 space-y-1">
-                    <span className="text-[11px] font-bold text-amber-400 block uppercase tracking-wider flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5" />
-                      Grading Rubric
-                    </span>
-                    <p className="text-xs text-slate-300 leading-normal">
-                      {sheetActiveQ === 'Q1' && '10 Marks: Atomicity explanation & WAL mechanics (3m), Consistency preservation (2m), Isolation levels (2m), Durability & Non-volatile recovery (3m).'}
-                      {sheetActiveQ === 'Q2' && '10 Marks: 3NF vs BCNF formal definitions (3m), Candidate key derivation (3m), Dependency preservation & Lossless decomposition steps (4m).'}
-                      {sheetActiveQ === 'Q3' && '10 Marks: Architectural comparison (3m), CAP Theorem triangle diagram & explanation (4m), BASE vs ACID trade-offs (3m).'}
-                      {sheetActiveQ === 'Q4' && '10 Marks: B+ Tree node layout & leaf linked list (3m), Fanout and Disk Block I/O efficiency (3m), Step-by-step insertion & node splitting diagram (4m).'}
-                      {sheetActiveQ === 'Q5' && '10 Marks: Concurrency anomalies (2m), Growing vs Shrinking phase of 2PL (3m), Strict vs Rigorous 2PL comparison (2m), Cascading abort prevention proof (3m).'}
-                    </p>
-                  </div>
-                </div>
+                        <h4 className="text-sm font-bold text-white leading-relaxed">
+                          {activeQuestion?.prompt || (
+                            sheetActiveQ === 'Q1' ? 'Explain the ACID properties (Atomicity, Consistency, Isolation, Durability) in Database Management Systems. Provide a concrete banking transaction scenario demonstrating how a crash between debit and credit operations violates Atomicity without Write-Ahead Logging (WAL).' :
+                            sheetActiveQ === 'Q2' ? 'Differentiate between 3NF and Boyce-Codd Normal Form (BCNF). Given the relation R(A, B, C, D) with F = { A -> B, B -> C, C -> D, D -> A }, identify candidate keys and show step-by-step lossless join decomposition.' :
+                            sheetActiveQ === 'Q3' ? 'Contrast Relational DBMS with NoSQL distributed systems. Discuss the CAP Theorem and analyze why traditional RDBMS prioritizes ACID while systems like MongoDB and Cassandra adopt BASE.' :
+                            sheetActiveQ === 'Q4' ? 'Describe the internal structure of a B+ Tree index in relational database engines. Why do database storage engines prefer B+ Trees over BSTs and B-Trees for disk-based storage? Illustrate node splitting during order 3 insertion.' :
+                            'Explain Concurrency Control in multi-user DBMS environments. Detail the Two-Phase Locking (2PL) protocol, distinguishing between Strict 2PL and Rigorous 2PL. Draw a lock acquisition graph proving conflict serializability.'
+                          )}
+                        </h4>
 
-                <div className="p-4 rounded-2xl bg-[#1E293B] border border-slate-800 space-y-2">
-                  <span className="text-xs font-bold text-slate-300 block">Inspection Summary</span>
-                  <div className="flex justify-between text-xs text-slate-400">
-                    <span>Stroke Count:</span>
-                    <strong className="text-emerald-400 font-mono">{sheetStrokes.length} digital ink strokes</strong>
-                  </div>
-                  <div className="flex justify-between text-xs text-slate-400">
-                    <span>Resolution:</span>
-                    <strong className="text-slate-200 font-mono">900 × 2400 continuous canvas</strong>
-                  </div>
-                </div>
-              </div>
+                        <div className="p-3.5 rounded-xl bg-[#0F172A] border border-slate-800 space-y-1">
+                          <span className="text-[11px] font-bold text-amber-400 block uppercase tracking-wider flex items-center gap-1.5">
+                            <Sparkles className="w-3.5 h-3.5" />
+                            Grading Rubric
+                          </span>
+                          <p className="text-xs text-slate-300 leading-normal">
+                            {activeQuestion?.explanation || (
+                              sheetActiveQ === 'Q1' ? '10 Marks: Atomicity explanation & WAL mechanics (3m), Consistency preservation (2m), Isolation levels (2m), Durability & Non-volatile recovery (3m).' :
+                              sheetActiveQ === 'Q2' ? '10 Marks: 3NF vs BCNF formal definitions (3m), Candidate key derivation (3m), Dependency preservation & Lossless decomposition steps (4m).' :
+                              sheetActiveQ === 'Q3' ? '10 Marks: Architectural comparison (3m), CAP Theorem triangle diagram & explanation (4m), BASE vs ACID trade-offs (3m).' :
+                              sheetActiveQ === 'Q4' ? '10 Marks: B+ Tree node layout & leaf linked list (3m), Fanout and Disk Block I/O efficiency (3m), Step-by-step insertion & node splitting diagram (4m).' :
+                              '10 Marks: Concurrency anomalies (2m), Growing vs Shrinking phase of 2PL (3m), Strict vs Rigorous 2PL comparison (2m), Cascading abort prevention proof (3m).'
+                            )}
+                          </p>
+                        </div>
+                      </div>
 
-              {/* Right: Answer Sheet Ruled Paper Canvas */}
-              <div className="lg:col-span-7 space-y-2">
-                <div className="flex items-center justify-between text-xs text-slate-400">
-                  <span className="font-semibold text-slate-300">Student Submitted Answer Sheet</span>
-                  {sheetLoading && (
-                    <span className="flex items-center gap-1.5 text-indigo-400">
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      Loading answer strokes...
-                    </span>
-                  )}
-                </div>
+                      {/* Manual Faculty Grading Card */}
+                      <div className="p-5 rounded-2xl bg-gradient-to-br from-[#1E293B] to-[#111827] border-2 border-emerald-500/40 space-y-4 shadow-xl">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Award className="w-5 h-5 text-emerald-400" />
+                            <h4 className="text-sm font-bold text-white uppercase tracking-wider">
+                              Manual Evaluation • {sheetActiveQ}
+                            </h4>
+                          </div>
+                          <span className="text-xs font-mono font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                            Non-Automated
+                          </span>
+                        </div>
 
-                <div className="relative border-2 border-slate-700 rounded-2xl overflow-hidden shadow-2xl bg-white max-h-[650px] overflow-y-auto">
-                  <canvas
-                    ref={sheetCanvasRef}
-                    width={900}
-                    height={2400}
-                    className="w-full h-auto block select-none bg-white"
-                  />
-                  {sheetStrokes.length === 0 && !sheetLoading && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center text-slate-500 bg-white/90">
-                      <FileText className="w-12 h-12 text-slate-400 mb-2" />
-                      <p className="font-bold text-sm text-slate-700">No strokes recorded for {sheetActiveQ}</p>
-                      <p className="text-xs text-slate-500 mt-1">The student did not write on this question sheet.</p>
+                        {/* Marks input and Quick Pills */}
+                        <div className="space-y-2">
+                          <label className="block text-xs font-bold text-slate-300">
+                            Award Marks for {sheetActiveQ} (Max {activeMaxPoints} Marks):
+                          </label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="number"
+                              min={0}
+                              max={activeMaxPoints}
+                              step={0.5}
+                              value={gradingMarks[sheetActiveQ] ?? ''}
+                              onChange={(e) => {
+                                const val = Number(e.target.value);
+                                setGradingMarks((prev) => ({ ...prev, [sheetActiveQ]: val }));
+                              }}
+                              placeholder="0.0"
+                              className="w-24 p-2.5 rounded-xl bg-[#0F172A] border border-slate-700 text-white font-mono text-base font-bold text-center focus:outline-none focus:border-emerald-500"
+                            />
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              {[0, activeMaxPoints * 0.25, activeMaxPoints * 0.5, activeMaxPoints * 0.75, activeMaxPoints].map((mk) => (
+                                <button
+                                  key={mk}
+                                  type="button"
+                                  onClick={() => setGradingMarks((prev) => ({ ...prev, [sheetActiveQ]: mk }))}
+                                  className={`px-2 py-1 rounded-lg text-xs font-mono font-bold border transition ${
+                                    gradingMarks[sheetActiveQ] === mk
+                                      ? 'bg-emerald-600 border-emerald-500 text-white'
+                                      : 'bg-[#0F172A] border-slate-700 text-slate-300 hover:bg-slate-800'
+                                  }`}
+                                >
+                                  +{mk}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Question Feedback Textarea */}
+                        <div className="space-y-1.5">
+                          <label className="block text-xs font-bold text-slate-300">
+                            Evaluator Remarks for {sheetActiveQ}:
+                          </label>
+                          <textarea
+                            rows={2}
+                            value={gradingFeedback[sheetActiveQ] || ''}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              setGradingFeedback((prev) => ({ ...prev, [sheetActiveQ]: val }));
+                            }}
+                            placeholder="e.g. Accurate derivation and clear diagrams. Points awarded."
+                            className="w-full p-2.5 rounded-xl bg-[#0F172A] border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-sans"
+                          />
+                        </div>
+
+                        {/* Overall Submission Score Summary & Evaluation Finalization */}
+                        <div className="pt-3 border-t border-slate-800 space-y-3">
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-slate-400 font-bold uppercase tracking-wider">
+                              Running Total Evaluated:
+                            </span>
+                            <span className="font-mono text-sm font-black text-emerald-400">
+                              {currentTotalAwarded} / {totalPossibleMarks} Marks ({totalPercentage}%)
+                            </span>
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <label className="block text-xs font-bold text-slate-300">
+                              Overall Exam Feedback & Summary:
+                            </label>
+                            <textarea
+                              rows={2}
+                              value={overallFeedback}
+                              onChange={(e) => setOverallFeedback(e.target.value)}
+                              placeholder="Comprehensive feedback reflected in candidate learning portal..."
+                              className="w-full p-2.5 rounded-xl bg-[#0F172A] border border-slate-700 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 font-sans"
+                            />
+                          </div>
+
+                          {gradeSuccessMsg && (
+                            <div className="p-3 rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-200 text-xs flex items-center gap-2 animate-in fade-in">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                              <span>{gradeSuccessMsg}</span>
+                            </div>
+                          )}
+
+                          <button
+                            type="button"
+                            onClick={handleSaveStudentGrades}
+                            disabled={savingGrades}
+                            className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white font-mono text-xs font-bold uppercase tracking-wider rounded-xl transition flex items-center justify-center gap-2 shadow-lg"
+                          >
+                            {savingGrades ? (
+                              <>
+                                <Loader2 className="w-4 h-4 animate-spin" />
+                                <span>Finalizing Grades & Syncing Analytics...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Check className="w-4 h-4" />
+                                <span>Finalize & Save Grades</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="p-4 rounded-2xl bg-[#1E293B] border border-slate-800 space-y-2">
+                        <span className="text-xs font-bold text-slate-300 block">Inspection Summary</span>
+                        <div className="flex justify-between text-xs text-slate-400">
+                          <span>Stroke Count:</span>
+                          <strong className="text-emerald-400 font-mono">{sheetStrokes.length} digital ink strokes</strong>
+                        </div>
+                        <div className="flex justify-between text-xs text-slate-400">
+                          <span>Resolution:</span>
+                          <strong className="text-slate-200 font-mono">900 × 2400 continuous canvas</strong>
+                        </div>
+                      </div>
                     </div>
-                  )}
-                </div>
-              </div>
-            </div>
+
+                    {/* Right: Answer Sheet Ruled Paper Canvas */}
+                    <div className="lg:col-span-7 space-y-2">
+                      <div className="flex items-center justify-between text-xs text-slate-400">
+                        <span className="font-semibold text-slate-300">Student Submitted Answer Sheet</span>
+                        {sheetLoading && (
+                          <span className="flex items-center gap-1.5 text-indigo-400">
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            Loading answer strokes...
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="relative border-2 border-slate-700 rounded-2xl overflow-hidden shadow-2xl bg-white max-h-[650px] overflow-y-auto">
+                        <canvas
+                          ref={sheetCanvasRef}
+                          width={900}
+                          height={2400}
+                          className="w-full h-auto block select-none bg-white"
+                        />
+                        {sheetStrokes.length === 0 && !sheetLoading && (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center text-slate-500 bg-white/90">
+                            <FileText className="w-12 h-12 text-slate-400 mb-2" />
+                            <p className="font-bold text-sm text-slate-700">No strokes recorded for {sheetActiveQ}</p>
+                            <p className="text-xs text-slate-500 mt-1">The student did not write on this question sheet.</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </>
+              );
+            })()}
           </div>
         </div>
       )}

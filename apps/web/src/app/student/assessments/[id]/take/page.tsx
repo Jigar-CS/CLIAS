@@ -42,6 +42,7 @@ import {
   UserX,
   Trophy,
   FileText,
+  PenTool,
 } from 'lucide-react';
 import { AssessmentLeaderboardView } from '@/components/AssessmentLeaderboardModal';
 import { DescriptiveCompanionWorkspace } from '@/components/DescriptiveCompanionWorkspace';
@@ -1630,12 +1631,18 @@ export default function TakeAssessmentPage() {
           <div className="panel p-8 shadow-2xl text-center">
             <div
               className={`w-16 h-16 mx-auto flex items-center justify-center mb-4 ${
-                result.passed
+                result.isPendingFacultyGrading || result.status === 'SUBMITTED'
+                  ? 'bg-amber-500/10 text-amber-500 border border-amber-500/30'
+                  : result.passed
                   ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/30'
                   : 'bg-rose-500/10 text-rose-500 border border-rose-500/30'
               }`}
             >
-              <Award className="w-8 h-8" />
+              {result.isPendingFacultyGrading || result.status === 'SUBMITTED' ? (
+                <PenTool className="w-8 h-8" />
+              ) : (
+                <Award className="w-8 h-8" />
+              )}
             </div>
 
             <span className="font-mono text-xs uppercase font-bold tracking-wider text-slate-600 dark:text-slate-400">
@@ -1643,36 +1650,55 @@ export default function TakeAssessmentPage() {
             </span>
             <h1 className="text-2xl sm:text-3xl font-bold font-mono uppercase tracking-wider mt-1">{result.assessmentTitle}</h1>
 
-            <div className="mt-6 flex flex-wrap justify-center gap-4 sm:gap-6">
-              <div className="panel px-6 py-4">
-                <span className="font-mono text-xs text-slate-600 dark:text-slate-400 block font-bold">YOUR SCORE</span>
-                <span className="text-2xl font-black font-mono">
-                  {result.totalScore} / {result.totalMarks}
+            {result.isPendingFacultyGrading || result.status === 'SUBMITTED' ? (
+              <div className="mt-6 p-6 rounded-2xl bg-gradient-to-br from-amber-500/10 via-amber-500/15 to-transparent border-2 border-amber-500/40 max-w-2xl mx-auto text-center space-y-3 shadow-lg">
+                <span className="inline-block px-3 py-1 bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/40 rounded-full font-mono text-xs font-bold uppercase tracking-wider">
+                  Digital Ink Answers Submitted • Awaiting Evaluation
                 </span>
+                <h3 className="text-xl font-bold text-amber-800 dark:text-amber-200">
+                  Descriptive Examination Under Manual Faculty Evaluation
+                </h3>
+                <p className="text-xs text-slate-700 dark:text-slate-300 max-w-lg mx-auto leading-relaxed">
+                  Your handwritten digital ink strokes and answer sheets have been securely submitted to the faculty review portal. Descriptive question answers are manually graded by your course instructor according to official rubrics. Your final grade and evaluator remarks will appear once reviewed.
+                </p>
+                <div className="flex items-center justify-center gap-6 pt-2 font-mono text-xs text-slate-600 dark:text-slate-400">
+                  <span>Proctoring Trust: <strong className="text-emerald-500 font-bold">{trustScore}%</strong></span>
+                  <span>Total Exam Marks: <strong className="text-slate-900 dark:text-white font-bold">{result.totalMarks} M</strong></span>
+                  <span>Status: <strong className="text-amber-600 dark:text-amber-400 font-bold">AWAITING FACULTY REVIEW</strong></span>
+                </div>
               </div>
-              <div className="panel px-6 py-4">
-                <span className="font-mono text-xs text-slate-600 dark:text-slate-400 block font-bold">PERCENTAGE</span>
-                <span className="text-2xl font-black font-mono text-[var(--primary)]">
-                  {result.percentage}%
-                </span>
+            ) : (
+              <div className="mt-6 flex flex-wrap justify-center gap-4 sm:gap-6">
+                <div className="panel px-6 py-4">
+                  <span className="font-mono text-xs text-slate-600 dark:text-slate-400 block font-bold">YOUR SCORE</span>
+                  <span className="text-2xl font-black font-mono">
+                    {result.totalScore} / {result.totalMarks}
+                  </span>
+                </div>
+                <div className="panel px-6 py-4">
+                  <span className="font-mono text-xs text-slate-600 dark:text-slate-400 block font-bold">PERCENTAGE</span>
+                  <span className="text-2xl font-black font-mono text-[var(--primary)]">
+                    {result.percentage}%
+                  </span>
+                </div>
+                <div className="panel px-6 py-4">
+                  <span className="font-mono text-xs text-slate-600 dark:text-slate-400 block font-bold">PROCTORING TRUST</span>
+                  <span className={`text-2xl font-black font-mono ${trustScore >= 80 ? 'text-emerald-500' : 'text-amber-500'}`}>
+                    {trustScore}%
+                  </span>
+                </div>
+                <div className="panel px-6 py-4">
+                  <span className="font-mono text-xs text-slate-600 dark:text-slate-400 block font-bold">OUTCOME</span>
+                  <span
+                    className={`text-2xl font-black font-mono ${
+                      result.passed ? 'text-emerald-500' : 'text-rose-500'
+                    }`}
+                  >
+                    {result.passed ? 'PASSED' : 'RETAKE'}
+                  </span>
+                </div>
               </div>
-              <div className="panel px-6 py-4">
-                <span className="font-mono text-xs text-slate-600 dark:text-slate-400 block font-bold">PROCTORING TRUST</span>
-                <span className={`text-2xl font-black font-mono ${trustScore >= 80 ? 'text-emerald-500' : 'text-amber-500'}`}>
-                  {trustScore}%
-                </span>
-              </div>
-              <div className="panel px-6 py-4">
-                <span className="font-mono text-xs text-slate-600 dark:text-slate-400 block font-bold">OUTCOME</span>
-                <span
-                  className={`text-2xl font-black font-mono ${
-                    result.passed ? 'text-emerald-500' : 'text-rose-500'
-                  }`}
-                >
-                  {result.passed ? 'PASSED' : 'RETAKE'}
-                </span>
-              </div>
-            </div>
+            )}
 
             {exitPassCode && (
               <div className="mt-6 p-6 rounded-2xl bg-gradient-to-r from-amber-500/10 via-amber-500/20 to-amber-500/10 border-2 border-amber-500/40 max-w-md mx-auto text-center space-y-2 shadow-lg animate-in fade-in zoom-in-95">
@@ -1749,62 +1775,94 @@ export default function TakeAssessmentPage() {
           {resultTab === 'review' && (
             <div className="space-y-4">
               <h3 className="text-lg font-bold text-slate-900 dark:text-white">Question Itemization & Explanations</h3>
-              {result.answers?.map((ans: any, idx: number) => (
-                <div
-                  key={ans.questionId}
-                  className={`rounded-2xl border p-6 ${
-                    ans.isCorrect
-                      ? 'bg-white dark:bg-slate-900 border-emerald-500/30 shadow-xs'
-                      : 'bg-white dark:bg-slate-900 border-rose-500/30 shadow-xs'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-                      Question {idx + 1} • {ans.topicName}
-                    </span>
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-bold border ${
-                        ans.isCorrect
-                          ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20'
-                          : 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/20'
-                      }`}
-                    >
-                      {ans.isCorrect ? `+${ans.pointsAwarded} pts (Correct)` : '0 pts (Incorrect)'}
-                    </span>
-                  </div>
+              {result.answers?.map((ans: any, idx: number) => {
+                const isDescriptive = !ans.correctOptionText && !ans.options?.length;
+                const isPending = (result.isPendingFacultyGrading || result.status === 'SUBMITTED') && isDescriptive && (ans.pointsAwarded === null || ans.pointsAwarded === undefined || (ans.pointsAwarded === 0 && !ans.feedback));
 
-                  <p className="text-sm font-semibold text-slate-900 dark:text-white leading-relaxed mb-4">
-                    {ans.questionText}
-                  </p>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs mb-4">
-                    <div className={`p-3.5 rounded-xl border ${
-                      ans.isCorrect
-                        ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/40'
-                        : 'bg-rose-50/60 dark:bg-rose-950/20 border-rose-200 dark:border-rose-800/40'
-                    }`}>
-                      <span className="text-slate-600 dark:text-slate-400 block font-semibold mb-1">Your Selection:</span>
-                      <span className={`block font-bold text-sm ${ans.isCorrect ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'}`}>
-                        {ans.selectedOptionText || 'No answer selected'}
+                return (
+                  <div
+                    key={ans.questionId}
+                    className={`rounded-2xl border p-6 ${
+                      isPending
+                        ? 'bg-white dark:bg-slate-900 border-amber-500/40 shadow-xs'
+                        : ans.isCorrect || ans.pointsAwarded > 0
+                        ? 'bg-white dark:bg-slate-900 border-emerald-500/30 shadow-xs'
+                        : 'bg-white dark:bg-slate-900 border-rose-500/30 shadow-xs'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+                        Question {idx + 1} {ans.topicName ? `• ${ans.topicName}` : ''}
+                      </span>
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-bold border ${
+                          isPending
+                            ? 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30'
+                            : ans.isCorrect || ans.pointsAwarded > 0
+                            ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/20'
+                            : 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/20'
+                        }`}
+                      >
+                        {isPending
+                          ? 'Under Faculty Evaluation'
+                          : ans.pointsAwarded !== undefined
+                          ? `+${ans.pointsAwarded} pts Awarded`
+                          : ans.isCorrect
+                          ? 'Correct'
+                          : '0 pts (Incorrect)'}
                       </span>
                     </div>
-                    <div className="p-3.5 rounded-xl border bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/40">
-                      <span className="text-slate-600 dark:text-slate-400 block font-semibold mb-1">Correct Solution:</span>
-                      <span className="text-emerald-700 dark:text-emerald-400 font-bold text-sm block">{ans.correctOptionText}</span>
-                    </div>
-                  </div>
 
-                  {ans.explanation && (
-                    <div className="bg-indigo-50/80 dark:bg-indigo-950/30 p-4 rounded-xl border border-indigo-200/80 dark:border-indigo-500/20 text-xs text-slate-700 dark:text-indigo-200 leading-relaxed font-sans">
-                      <strong className="text-indigo-950 dark:text-white block mb-1 font-bold text-xs flex items-center gap-1.5">
-                        <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
-                        Pedagogical Explanation:
-                      </strong>
-                      {ans.explanation}
-                    </div>
-                  )}
-                </div>
-              ))}
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white leading-relaxed mb-4">
+                      {ans.questionText}
+                    </p>
+
+                    {isDescriptive ? (
+                      <div className="space-y-3 mb-4">
+                        <div className="p-3.5 rounded-xl border bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 text-xs">
+                          <span className="text-slate-500 dark:text-slate-400 block font-semibold mb-1">Response Mode:</span>
+                          <span className="font-bold text-slate-800 dark:text-slate-200">
+                            Digital Ink Handwritten Canvas Answer Sheet (Synchronized via S-Pen Mobile Companion)
+                          </span>
+                        </div>
+                        {ans.feedback && (
+                          <div className="p-3.5 rounded-xl border bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/40 text-xs">
+                            <span className="text-emerald-800 dark:text-emerald-300 block font-bold mb-1">Faculty Evaluator Remarks:</span>
+                            <p className="text-slate-700 dark:text-slate-300 font-sans">{ans.feedback}</p>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs mb-4">
+                        <div className={`p-3.5 rounded-xl border ${
+                          ans.isCorrect
+                            ? 'bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/40'
+                            : 'bg-rose-50/60 dark:bg-rose-950/20 border-rose-200 dark:border-rose-800/40'
+                        }`}>
+                          <span className="text-slate-600 dark:text-slate-400 block font-semibold mb-1">Your Selection:</span>
+                          <span className={`block font-bold text-sm ${ans.isCorrect ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'}`}>
+                            {ans.selectedOptionText || 'No answer selected'}
+                          </span>
+                        </div>
+                        <div className="p-3.5 rounded-xl border bg-emerald-50/60 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-800/40">
+                          <span className="text-slate-600 dark:text-slate-400 block font-semibold mb-1">Correct Solution:</span>
+                          <span className="text-emerald-700 dark:text-emerald-400 font-bold text-sm block">{ans.correctOptionText}</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {ans.explanation && (
+                      <div className="bg-indigo-50/80 dark:bg-indigo-950/30 p-4 rounded-xl border border-indigo-200/80 dark:border-indigo-500/20 text-xs text-slate-700 dark:text-indigo-200 leading-relaxed font-sans">
+                        <strong className="text-indigo-950 dark:text-white block mb-1 font-bold text-xs flex items-center gap-1.5">
+                          <Sparkles className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+                          Evaluation Rubric / Pedagogical Note:
+                        </strong>
+                        {ans.explanation}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
