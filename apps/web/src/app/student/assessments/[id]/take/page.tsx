@@ -189,6 +189,71 @@ export default function TakeAssessmentPage() {
   const [descriptiveStrokeCounts, setDescriptiveStrokeCounts] = useState<Record<string, number>>({});
   const [exitPassCode, setExitPassCode] = useState<string | null>(null);
   const [showExitPassModal, setShowExitPassModal] = useState<boolean>(false);
+  const [preflightMobileConnected, setPreflightMobileConnected] = useState<boolean>(false);
+  const [preflightCheckingMobile, setPreflightCheckingMobile] = useState<boolean>(false);
+  const [pairingHost, setPairingHost] = useState<string>('');
+
+  const isCodingTest = Boolean(
+    examData?.questions?.some((q: any) => q.type === 'CODING' || q.codingProblem)
+  );
+
+  const isDescriptiveTest = Boolean(
+    examData?.assessment?.examMode === 'DESCRIPTIVE' ||
+    examData?.questions?.some((q: any) => q.type === 'SHORT_ANSWER' || q.type === 'DESCRIPTIVE')
+  );
+
+  const checkMobileStatus = React.useCallback(async () => {
+    setPreflightCheckingMobile(true);
+    try {
+      const res = await fetch('/api/v1/companion/status?sessionId=clias-session-9842');
+      if (res.ok) {
+        const data = await res.json();
+        setPreflightMobileConnected(Boolean(data.mobileConnected));
+      }
+    } catch {
+      // ignore network errors during preflight
+    } finally {
+      setPreflightCheckingMobile(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setPairingHost(`${window.location.hostname}:4000`);
+    }
+  }, []);
+
+  // Monitor phone companion connectivity during PreFlight for descriptive tests
+  useEffect(() => {
+    if (typeof window === 'undefined' || !isDescriptiveTest) return;
+
+    checkMobileStatus();
+    const interval = setInterval(checkMobileStatus, 3000);
+
+    let ws: WebSocket;
+    try {
+      ws = new WebSocket(
+        `ws://${window.location.hostname}:4000/companion?role=viewer&sessionId=clias-session-9842`,
+      );
+      ws.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg.type === 'INITIAL_STATE') {
+            setPreflightMobileConnected(msg.mobileStatus === 'connected');
+          } else if (msg.type === 'MOBILE_STATUS') {
+            setPreflightMobileConnected(msg.status === 'connected');
+          }
+        } catch {}
+      };
+    } catch {}
+
+    return () => {
+      clearInterval(interval);
+      try {
+        ws?.close();
+      } catch {}
+    };
+  }, [isDescriptiveTest, checkMobileStatus]);
 
   // ---------------------------------------------------------------------------
   // Phase 9: AI Proctoring & Multi-Modal Telemetry State
@@ -367,6 +432,15 @@ export default function TakeAssessmentPage() {
         });
         setCodingAnswers(initialCoding);
       }
+
+      // If descriptive test, wipe any stale strokes from previous exam attempts
+      const isDescriptive = Boolean(
+        data.assessment?.examMode === 'DESCRIPTIVE' ||
+        data.questions?.some((q: any) => q.type === 'SHORT_ANSWER' || q.type === 'DESCRIPTIVE')
+      );
+      if (isDescriptive) {
+        fetch('/api/v1/companion/reset?sessionId=clias-session-9842', { method: 'POST' }).catch(() => {});
+      }
     } catch (err: any) {
       const msg = err.message || '';
       if (
@@ -475,6 +549,20 @@ export default function TakeAssessmentPage() {
   };
 
   const handleConfirmAndEnterExam = async () => {
+    if (isDescriptiveTest && !preflightMobileConnected) {
+      alert('Phone companion must be paired and connected before starting this descriptive examination.');
+      return;
+    }
+
+    if (isDescriptiveTest) {
+      try {
+        // Reset companion server session buffer so previous test's strokes are wiped
+        await fetch('/api/v1/companion/reset?sessionId=clias-session-9842', { method: 'POST' });
+      } catch (err) {
+        console.warn('Could not reset companion session:', err);
+      }
+    }
+
     try {
       if (document.documentElement.requestFullscreen) {
         await document.documentElement.requestFullscreen();
@@ -606,14 +694,6 @@ export default function TakeAssessmentPage() {
   // ---------------------------------------------------------------------------
   // Real-Time Browser Integrity Monitoring Listeners
   // ---------------------------------------------------------------------------
-  const isCodingTest = Boolean(
-    examData?.questions?.some((q: any) => q.type === 'CODING' || q.codingProblem)
-  );
-
-  const isDescriptiveTest = Boolean(
-    examData?.questions?.some((q: any) => q.type === 'SHORT_ANSWER' || q.type === 'DESCRIPTIVE')
-  );
-
   const handleSwitchQuestion = (idx: number) => {
     setCurrentIdx(idx);
     setRunOutput(null);
@@ -1537,9 +1617,105 @@ export default function TakeAssessmentPage() {
                   </span>
                   <span className="text-amber-600 dark:text-amber-400 font-bold">Enforced on Entry</span>
                 </div>
+
+                {isDescriptiveTest && (
+                  <div
+                    className={`flex items-center justify-between p-2 border transition-all ${
+                      preflightMobileConnected
+                        ? 'bg-emerald-500/10 border-emerald-500/30'
+                        : 'bg-amber-500/10 border-amber-500/30'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-medium">
+                      <Smartphone
+                        className={`w-4 h-4 ${
+                          preflightMobileConnected ? 'text-emerald-500' : 'text-amber-500 animate-pulse'
+                        }`}
+                      />
+                      <span>Phone Companion</span>
+                    </span>
+                    {preflightMobileConnected ? (
+                      <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5" /> Connected
+                      </span>
+                    ) : (
+                      <span className="text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1 animate-pulse">
+                        <AlertTriangle className="w-3.5 h-3.5" /> Required
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
+
+          {/* Mobile Companion Pairing Card for Descriptive Tests */}
+          {isDescriptiveTest && (
+            <div
+              className={`p-4 rounded-2xl border-2 transition-all space-y-3 ${
+                preflightMobileConnected
+                  ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-950 dark:text-emerald-200'
+                  : 'bg-amber-500/10 border-amber-500/40 text-amber-950 dark:text-amber-200 animate-in fade-in'
+              }`}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div
+                    className={`p-2 rounded-xl ${
+                      preflightMobileConnected
+                        ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400'
+                        : 'bg-amber-500/20 text-amber-600 dark:text-amber-400'
+                    }`}
+                  >
+                    <Smartphone className={`w-5 h-5 ${preflightMobileConnected ? '' : 'animate-bounce'}`} />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold uppercase tracking-wider">
+                      {preflightMobileConnected
+                        ? 'Mobile Digital Ink Companion Connected'
+                        : 'Descriptive Examination: Mobile Phone Connection Required'}
+                    </h4>
+                    <p className="text-[11px] opacity-80 mt-0.5 font-sans leading-relaxed">
+                      {preflightMobileConnected
+                        ? 'Handwritten answers written on your phone will sync live to this examination in real time.'
+                        : 'You must connect your phone running the CLIAS Companion app to submit handwritten answers before entering the test.'}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={checkMobileStatus}
+                  disabled={preflightCheckingMobile}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 ${
+                    preflightMobileConnected
+                      ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                      : 'bg-amber-600 hover:bg-amber-500 text-white shadow-md shadow-amber-600/20'
+                  }`}
+                >
+                  {preflightCheckingMobile ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <RefreshCw className="w-3.5 h-3.5" />
+                  )}
+                  <span>{preflightMobileConnected ? 'Re-verify Phone' : 'Check Phone Connection'}</span>
+                </button>
+              </div>
+
+              {!preflightMobileConnected && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs bg-black/20 p-3 rounded-xl border border-amber-500/20 font-mono">
+                  <div>
+                    <span className="text-[10px] text-slate-400 block uppercase font-bold">1. Companion Host</span>
+                    <span className="font-bold text-amber-300">{pairingHost || 'localhost:4000'}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-400 block uppercase font-bold">2. Session Token</span>
+                    <span className="font-bold text-emerald-400">clias-session-9842</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Face Enrollment Action */}
           <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 space-y-3">
@@ -1610,11 +1786,25 @@ export default function TakeAssessmentPage() {
           <button
             type="button"
             onClick={handleConfirmAndEnterExam}
-            disabled={!integrityPledge || cameraPermission !== 'granted' || !faceEnrolled}
+            disabled={
+              !integrityPledge ||
+              cameraPermission !== 'granted' ||
+              !faceEnrolled ||
+              (isDescriptiveTest && !preflightMobileConnected)
+            }
             className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-600 to-rose-600 hover:from-amber-500 hover:to-rose-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-sm shadow-xl shadow-amber-600/20 transition flex items-center justify-center gap-2"
           >
-            <Lock className="w-4 h-4" />
-            <span>Confirm & Enter Fullscreen Assessment</span>
+            {isDescriptiveTest && !preflightMobileConnected ? (
+              <>
+                <Smartphone className="w-4 h-4 animate-pulse" />
+                <span>Connect Phone Companion to Begin Test</span>
+              </>
+            ) : (
+              <>
+                <Lock className="w-4 h-4" />
+                <span>Confirm & Enter Fullscreen Assessment</span>
+              </>
+            )}
           </button>
         </div>
       </div>

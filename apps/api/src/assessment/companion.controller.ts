@@ -5,6 +5,20 @@ import { CompanionSyncService } from './companion-sync.service';
 export class CompanionController {
   constructor(private readonly companionSync: CompanionSyncService) {}
 
+  @Get('status')
+  getStatus(@Query('sessionId') sessionId = 'clias-session-default') {
+    return {
+      mobileConnected: this.companionSync.isMobileConnected(sessionId),
+      isSubmitted: this.companionSync.isSessionSubmitted(sessionId),
+      activeQuestionId: this.companionSync.getActiveQuestion(sessionId),
+    };
+  }
+
+  @Post('reset')
+  resetSession(@Query('sessionId') sessionId = 'clias-session-default') {
+    return this.companionSync.resetSession(sessionId);
+  }
+
   @Get('strokes')
   getStrokes(
     @Query('sessionId') sessionId = 'clias-session-default',

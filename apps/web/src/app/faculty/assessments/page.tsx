@@ -285,6 +285,20 @@ export default function FacultyAssessmentsPage() {
   const [sheetStrokes, setSheetStrokes] = useState<any[]>([]);
   const [sheetLoading, setSheetLoading] = useState(false);
   const sheetCanvasRef = React.useRef<HTMLCanvasElement | null>(null);
+  const [sheetDocDimensions, setSheetDocDimensions] = useState({ width: 900, height: 2400 });
+
+  useEffect(() => {
+    let w = 900;
+    let h = 2400;
+    for (const stroke of sheetStrokes) {
+      const pts = stroke.points || stroke.pts || [];
+      for (const p of pts) {
+        if (p.x + 50 > w) w = Math.ceil(p.x + 50);
+        if (p.y + 80 > h) h = Math.ceil(p.y + 80);
+      }
+    }
+    setSheetDocDimensions({ width: w, height: h });
+  }, [sheetStrokes]);
 
   // Interactive Faculty Grading State
   const [gradingMarks, setGradingMarks] = useState<Record<string, number>>({});
@@ -605,30 +619,44 @@ export default function FacultyAssessmentsPage() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    let docWidth = 900;
+    let docHeight = 2400;
+    for (const stroke of sheetStrokes) {
+      const pts = stroke.points || stroke.pts || [];
+      for (const p of pts) {
+        if (p.x + 50 > docWidth) docWidth = Math.ceil(p.x + 50);
+        if (p.y + 80 > docHeight) docHeight = Math.ceil(p.y + 80);
+      }
+    }
+    if (canvas.width !== docWidth || canvas.height !== docHeight) {
+      canvas.width = docWidth;
+      canvas.height = docHeight;
+    }
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     // Draw clean ruled paper lines
     ctx.fillStyle = '#FFFFFF';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Margin rule
-    ctx.strokeStyle = 'rgba(239, 68, 68, 0.45)';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(80, 0);
-    ctx.lineTo(80, canvas.height);
-    ctx.stroke();
-
-    // Horizontal ruled lines
+    // Subtle horizontal notebook ruled lines (starting at y=48 with 36px spacing)
     const lineSpacing = 36;
     ctx.strokeStyle = 'rgba(148, 163, 184, 0.35)';
     ctx.lineWidth = 1.0;
-    for (let y = lineSpacing; y < canvas.height; y += lineSpacing) {
+    for (let y = 48; y < canvas.height; y += lineSpacing) {
       ctx.beginPath();
       ctx.moveTo(0, y);
       ctx.lineTo(canvas.width, y);
       ctx.stroke();
     }
+
+    // Vertical red margin rule at x = 60
+    ctx.strokeStyle = 'rgba(239, 68, 68, 0.45)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(60, 0);
+    ctx.lineTo(60, canvas.height);
+    ctx.stroke();
 
     // Render student's handwritten ink strokes
     for (const stroke of sheetStrokes) {
@@ -638,22 +666,53 @@ export default function FacultyAssessmentsPage() {
       ctx.save();
       const toolType = (stroke.toolType || stroke.tool || 'PEN').toUpperCase();
       if (toolType === 'HIGHLIGHTER') {
-        ctx.globalAlpha = 0.35;
-        ctx.strokeStyle = '#FDE047';
-        ctx.lineWidth = stroke.strokeWidth || stroke.w || 24;
+        ctx.globalAlpha = 0.4;
+        ctx.strokeStyle = '#FACC15';
+        ctx.lineWidth = stroke.strokeWidth || stroke.w || 20;
       } else {
         ctx.globalAlpha = 1.0;
-        ctx.strokeStyle = typeof stroke.color === 'string' ? stroke.color : '#0F172A';
-        ctx.lineWidth = stroke.strokeWidth || stroke.w || 3.5;
+        let color = '#0F172A';
+        if (stroke.color) {
+          if (typeof stroke.color === 'number') {
+            const hex = (stroke.color >>> 0).toString(16).padStart(8, '0');
+            const r = parseInt(hex.substring(2, 4), 16);
+            const g = parseInt(hex.substring(4, 6), 16);
+            const b = parseInt(hex.substring(6, 8), 16);
+            color = `rgb(${r},${g},${b})`;
+          } else if (typeof stroke.color === 'string') {
+            color = stroke.color;
+          }
+        }
+        ctx.strokeStyle = color;
+        ctx.lineWidth = stroke.strokeWidth || stroke.w || 3.0;
       }
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
 
+      // Handle single point (dots on 'i', periods, commas)
+      if (pts.length === 1) {
+        ctx.beginPath();
+        const r = Math.max(1.5, (stroke.strokeWidth || stroke.w || 3.0) / 2);
+        ctx.arc(pts[0].x, pts[0].y, r, 0, Math.PI * 2);
+        ctx.fillStyle = ctx.strokeStyle;
+        ctx.fill();
+        ctx.restore();
+        continue;
+      }
+
       ctx.beginPath();
       ctx.moveTo(pts[0].x, pts[0].y);
+
       for (let i = 1; i < pts.length; i++) {
-        ctx.lineTo(pts[i].x, pts[i].y);
+        const p0 = pts[i - 1];
+        const p1 = pts[i];
+        const midX = (p0.x + p1.x) / 2;
+        const midY = (p0.y + p1.y) / 2;
+        ctx.quadraticCurveTo(p0.x, p0.y, midX, midY);
       }
+
+      const last = pts[pts.length - 1];
+      ctx.lineTo(last.x, last.y);
       ctx.stroke();
       ctx.restore();
     }
@@ -1346,7 +1405,10 @@ export default function FacultyAssessmentsPage() {
         batch: newBatch,
         rollFilter: newRollFilter,
         durationMinutes: Number(newDuration),
-        totalMarks: Number(newTotalMarks),
+        totalMarks:
+          examMode === 'DESCRIPTIVE'
+            ? authoredDescriptiveQuestions.reduce((acc, q) => acc + (Number(q.points) || 0), 0)
+            : Number(newTotalMarks),
         passingMarks: Number(newPassingMarks),
         examMode,
         status: newStatus,
@@ -3035,6 +3097,8 @@ export default function FacultyAssessmentsPage() {
                   <span className="font-mono text-xs text-slate-700 dark:text-slate-300">
                     Target: <strong className="text-slate-900 dark:text-white font-bold">{newDivision === 'DIV 1' ? 'Division A' : newDivision === 'DIV 2' ? 'Division B' : 'All Divisions'}</strong>{newRollFilter !== 'ALL' && <strong className="text-amber-700 dark:text-amber-300 font-bold ml-1">({newRollFilter === 'ODD' ? 'Odd IDs Only' : 'Even IDs Only'})</strong>} • {examMode === 'CODING' ? (
                       <strong className="text-[#e05033] font-bold">{authoredCodingProblems.length} Problems</strong>
+                    ) : examMode === 'DESCRIPTIVE' ? (
+                      <strong className="text-emerald-600 dark:text-emerald-400 font-bold">{authoredDescriptiveQuestions.length} Descriptive Questions ({authoredDescriptiveQuestions.reduce((acc, q) => acc + (Number(q.points) || 0), 0)} Marks)</strong>
                     ) : examMode === 'HYBRID' ? (
                       <strong className="text-purple-600 dark:text-purple-400 font-bold">{selectedQuestionIds.length} MCQs + {authoredCodingProblems.length} Problems</strong>
                     ) : (
@@ -3084,6 +3148,8 @@ export default function FacultyAssessmentsPage() {
                       creating ||
                       (examMode === 'CODING'
                         ? authoredCodingProblems.length === 0
+                        : examMode === 'DESCRIPTIVE'
+                        ? authoredDescriptiveQuestions.length === 0
                         : examMode === 'HYBRID'
                         ? selectedQuestionIds.length === 0 && authoredCodingProblems.length === 0
                         : selectedQuestionIds.length === 0)
@@ -4311,8 +4377,8 @@ export default function FacultyAssessmentsPage() {
                       <div className="relative border-2 border-slate-700 rounded-2xl overflow-hidden shadow-2xl bg-white max-h-[650px] overflow-y-auto">
                         <canvas
                           ref={sheetCanvasRef}
-                          width={900}
-                          height={2400}
+                          width={sheetDocDimensions.width}
+                          height={sheetDocDimensions.height}
                           className="w-full h-auto block select-none bg-white"
                         />
                         {sheetStrokes.length === 0 && !sheetLoading && (

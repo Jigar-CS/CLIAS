@@ -59,6 +59,11 @@ class MainActivity : FlutterActivity() {
                     prefs.edit().remove(key).apply()
                     result.success(true)
                 }
+                "clearAllCache" -> {
+                    val prefs = getSharedPreferences("clias_cache", Context.MODE_PRIVATE)
+                    prefs.edit().clear().apply()
+                    result.success(true)
+                }
                 else -> {
                     result.notImplemented()
                 }

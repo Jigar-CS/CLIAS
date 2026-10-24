@@ -13,6 +13,8 @@ import {
   Maximize2,
   Layers,
   Sparkles,
+  ZoomIn,
+  ZoomOut,
 } from 'lucide-react';
 
 export interface StrokePoint {
@@ -57,9 +59,26 @@ export function DescriptiveCompanionWorkspace({
   const [mobileConnected, setMobileConnected] = useState(false);
   const [pairingHost, setPairingHost] = useState('');
   const [isClearing, setIsClearing] = useState(false);
+  const [viewMode, setViewMode] = useState<'fit' | 'actual'>('fit');
+  const [zoomLevel, setZoomLevel] = useState<number>(100);
+  const [docDimensions, setDocDimensions] = useState({ width: 900, height: 2400 });
   const socketRef = useRef<WebSocket | null>(null);
 
   const activeQId = `Q${questionNumber}`;
+
+  // Dynamically expand canvas bounds if any received strokes exceed default 900x2400 dimensions
+  useEffect(() => {
+    let w = 900;
+    let h = 2400;
+    for (const stroke of strokes) {
+      const pts = stroke.points || stroke.pts || [];
+      for (const p of pts) {
+        if (p.x + 50 > w) w = Math.ceil(p.x + 50);
+        if (p.y + 80 > h) h = Math.ceil(p.y + 80);
+      }
+    }
+    setDocDimensions({ width: w, height: h });
+  }, [strokes]);
 
   // 1. Determine local host for pairing
   useEffect(() => {
@@ -162,11 +181,16 @@ export function DescriptiveCompanionWorkspace({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    if (canvas.width !== docDimensions.width || canvas.height !== docDimensions.height) {
+      canvas.width = docDimensions.width;
+      canvas.height = docDimensions.height;
+    }
+
     // Background ruled paper
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Subtle horizontal notebook ruled lines
+    // Subtle horizontal notebook ruled lines (spaced every 36px, starting at y=48)
     ctx.strokeStyle = '#f1f5f9';
     ctx.lineWidth = 1;
     for (let y = 48; y < canvas.height; y += 36) {
@@ -176,7 +200,7 @@ export function DescriptiveCompanionWorkspace({
       ctx.stroke();
     }
 
-    // Vertical red margin rule
+    // Vertical red margin rule at x = 60
     ctx.strokeStyle = '#fee2e2';
     ctx.lineWidth = 1.5;
     ctx.beginPath();
@@ -208,8 +232,8 @@ export function DescriptiveCompanionWorkspace({
       ctx.lineJoin = 'round';
 
       if (stroke.toolType === 'highlighter' || stroke.tool === 'highlighter') {
-        ctx.strokeStyle = 'rgba(234, 179, 8, 0.35)';
-        ctx.lineWidth = stroke.strokeWidth || stroke.w || 18;
+        ctx.strokeStyle = 'rgba(250, 204, 21, 0.4)';
+        ctx.lineWidth = stroke.strokeWidth || stroke.w || 20;
         ctx.globalCompositeOperation = 'multiply';
       } else {
         let color = '#0f172a';
@@ -230,7 +254,8 @@ export function DescriptiveCompanionWorkspace({
 
       if (pts.length === 1) {
         ctx.beginPath();
-        ctx.arc(pts[0].x, pts[0].y, (stroke.strokeWidth || stroke.w || 3) / 2, 0, Math.PI * 2);
+        const r = Math.max(1.5, (stroke.strokeWidth || stroke.w || 3) / 2);
+        ctx.arc(pts[0].x, pts[0].y, r, 0, Math.PI * 2);
         ctx.fillStyle = ctx.strokeStyle;
         ctx.fill();
         ctx.restore();
@@ -253,7 +278,7 @@ export function DescriptiveCompanionWorkspace({
       ctx.stroke();
       ctx.restore();
     }
-  }, [strokes]);
+  }, [strokes, docDimensions]);
 
   // Handle Clear Canvas
   const handleClear = async () => {
@@ -361,8 +386,8 @@ export function DescriptiveCompanionWorkspace({
 
       {/* Right Column: 900x2400 Continuous Downward Scroll Ruled Answer Sheet */}
       <div className="lg:col-span-7 space-y-3">
-        {/* Canvas Toolbar */}
-        <div className="flex items-center justify-between p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs">
+        {/* Canvas Toolbar with Fit-Width & Zoom Controls */}
+        <div className="flex items-center justify-between p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <Layers className="w-4 h-4 text-indigo-500" />
             <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
@@ -373,12 +398,69 @@ export function DescriptiveCompanionWorkspace({
             </span>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* View Mode Toggle: Fit Width vs Actual 100% */}
+            <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs">
+              <button
+                type="button"
+                onClick={() => setViewMode('fit')}
+                className={`px-2.5 py-1 rounded-lg font-semibold transition flex items-center gap-1.5 ${
+                  viewMode === 'fit'
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+                title="Fit sheet to 100% card width so all words are fully visible"
+              >
+                <Maximize2 className="w-3 h-3" />
+                <span>Fit Width</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setViewMode('actual');
+                  setZoomLevel(100);
+                }}
+                className={`px-2.5 py-1 rounded-lg font-semibold transition flex items-center gap-1.5 ${
+                  viewMode === 'actual'
+                    ? 'bg-indigo-600 text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+                title="View at 1:1 actual pixel scale"
+              >
+                <span>100% Size</span>
+              </button>
+            </div>
+
+            {viewMode === 'actual' && (
+              <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setZoomLevel((z) => Math.max(50, z - 15))}
+                  className="px-2 py-0.5 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md font-bold"
+                  title="Zoom Out"
+                >
+                  -
+                </button>
+                <span className="font-mono text-[11px] px-1 font-bold text-slate-700 dark:text-slate-300">
+                  {zoomLevel}%
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setZoomLevel((z) => Math.min(200, z + 15))}
+                  className="px-2 py-0.5 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md font-bold"
+                  title="Zoom In"
+                >
+                  +
+                </button>
+              </div>
+            )}
+
             <button
               type="button"
               onClick={handleClear}
               disabled={isClearing || strokes.length === 0}
-              className="p-1.5 text-xs text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition disabled:opacity-40 flex items-center gap-1 font-semibold"
+              className="p-1.5 px-2 text-xs text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition disabled:opacity-40 flex items-center gap-1 font-semibold border border-rose-200 dark:border-rose-900/40"
               title="Clear answer sheet for this question"
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -389,7 +471,7 @@ export function DescriptiveCompanionWorkspace({
               type="button"
               onClick={handleDownload}
               disabled={strokes.length === 0}
-              className="p-1.5 text-xs text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 rounded-lg transition disabled:opacity-40 flex items-center gap-1 font-semibold"
+              className="p-1.5 px-2 text-xs text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 rounded-xl transition disabled:opacity-40 flex items-center gap-1 font-semibold border border-indigo-200 dark:border-indigo-900/40"
               title="Download answer sheet as PNG"
             >
               <Download className="w-3.5 h-3.5" />
@@ -399,12 +481,30 @@ export function DescriptiveCompanionWorkspace({
         </div>
 
         {/* Scrollable Answer Sheet Paper Container */}
-        <div className="w-full h-[640px] rounded-2xl bg-slate-200 dark:bg-slate-950/80 p-4 overflow-y-auto overflow-x-auto border border-slate-300 dark:border-slate-800 shadow-inner flex justify-center">
+        <div className="w-full h-[660px] rounded-2xl bg-slate-200/90 dark:bg-slate-950/80 p-3 sm:p-5 overflow-y-auto overflow-x-auto border border-slate-300 dark:border-slate-800 shadow-inner">
           <div
-            className="bg-white rounded-lg shadow-xl relative overflow-hidden"
-            style={{ width: '900px', height: '2400px', minWidth: '900px' }}
+            className="bg-white rounded-xl shadow-xl relative overflow-hidden mx-auto transition-all duration-150"
+            style={
+              viewMode === 'fit'
+                ? {
+                    width: '100%',
+                    maxWidth: `${docDimensions.width}px`,
+                    height: 'auto',
+                    aspectRatio: `${docDimensions.width} / ${docDimensions.height}`,
+                  }
+                : {
+                    width: `${(docDimensions.width * zoomLevel) / 100}px`,
+                    minWidth: `${(docDimensions.width * zoomLevel) / 100}px`,
+                    height: `${(docDimensions.height * zoomLevel) / 100}px`,
+                  }
+            }
           >
-            <canvas ref={canvasRef} width={900} height={2400} className="w-full h-full block" />
+            <canvas
+              ref={canvasRef}
+              width={docDimensions.width}
+              height={docDimensions.height}
+              className="w-full h-auto block select-none bg-white"
+            />
             <div className="absolute bottom-4 right-6 text-[10px] font-bold tracking-widest text-slate-400 pointer-events-none select-none">
               CLIAS SECURE DIGITAL ANSWER SHEET • CONFIDENTIAL
             </div>

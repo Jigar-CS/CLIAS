@@ -74,6 +74,11 @@ class _ExamSheetScreenState extends State<ExamSheetScreen>
           _switchToQuestion(newQId, newTitle, false);
         }
       },
+      onSessionReset: () {
+        if (mounted) {
+          _handleSessionReset();
+        }
+      },
       onExamSubmitted: (exitPass) {
         if (mounted) {
           _showExamSubmittedExitDialog(exitPass);
@@ -189,14 +194,39 @@ class _ExamSheetScreenState extends State<ExamSheetScreen>
     }
   }
 
+  Future<void> _handleSessionReset() async {
+    debugPrint('[ExamSheet] Received session reset. Clearing all canvas strokes and local cache.');
+    try {
+      await KioskService().clearAllCache();
+      for (var i = 1; i <= 10; i++) {
+        await KioskService().clearCache('all_strokes_${widget.sessionId}_Q$i');
+      }
+    } catch (e) {
+      debugPrint('[ExamSheet] Error clearing cache on reset: $e');
+    }
+
+    if (mounted) {
+      _canvasController.loadStrokes([]);
+      _canvasController.scrollBy(-_canvasController.scrollOffset);
+      setState(() {
+        _currentQuestionId = 'Q1';
+        _currentQuestionTitle = _questions.first['title']!;
+      });
+    }
+  }
+
   void _showExitPinDialog() {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => ExitPinDialog(
+      builder: (dialogCtx) => ExitPinDialog(
         expectedPinHash: widget.proctorPinHash,
         dynamicExitPass: _syncEngine.remoteExitPass,
-        onExitConfirmed: () {
+        onExitConfirmed: () async {
+          Navigator.of(dialogCtx).pop();
+          await _handleSessionReset();
+          await KioskService().exitLockdown();
+          if (!mounted) return;
           Navigator.of(context).pop();
         },
       ),
@@ -207,11 +237,15 @@ class _ExamSheetScreenState extends State<ExamSheetScreen>
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => ExitPinDialog(
+      builder: (dialogCtx) => ExitPinDialog(
         expectedPinHash: widget.proctorPinHash,
         dynamicExitPass: exitPass,
         isExamSubmitted: true,
-        onExitConfirmed: () {
+        onExitConfirmed: () async {
+          Navigator.of(dialogCtx).pop();
+          await _handleSessionReset();
+          await KioskService().exitLockdown();
+          if (!mounted) return;
           Navigator.of(context).pop();
         },
       ),

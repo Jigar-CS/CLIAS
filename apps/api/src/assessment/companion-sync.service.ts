@@ -231,6 +231,47 @@ export class CompanionSyncService implements OnApplicationBootstrap {
     }
   }
 
+  public isMobileConnected(sessionId?: string): boolean {
+    for (const ws of this.mobileSockets) {
+      if (ws.readyState === WebSocket.OPEN) return true;
+    }
+    return false;
+  }
+
+  public isSessionSubmitted(sessionId: string): boolean {
+    return this.submittedSessions.has(sessionId) || this.submittedSessions.has('clias-session-9842');
+  }
+
+  public getActiveQuestion(sessionId: string): string {
+    return this.activeQuestions[sessionId] || this.activeQuestions['clias-session-9842'] || 'Q1';
+  }
+
+  public resetSession(sessionId: string) {
+    this.logger.log(`🧹 RESET COMPANION SESSION: ${sessionId}`);
+    
+    // Clear in-memory answer sheets completely for fresh test attempt
+    this.answerSheets = {};
+
+    delete this.exitPasses[sessionId];
+    delete this.exitPasses['clias-session-9842'];
+    this.submittedSessions.delete(sessionId);
+    this.submittedSessions.delete('clias-session-9842');
+
+    this.activeQuestions[sessionId] = 'Q1';
+    this.activeQuestions['clias-session-9842'] = 'Q1';
+
+    // Broadcast reset event to all viewers and mobile devices
+    this.broadcastToAll({
+      type: 'RESET_SESSION',
+      sessionId,
+      activeQuestionId: 'Q1',
+      allStrokes: [],
+      timestamp: Date.now(),
+    });
+
+    return { success: true, message: `Session ${sessionId} reset successfully` };
+  }
+
   public getStrokes(sessionId: string, questionId: string) {
     const q = questionId.toUpperCase();
     const key = `${sessionId}:${q}`;
@@ -239,11 +280,6 @@ export class CompanionSyncService implements OnApplicationBootstrap {
     }
     if (this.answerSheets[`clias-session-9842:${q}`]) {
       return this.answerSheets[`clias-session-9842:${q}`];
-    }
-    for (const k of Object.keys(this.answerSheets)) {
-      if (k.endsWith(`:${q}`) && this.answerSheets[k].strokes?.length > 0) {
-        return this.answerSheets[k];
-      }
     }
     return { sessionId, questionId: q, strokes: [], lastUpdated: Date.now() };
   }

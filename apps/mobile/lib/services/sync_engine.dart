@@ -23,6 +23,7 @@ class SyncEngine {
 
   Function(String questionId, String title)? onRemoteQuestionChanged;
   Function(String exitPass)? onExamSubmitted;
+  Function()? onSessionReset;
   String? remoteExitPass;
 
   WebSocketChannel? _channel;
@@ -48,6 +49,7 @@ class SyncEngine {
     required this.wsUrl,
     this.onRemoteQuestionChanged,
     this.onExamSubmitted,
+    this.onSessionReset,
   });
 
   /// Starts the WebSocket connection and the sync loop.
@@ -119,6 +121,14 @@ class SyncEngine {
         final exitPass = msg['exitPass']?.toString() ?? '';
         remoteExitPass = exitPass;
         onExamSubmitted?.call(exitPass);
+      } else if (type == 'RESET_SESSION' || type == 'CANVAS_CLEAR') {
+        _pendingDelta.clear();
+        _deletedDelta.clear();
+        remoteExitPass = null;
+        if (msg['activeQuestionId'] != null) {
+          questionId = msg['activeQuestionId'].toString().toUpperCase();
+        }
+        onSessionReset?.call();
       }
     } catch (e) {
       debugPrint('[SyncEngine] Error parsing incoming message: $e');

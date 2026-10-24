@@ -112,4 +112,15 @@ class KioskService {
       debugPrint('[KioskService] Error clearing cache: $e');
     }
   }
+
+  /// Clears all cached exam data across all sessions and questions
+  Future<void> clearAllCache() async {
+    try {
+      if (Platform.isAndroid) {
+        await _channel.invokeMethod('clearAllCache');
+      }
+    } catch (e) {
+      debugPrint('[KioskService] Error clearing all cache: $e');
+    }
+  }
 }
