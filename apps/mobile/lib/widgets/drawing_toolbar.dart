@@ -16,8 +16,7 @@ class DrawingToolbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -33,70 +32,151 @@ class DrawingToolbar extends StatelessWidget {
       child: AnimatedBuilder(
         animation: controller,
         builder: (context, _) {
-          return Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Pen Tool
-              _buildToolButton(
-                icon: Icons.edit,
-                label: 'Pen',
-                isSelected: controller.currentTool == ToolType.pen,
-                onTap: () => controller.setTool(ToolType.pen),
-              ),
-              const SizedBox(width: 4),
+          return SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 1. Pen Tool
+                _buildToolButton(
+                  icon: Icons.edit,
+                  label: 'Pen',
+                  isSelected: controller.currentTool == ToolType.pen,
+                  onTap: () => controller.setTool(ToolType.pen),
+                ),
+                const SizedBox(width: 4),
 
-              // Highlighter Tool
-              _buildToolButton(
-                icon: Icons.border_color,
-                label: 'Highlighter',
-                isSelected: controller.currentTool == ToolType.highlighter,
-                onTap: () => controller.setTool(ToolType.highlighter),
-              ),
-              const SizedBox(width: 4),
+                // 2. Highlighter Tool
+                _buildToolButton(
+                  icon: Icons.border_color,
+                  label: 'Highlighter',
+                  isSelected: controller.currentTool == ToolType.highlighter,
+                  onTap: () => controller.setTool(ToolType.highlighter),
+                ),
+                const SizedBox(width: 4),
 
-              // Eraser Tool
-              _buildToolButton(
-                icon: Icons.auto_fix_normal,
-                label: 'Eraser',
-                isSelected: controller.currentTool == ToolType.eraser,
-                onTap: () => controller.setTool(ToolType.eraser),
-              ),
+                // 3. Eraser Tool
+                _buildToolButton(
+                  icon: Icons.auto_fix_normal,
+                  label: 'Eraser',
+                  isSelected: controller.currentTool == ToolType.eraser,
+                  onTap: () => controller.setTool(ToolType.eraser),
+                ),
+                const SizedBox(width: 4),
 
-              const SizedBox(width: 8),
-              Container(width: 1, height: 24, color: const Color(0xFFCBD5E1)),
-              const SizedBox(width: 8),
+                // 4. Scroll / Hand Tool
+                _buildToolButton(
+                  icon: Icons.pan_tool_outlined,
+                  label: 'Scroll',
+                  isSelected: controller.currentTool == ToolType.pan,
+                  onTap: () => controller.setTool(ToolType.pan),
+                ),
 
-              // Color choices (Pen)
-              if (controller.currentTool == ToolType.pen) ...[
-                _buildColorDot(controller, Colors.black),
-                _buildColorDot(controller, const Color(0xFF1E3A8A)), // Blue
-                _buildColorDot(controller, const Color(0xFFDC2626)), // Red
+                const SizedBox(width: 6),
+                Container(width: 1, height: 22, color: const Color(0xFFCBD5E1)),
+                const SizedBox(width: 6),
+
+                // Color choices (Pen)
+                if (controller.currentTool == ToolType.pen) ...[
+                  _buildColorDot(controller, Colors.black),
+                  _buildColorDot(controller, const Color(0xFF1E3A8A)), // Blue
+                  _buildColorDot(controller, const Color(0xFFDC2626)), // Red
+                  const SizedBox(width: 6),
+                  Container(width: 1, height: 22, color: const Color(0xFFCBD5E1)),
+                  const SizedBox(width: 6),
+                ],
+
+                // Undo / Redo
+                IconButton(
+                  icon: const Icon(Icons.undo, size: 20),
+                  tooltip: 'Undo',
+                  padding: const EdgeInsets.all(6),
+                  constraints: const BoxConstraints(),
+                  onPressed: controller.canUndo ? controller.undo : null,
+                ),
+                const SizedBox(width: 4),
+                IconButton(
+                  icon: const Icon(Icons.redo, size: 20),
+                  tooltip: 'Redo',
+                  padding: const EdgeInsets.all(6),
+                  constraints: const BoxConstraints(),
+                  onPressed: controller.canRedo ? controller.redo : null,
+                ),
+
+                const SizedBox(width: 6),
+                Container(width: 1, height: 22, color: const Color(0xFFCBD5E1)),
+                const SizedBox(width: 6),
+
+                // Clear Sheet action
+                InkWell(
+                  onTap: () => _confirmClear(context),
+                  borderRadius: BorderRadius.circular(8),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFEF2F2),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFFECACA)),
+                    ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.delete_outline, size: 16, color: Color(0xFFDC2626)),
+                        SizedBox(width: 3),
+                        Text(
+                          'Clear',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                            color: Color(0xFFDC2626),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
                 const SizedBox(width: 8),
-                Container(width: 1, height: 24, color: const Color(0xFFCBD5E1)),
+                Container(width: 1, height: 22, color: const Color(0xFFCBD5E1)),
                 const SizedBox(width: 8),
+
+                // Sync status pill
+                if (syncEngine != null) _buildSyncPill(syncEngine!),
               ],
-
-              // Undo / Redo
-              IconButton(
-                icon: const Icon(Icons.undo, size: 20),
-                tooltip: 'Undo',
-                onPressed: controller.canUndo ? controller.undo : null,
-              ),
-              IconButton(
-                icon: const Icon(Icons.redo, size: 20),
-                tooltip: 'Redo',
-                onPressed: controller.canRedo ? controller.redo : null,
-              ),
-
-              const SizedBox(width: 8),
-              Container(width: 1, height: 24, color: const Color(0xFFCBD5E1)),
-              const SizedBox(width: 8),
-
-              // Sync status pill
-              if (syncEngine != null) _buildSyncPill(syncEngine!),
-            ],
+            ),
           );
         },
+      ),
+    );
+  }
+
+  void _confirmClear(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Clear Answer Sheet?'),
+        content: const Text(
+          'This will erase all strokes on this sheet and reset the display on the laptop.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFDC2626),
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              controller.clearCanvas();
+            },
+            child: const Text('Clear Sheet'),
+          ),
+        ],
       ),
     );
   }

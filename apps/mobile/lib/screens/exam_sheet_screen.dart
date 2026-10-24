@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../canvas/canvas_controller.dart';
 import '../canvas/digital_ink_canvas.dart';
 import '../models/stroke.dart';
@@ -43,6 +44,12 @@ class _ExamSheetScreenState extends State<ExamSheetScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+
+    // Lock to horizontal landscape mode for comfortable digital writing
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
 
     _syncEngine = SyncEngine(
       sessionId: widget.sessionId,
@@ -140,6 +147,13 @@ class _ExamSheetScreenState extends State<ExamSheetScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    // Restore all orientations upon exiting exam screen
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
     _syncEngine.dispose();
     _canvasController.dispose();
     super.dispose();
@@ -154,46 +168,49 @@ class _ExamSheetScreenState extends State<ExamSheetScreen>
         body: SafeArea(
           child: Stack(
             children: [
-              // 1. Digital Ink Canvas (Full Surface)
+              // 1. Digital Ink Canvas (Full surface with downward vertical scroll)
               Positioned.fill(
                 child: DigitalInkCanvas(controller: _canvasController),
               ),
 
-              // 2. Question Header & Drawing Toolbar
+              // 2. Question Header & Drawing Toolbar (Single sleek horizontal row in landscape)
               Positioned(
-                top: 8,
-                left: 12,
-                right: 12,
+                top: 6,
+                left: 10,
+                right: 70, // Leave room for secret proctor exit hitbox on far top-right
                 child: Row(
                   children: [
-                    // Question banner
+                    // Compact Question Chip
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
                         color: const Color(0xFF0F172A),
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: Row(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.description, color: Colors.white, size: 16),
-                          const SizedBox(width: 8),
+                          const Icon(Icons.description, color: Colors.white, size: 14),
+                          const SizedBox(width: 6),
                           Text(
                             widget.questionTitle,
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 13,
+                              fontSize: 12,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                         ],
                       ),
                     ),
-                    const Spacer(),
+                    const SizedBox(width: 8),
 
-                    // Drawing Toolbar
-                    DrawingToolbar(
-                      controller: _canvasController,
-                      syncEngine: _syncEngine,
+                    // Drawing Toolbar (Scrollable horizontal row)
+                    Expanded(
+                      child: DrawingToolbar(
+                        controller: _canvasController,
+                        syncEngine: _syncEngine,
+                      ),
                     ),
                   ],
                 ),
@@ -203,8 +220,8 @@ class _ExamSheetScreenState extends State<ExamSheetScreen>
               Positioned(
                 top: 0,
                 right: 0,
-                width: 60,
-                height: 60,
+                width: 65,
+                height: 50,
                 child: GestureDetector(
                   behavior: HitTestBehavior.translucent,
                   onTap: _handleCornerSecretTap,

@@ -212,6 +212,31 @@ class SyncEngine {
     await KioskService().clearCache('cached_strokes_${sessionId}_$questionId');
   }
 
+  /// Sends a clear command to the laptop server and clears all local caches for this question
+  Future<void> clearRemoteCanvas() async {
+    _pendingDelta.clear();
+    _deletedDelta.clear();
+    _debouncedSyncTimer?.cancel();
+
+    await KioskService().clearCache('cached_strokes_${sessionId}_$questionId');
+    await KioskService().clearCache('all_strokes_${sessionId}_$questionId');
+
+    if (_isConnected && _channel != null) {
+      try {
+        _channel!.sink.add(jsonEncode({
+          'type': 'CLEAR_CANVAS',
+          'sessionId': sessionId,
+          'questionId': questionId,
+          'timestamp': DateTime.now().millisecondsSinceEpoch,
+        }));
+        debugPrint('[SyncEngine] Sent CLEAR_CANVAS to laptop companion server');
+      } catch (e) {
+        debugPrint('[SyncEngine] Error sending CLEAR_CANVAS: $e');
+      }
+    }
+    statusNotifier.value = SyncStatus.synced;
+  }
+
   Future<void> _savePendingToCache(SyncPacket packet) async {
     try {
       await KioskService().saveCache(

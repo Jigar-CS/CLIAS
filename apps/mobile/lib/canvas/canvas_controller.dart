@@ -31,7 +31,27 @@ class CanvasController extends ChangeNotifier {
         return _highlighterWidth;
       case ToolType.eraser:
         return _eraserRadius;
+      case ToolType.pan:
+        return 0.0;
     }
+  }
+
+  double _scrollOffset = 0.0;
+  double _maxScroll = 2400.0;
+
+  double get scrollOffset => _scrollOffset;
+  double get maxScroll => _maxScroll;
+
+  void setScrollOffset(double offset) {
+    final clamped = offset.clamp(0.0, _maxScroll);
+    if (clamped != _scrollOffset) {
+      _scrollOffset = clamped;
+      notifyListeners();
+    }
+  }
+
+  void scrollBy(double delta) {
+    setScrollOffset(_scrollOffset + delta);
   }
 
   bool get canUndo => _strokes.isNotEmpty;
@@ -68,6 +88,7 @@ class CanvasController extends ChangeNotifier {
 
   /// Begins a new stroke when pointer touches canvas.
   void startStroke(Offset point, double pressure) {
+    if (_currentTool == ToolType.pan) return;
     _undoStack.clear();
 
     if (_currentTool == ToolType.eraser) {
@@ -169,11 +190,9 @@ class CanvasController extends ChangeNotifier {
   }
 
   void clearCanvas() {
-    for (final s in _strokes) {
-      syncEngine?.recordStrokeDeletion(s.id);
-    }
     _strokes.clear();
     _undoStack.clear();
+    syncEngine?.clearRemoteCanvas();
     notifyListeners();
   }
 }

@@ -6,6 +6,7 @@ enum ToolType {
   pen,
   highlighter,
   eraser,
+  pan,
 }
 
 /// Represents an individual continuous handwritten stroke on the canvas.

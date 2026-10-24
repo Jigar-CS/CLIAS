@@ -37,20 +37,43 @@ const server = http.createServer((req, res) => {
     res.end(getViewerHtml(localIp, PORT));
     return;
   }
-  if (reqUrl.pathname === '/api/strokes') {
+  if (reqUrl.pathname === '/api/clear') {
     const q = reqUrl.searchParams.get('questionId') || activeQuestionId;
-    let sheet = answerSheets[`clias-session-9842:${q}`];
-    // Fallback to whichever question has active strokes if requested is empty
-    if (!sheet || sheet.strokes.length === 0) {
+    const s = reqUrl.searchParams.get('sessionId') || 'clias-session-9842';
+    const clearAll = reqUrl.searchParams.get('all') === 'true';
+
+    if (clearAll) {
       for (const k of Object.keys(answerSheets)) {
-        if (answerSheets[k].strokes && answerSheets[k].strokes.length > 0) {
-          sheet = answerSheets[k];
-          break;
-        }
+        answerSheets[k].strokes = [];
+        answerSheets[k].lastUpdated = Date.now();
+      }
+    } else {
+      const key = `${s}:${q}`;
+      if (answerSheets[key]) {
+        answerSheets[key].strokes = [];
+        answerSheets[key].lastUpdated = Date.now();
       }
     }
+
+    broadcastToViewers({
+      type: 'CANVAS_CLEAR',
+      questionId: q,
+      allStrokes: [],
+      totalStrokes: 0,
+      lastUpdated: Date.now(),
+    });
+
     res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify(sheet || { questionId: q, strokes: [] }));
+    res.end(JSON.stringify({ success: true, message: 'Canvas cleared' }));
+    return;
+  }
+  if (reqUrl.pathname === '/api/strokes') {
+    const q = reqUrl.searchParams.get('questionId') || activeQuestionId;
+    const s = reqUrl.searchParams.get('sessionId') || 'clias-session-9842';
+    const key = `${s}:${q}`;
+    const sheet = answerSheets[key] || { sessionId: s, questionId: q, strokes: [] };
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(sheet));
     return;
   }
   res.writeHead(404);
@@ -152,7 +175,23 @@ wss.on('connection', (ws, req) => {
           lastUpdated: sheet.lastUpdated,
         });
 
-        console.log(`[CompanionServer] Synced Seq #${data.seq}: ${data.strokes?.length || 0} strokes updated (Total: ${sheet.strokes.length})`);
+      } else if (data.type === 'CLEAR_CANVAS') {
+        const q = data.questionId || questionId;
+        const s = data.sessionId || sessionId;
+        const key = `${s}:${q}`;
+        if (answerSheets[key]) {
+          answerSheets[key].strokes = [];
+          answerSheets[key].lastUpdated = Date.now();
+        }
+        broadcastToViewers({
+          type: 'CANVAS_CLEAR',
+          questionId: q,
+          allStrokes: [],
+          totalStrokes: 0,
+          lastUpdated: Date.now(),
+        });
+        ws.send(JSON.stringify({ type: 'CLEAR_CANVAS_ACK', success: true }));
+        console.log(`[CompanionServer] Canvas cleared via mobile for Session: ${s}, Question: ${q}`);
       } else if (data.type === 'HEARTBEAT') {
         ws.send(JSON.stringify({ type: 'HEARTBEAT_ACK', timestamp: Date.now() }));
       }
@@ -229,8 +268,8 @@ function getViewerHtml(ip, port) {
     .p-code { font-family: monospace; background: #1e293b; padding: 8px 12px; border-radius: 6px; font-size: 13px; color: #38bdf8; display: flex; justify-content: space-between; }
 
     /* Right pane: Real-Time Digital Answer Sheet */
-    .canvas-container { flex: 1; background: #334155; display: flex; justify-content: center; align-items: center; padding: 24px; overflow: auto; position: relative; }
-    .paper-sheet { background: white; width: 680px; height: 900px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); border-radius: 8px; position: relative; overflow: hidden; }
+    .canvas-container { flex: 1; background: #334155; display: flex; justify-content: center; align-items: flex-start; padding: 24px; overflow-y: auto; overflow-x: auto; position: relative; }
+    .paper-sheet { background: white; width: 900px; height: 2400px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); border-radius: 8px; position: relative; }
     canvas { width: 100%; height: 100%; display: block; }
     
     .paper-watermark { position: absolute; bottom: 16px; right: 20px; font-size: 11px; color: #94a3b8; font-weight: 600; pointer-events: none; }
@@ -288,7 +327,7 @@ function getViewerHtml(ip, port) {
 
     <div class="canvas-container">
       <div class="paper-sheet" id="paperSheet">
-        <canvas id="answerCanvas" width="680" height="900"></canvas>
+        <canvas id="answerCanvas" width="900" height="2400"></canvas>
         <div class="paper-watermark">CLIAS SECURE DIGITAL ANSWER SHEET • CONFIDENTIAL</div>
       </div>
     </div>
@@ -310,7 +349,7 @@ function getViewerHtml(ip, port) {
 
       ctx.strokeStyle = '#f1f5f9';
       ctx.lineWidth = 1;
-      for (let y = 60; y < canvas.height; y += 32) {
+      for (let y = 48; y < canvas.height; y += 36) {
         ctx.beginPath();
         ctx.moveTo(0, y);
         ctx.lineTo(canvas.width, y);
@@ -324,6 +363,20 @@ function getViewerHtml(ip, port) {
       ctx.moveTo(60, 0);
       ctx.lineTo(60, canvas.height);
       ctx.stroke();
+
+      // Page markers every 750px
+      ctx.strokeStyle = '#e2e8f0';
+      ctx.lineWidth = 1;
+      ctx.font = '10px sans-serif';
+      ctx.fillStyle = '#94a3b8';
+      for (let p = 1; p * 750 < canvas.height; p++) {
+        const py = p * 750;
+        ctx.beginPath();
+        ctx.moveTo(0, py);
+        ctx.lineTo(canvas.width, py);
+        ctx.stroke();
+        ctx.fillText(\`— PAGE \${p + 1} —\`, canvas.width - 120, py - 10);
+      }
     }
 
     function renderAllStrokes() {
@@ -395,9 +448,11 @@ function getViewerHtml(ip, port) {
       fetch('/api/strokes')
         .then(res => res.json())
         .then(data => {
-          if (data && data.strokes && data.strokes.length > 0) {
-            strokes = data.strokes;
-            renderAllStrokes();
+          if (data && Array.isArray(data.strokes)) {
+            if (data.strokes.length !== strokes.length) {
+              strokes = data.strokes;
+              renderAllStrokes();
+            }
           }
         })
         .catch(err => console.error('Fetch error:', err));
@@ -422,11 +477,14 @@ function getViewerHtml(ip, port) {
           statusDot.className = 'dot';
           statusText.innerText = 'Mobile Disconnected';
         }
+      } else if (msg.type === 'CANVAS_CLEAR') {
+        strokes = [];
+        renderAllStrokes();
       } else if (msg.type === 'CANVAS_UPDATE') {
         statusDot.className = 'dot live';
         statusText.innerText = 'Mobile Syncing (Live)';
 
-        if (msg.allStrokes && msg.allStrokes.length > 0) {
+        if (msg.allStrokes && Array.isArray(msg.allStrokes)) {
           strokes = msg.allStrokes;
         } else {
           const delta = msg.delta;
@@ -454,8 +512,18 @@ function getViewerHtml(ip, port) {
     }
 
     function clearViewer() {
-      strokes = [];
-      renderAllStrokes();
+      if (!confirm('Clear all strokes for this answer sheet?')) return;
+      fetch('/api/clear?all=true', { method: 'POST' })
+        .then(res => res.json())
+        .then(() => {
+          strokes = [];
+          renderAllStrokes();
+        })
+        .catch(err => {
+          console.error('Clear error:', err);
+          strokes = [];
+          renderAllStrokes();
+        });
     }
 
     drawPaperBackground();
