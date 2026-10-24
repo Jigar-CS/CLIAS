@@ -18,8 +18,12 @@ enum SyncStatus {
 
 class SyncEngine {
   final String sessionId;
-  final String questionId;
+  String questionId;
   final String wsUrl;
+
+  Function(String questionId, String title)? onRemoteQuestionChanged;
+  Function(String exitPass)? onExamSubmitted;
+  String? remoteExitPass;
 
   WebSocketChannel? _channel;
   StreamSubscription? _channelSubscription;
@@ -42,6 +46,8 @@ class SyncEngine {
     required this.sessionId,
     required this.questionId,
     required this.wsUrl,
+    this.onRemoteQuestionChanged,
+    this.onExamSubmitted,
   });
 
   /// Starts the WebSocket connection and the sync loop.
@@ -92,9 +98,59 @@ class SyncEngine {
         }
       } else if (type == 'HEARTBEAT_ACK') {
         _isConnected = true;
+      } else if (type == 'SESSION_CONFIG') {
+        if (msg['exitPass'] != null) {
+          remoteExitPass = msg['exitPass'].toString();
+        }
+        if (msg['activeQuestionId'] != null) {
+          final activeQId = msg['activeQuestionId'].toString();
+          if (activeQId != questionId) {
+            final title = msg['question']?['title']?.toString() ?? activeQId;
+            onRemoteQuestionChanged?.call(activeQId, title);
+          }
+        }
+      } else if (type == 'ACTIVE_QUESTION_CHANGED') {
+        final activeQId = msg['questionId']?.toString();
+        final title = msg['question']?['title']?.toString() ?? msg['title']?.toString() ?? activeQId ?? '';
+        if (activeQId != null && activeQId != questionId) {
+          onRemoteQuestionChanged?.call(activeQId, title);
+        }
+      } else if (type == 'EXAM_SUBMITTED') {
+        final exitPass = msg['exitPass']?.toString() ?? '';
+        remoteExitPass = exitPass;
+        onExamSubmitted?.call(exitPass);
       }
     } catch (e) {
       debugPrint('[SyncEngine] Error parsing incoming message: $e');
+    }
+  }
+
+  /// Switches active question, flushing current delta, and notifying server if connected
+  Future<void> switchQuestion(String newQuestionId, {bool notifyServer = true}) async {
+    if (questionId == newQuestionId) return;
+
+    // Flush current pending delta before switching
+    if (_pendingDelta.isNotEmpty || _deletedDelta.isNotEmpty) {
+      await performSync();
+    }
+
+    questionId = newQuestionId;
+    _sequenceNumber = 0;
+    _pendingDelta.clear();
+    _deletedDelta.clear();
+
+    if (notifyServer && _isConnected && _channel != null) {
+      try {
+        _channel!.sink.add(jsonEncode({
+          'type': 'SWITCH_QUESTION',
+          'sessionId': sessionId,
+          'questionId': newQuestionId,
+          'timestamp': DateTime.now().millisecondsSinceEpoch,
+        }));
+        debugPrint('[SyncEngine] Notified server of question switch: $newQuestionId');
+      } catch (e) {
+        debugPrint('[SyncEngine] Failed to notify server of switch: $e');
+      }
     }
   }
 

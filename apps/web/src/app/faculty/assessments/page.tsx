@@ -232,6 +232,14 @@ export default function FacultyAssessmentsPage() {
   const [isInspectModalOpen, setIsInspectModalOpen] = useState(false);
   const [inspectAssessment, setInspectAssessment] = useState<any | null>(null);
 
+  // Handwritten Answer Sheet Review Modal State
+  const [sheetModalOpen, setSheetModalOpen] = useState(false);
+  const [selectedSubForSheet, setSelectedSubForSheet] = useState<any | null>(null);
+  const [sheetActiveQ, setSheetActiveQ] = useState<'Q1' | 'Q2' | 'Q3' | 'Q4' | 'Q5'>('Q1');
+  const [sheetStrokes, setSheetStrokes] = useState<any[]>([]);
+  const [sheetLoading, setSheetLoading] = useState(false);
+  const sheetCanvasRef = React.useRef<HTMLCanvasElement | null>(null);
+
   // New assessment form state
   const [newTitle, setNewTitle] = useState('');
   const [newCode, setNewCode] = useState('');
@@ -430,6 +438,97 @@ export default function FacultyAssessmentsPage() {
       setAnalyticsLoading(false);
     }
   };
+
+  const openAnswerSheetModal = (sub: any) => {
+    setSelectedSubForSheet(sub);
+    setSheetActiveQ('Q1');
+    setSheetModalOpen(true);
+    loadSheetStrokes(sub.submissionId || 'clias-session-9842', 'Q1');
+  };
+
+  const loadSheetStrokes = async (sessionId: string, qId: string) => {
+    setSheetLoading(true);
+    try {
+      const res = await fetch(`/api/v1/companion/strokes?sessionId=${sessionId}&questionId=${qId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setSheetStrokes(data?.strokes || []);
+      } else {
+        setSheetStrokes([]);
+      }
+    } catch {
+      setSheetStrokes([]);
+    } finally {
+      setSheetLoading(false);
+    }
+  };
+
+  const handleSheetQuestionChange = (qId: 'Q1' | 'Q2' | 'Q3' | 'Q4' | 'Q5') => {
+    setSheetActiveQ(qId);
+    if (selectedSubForSheet) {
+      loadSheetStrokes(selectedSubForSheet.submissionId || 'clias-session-9842', qId);
+    }
+  };
+
+  useEffect(() => {
+    if (!sheetModalOpen || !sheetCanvasRef.current) return;
+    const canvas = sheetCanvasRef.current;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw clean ruled paper lines
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Margin rule
+    ctx.strokeStyle = 'rgba(239, 68, 68, 0.45)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(80, 0);
+    ctx.lineTo(80, canvas.height);
+    ctx.stroke();
+
+    // Horizontal ruled lines
+    const lineSpacing = 36;
+    ctx.strokeStyle = 'rgba(148, 163, 184, 0.35)';
+    ctx.lineWidth = 1.0;
+    for (let y = lineSpacing; y < canvas.height; y += lineSpacing) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(canvas.width, y);
+      ctx.stroke();
+    }
+
+    // Render student's handwritten ink strokes
+    for (const stroke of sheetStrokes) {
+      const pts = stroke.points || stroke.pts || [];
+      if (pts.length === 0) continue;
+
+      ctx.save();
+      const toolType = (stroke.toolType || stroke.tool || 'PEN').toUpperCase();
+      if (toolType === 'HIGHLIGHTER') {
+        ctx.globalAlpha = 0.35;
+        ctx.strokeStyle = '#FDE047';
+        ctx.lineWidth = stroke.strokeWidth || stroke.w || 24;
+      } else {
+        ctx.globalAlpha = 1.0;
+        ctx.strokeStyle = typeof stroke.color === 'string' ? stroke.color : '#0F172A';
+        ctx.lineWidth = stroke.strokeWidth || stroke.w || 3.5;
+      }
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x, pts[0].y);
+      for (let i = 1; i < pts.length; i++) {
+        ctx.lineTo(pts[i].x, pts[i].y);
+      }
+      ctx.stroke();
+      ctx.restore();
+    }
+  }, [sheetModalOpen, sheetStrokes]);
 
   const exportMarksCsv = (analyticsData?: any) => {
     const target = analyticsData || activeAnalytics;
@@ -3478,6 +3577,7 @@ export default function FacultyAssessmentsPage() {
                             <th className="px-4 py-3.5">Status</th>
                             <th className="px-4 py-3.5">AI Proctoring Trust</th>
                             <th className="px-4 py-3.5 text-right">Attempt Date</th>
+                            <th className="px-4 py-3.5 text-right">Evaluation</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-800/60 font-medium">
@@ -3567,12 +3667,23 @@ export default function FacultyAssessmentsPage() {
                                     minute: '2-digit',
                                   })}
                                 </td>
+                                <td className="px-4 py-3.5 text-right">
+                                  <button
+                                    type="button"
+                                    onClick={() => openAnswerSheetModal(sub)}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition shadow-xs"
+                                    title="Inspect digital ink handwritten answer sheets"
+                                  >
+                                    <Eye className="w-3.5 h-3.5" />
+                                    <span>Answer Sheet</span>
+                                  </button>
+                                </td>
                               </tr>
                             ))}
 
                           {(!activeAnalytics.submissions || activeAnalytics.submissions.length === 0) && (
                             <tr>
-                              <td colSpan={7} className="px-4 py-12 text-center text-slate-500">
+                              <td colSpan={8} className="px-4 py-12 text-center text-slate-500">
                                 No students have completed or submitted this assessment yet.
                               </td>
                             </tr>
@@ -3583,6 +3694,167 @@ export default function FacultyAssessmentsPage() {
                   </div>
                 </>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Student Handwritten Answer Sheet Inspection Modal */}
+      {sheetModalOpen && selectedSubForSheet && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-md animate-in fade-in">
+          <div className="bg-[#0F172A] border border-slate-700 rounded-3xl w-full max-w-6xl max-h-[94vh] flex flex-col shadow-2xl overflow-hidden text-white">
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-slate-800 bg-[#1E293B] flex items-center justify-between flex-wrap gap-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-indigo-500/20 border border-indigo-500/40 text-indigo-400 flex items-center justify-center">
+                  <FileText className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-base font-bold text-white">
+                      Candidate Handwritten Answer Sheet: {selectedSubForSheet.studentName}
+                    </h3>
+                    <span className="font-mono text-xs px-2 py-0.5 rounded-md bg-slate-800 text-slate-300 border border-slate-700">
+                      {selectedSubForSheet.enrollmentNumber || selectedSubForSheet.email}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    Score: <strong className="text-emerald-400">{selectedSubForSheet.score}/{selectedSubForSheet.totalMarks} ({selectedSubForSheet.percentage}%)</strong> • AI Proctoring Trust: <strong className="text-indigo-400">{selectedSubForSheet.trustScore}%</strong>
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const canvas = sheetCanvasRef.current;
+                    if (!canvas) return;
+                    const link = document.createElement('a');
+                    link.download = `${selectedSubForSheet.studentName || 'Student'}_${sheetActiveQ}_Answer_Sheet.png`;
+                    link.href = canvas.toDataURL('image/png');
+                    link.click();
+                  }}
+                  className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download Sheet (.PNG)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSheetModalOpen(false)}
+                  className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Question Selector Tabs */}
+            <div className="flex items-center gap-2 px-6 py-2.5 bg-[#111827] border-b border-slate-800 overflow-x-auto text-xs font-bold">
+              {[
+                { id: 'Q1', title: 'Q1: ACID Properties' },
+                { id: 'Q2', title: 'Q2: BCNF Normalization' },
+                { id: 'Q3', title: 'Q3: SQL vs NoSQL' },
+                { id: 'Q4', title: 'Q4: B+ Tree Indexing' },
+                { id: 'Q5', title: 'Q5: Two-Phase Locking' },
+              ].map((q) => {
+                const isActive = sheetActiveQ === q.id;
+                return (
+                  <button
+                    key={q.id}
+                    type="button"
+                    onClick={() => handleSheetQuestionChange(q.id as any)}
+                    className={`px-3.5 py-1.5 rounded-xl transition flex items-center gap-1.5 shrink-0 ${
+                      isActive
+                        ? 'bg-indigo-600 text-white shadow-xs'
+                        : 'text-slate-400 hover:text-white hover:bg-slate-800'
+                    }`}
+                  >
+                    <span>{q.title}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Content Body: Left question prompt, Right ruled canvas */}
+            <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              {/* Left: Prompt & Evaluation Rubric */}
+              <div className="lg:col-span-5 space-y-4">
+                <div className="p-5 rounded-2xl bg-[#1E293B] border border-slate-800 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="px-2.5 py-1 rounded-lg bg-indigo-950 text-indigo-300 border border-indigo-800 text-xs font-bold">
+                      {sheetActiveQ} • Descriptive Theory
+                    </span>
+                    <span className="px-2.5 py-1 rounded-lg bg-emerald-950 text-emerald-300 border border-emerald-800 text-xs font-bold">
+                      10 Marks
+                    </span>
+                  </div>
+
+                  <h4 className="text-sm font-bold text-white leading-relaxed">
+                    {sheetActiveQ === 'Q1' && 'Explain the ACID properties (Atomicity, Consistency, Isolation, Durability) in Database Management Systems. Provide a concrete banking transaction scenario demonstrating how a crash between debit and credit operations violates Atomicity without Write-Ahead Logging (WAL).'}
+                    {sheetActiveQ === 'Q2' && 'Differentiate between 3NF and Boyce-Codd Normal Form (BCNF). Given the relation R(A, B, C, D) with F = { A -> B, B -> C, C -> D, D -> A }, identify candidate keys and show step-by-step lossless join decomposition.'}
+                    {sheetActiveQ === 'Q3' && 'Contrast Relational DBMS with NoSQL distributed systems. Discuss the CAP Theorem and analyze why traditional RDBMS prioritizes ACID while systems like MongoDB and Cassandra adopt BASE.'}
+                    {sheetActiveQ === 'Q4' && 'Describe the internal structure of a B+ Tree index in relational database engines. Why do database storage engines prefer B+ Trees over BSTs and B-Trees for disk-based storage? Illustrate node splitting during order 3 insertion.'}
+                    {sheetActiveQ === 'Q5' && 'Explain Concurrency Control in multi-user DBMS environments. Detail the Two-Phase Locking (2PL) protocol, distinguishing between Strict 2PL and Rigorous 2PL. Draw a lock acquisition graph proving conflict serializability.'}
+                  </h4>
+
+                  <div className="p-3.5 rounded-xl bg-[#0F172A] border border-slate-800 space-y-1">
+                    <span className="text-[11px] font-bold text-amber-400 block uppercase tracking-wider flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5" />
+                      Grading Rubric
+                    </span>
+                    <p className="text-xs text-slate-300 leading-normal">
+                      {sheetActiveQ === 'Q1' && '10 Marks: Atomicity explanation & WAL mechanics (3m), Consistency preservation (2m), Isolation levels (2m), Durability & Non-volatile recovery (3m).'}
+                      {sheetActiveQ === 'Q2' && '10 Marks: 3NF vs BCNF formal definitions (3m), Candidate key derivation (3m), Dependency preservation & Lossless decomposition steps (4m).'}
+                      {sheetActiveQ === 'Q3' && '10 Marks: Architectural comparison (3m), CAP Theorem triangle diagram & explanation (4m), BASE vs ACID trade-offs (3m).'}
+                      {sheetActiveQ === 'Q4' && '10 Marks: B+ Tree node layout & leaf linked list (3m), Fanout and Disk Block I/O efficiency (3m), Step-by-step insertion & node splitting diagram (4m).'}
+                      {sheetActiveQ === 'Q5' && '10 Marks: Concurrency anomalies (2m), Growing vs Shrinking phase of 2PL (3m), Strict vs Rigorous 2PL comparison (2m), Cascading abort prevention proof (3m).'}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-2xl bg-[#1E293B] border border-slate-800 space-y-2">
+                  <span className="text-xs font-bold text-slate-300 block">Inspection Summary</span>
+                  <div className="flex justify-between text-xs text-slate-400">
+                    <span>Stroke Count:</span>
+                    <strong className="text-emerald-400 font-mono">{sheetStrokes.length} digital ink strokes</strong>
+                  </div>
+                  <div className="flex justify-between text-xs text-slate-400">
+                    <span>Resolution:</span>
+                    <strong className="text-slate-200 font-mono">900 × 2400 continuous canvas</strong>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right: Answer Sheet Ruled Paper Canvas */}
+              <div className="lg:col-span-7 space-y-2">
+                <div className="flex items-center justify-between text-xs text-slate-400">
+                  <span className="font-semibold text-slate-300">Student Submitted Answer Sheet</span>
+                  {sheetLoading && (
+                    <span className="flex items-center gap-1.5 text-indigo-400">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      Loading answer strokes...
+                    </span>
+                  )}
+                </div>
+
+                <div className="relative border-2 border-slate-700 rounded-2xl overflow-hidden shadow-2xl bg-white max-h-[650px] overflow-y-auto">
+                  <canvas
+                    ref={sheetCanvasRef}
+                    width={900}
+                    height={2400}
+                    className="w-full h-auto block select-none bg-white"
+                  />
+                  {sheetStrokes.length === 0 && !sheetLoading && (
+                    <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center text-slate-500 bg-white/90">
+                      <FileText className="w-12 h-12 text-slate-400 mb-2" />
+                      <p className="font-bold text-sm text-slate-700">No strokes recorded for {sheetActiveQ}</p>
+                      <p className="text-xs text-slate-500 mt-1">The student did not write on this question sheet.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </div>
         </div>

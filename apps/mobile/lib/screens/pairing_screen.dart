@@ -53,8 +53,8 @@ class _PairingScreenState extends State<PairingScreen> {
       MaterialPageRoute(
         builder: (context) => ExamSheetScreen(
           sessionId: session,
-          questionId: question,
-          questionTitle: 'Question 1: Explain ACID Properties',
+          questionId: question.toUpperCase(),
+          questionTitle: 'Q1: ACID Properties',
           wsUrl: 'ws://$host/companion',
           proctorPinHash: defaultPinHash,
         ),

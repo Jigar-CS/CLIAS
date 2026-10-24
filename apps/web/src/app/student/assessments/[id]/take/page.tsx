@@ -44,6 +44,7 @@ import {
   FileText,
 } from 'lucide-react';
 import { AssessmentLeaderboardView } from '@/components/AssessmentLeaderboardModal';
+import { DescriptiveCompanionWorkspace } from '@/components/DescriptiveCompanionWorkspace';
 
 interface FaceFeatureProfile {
   grid: number[][]; // 8x8 normalized [r, g, b] cells
@@ -181,7 +182,12 @@ export default function TakeAssessmentPage() {
   const [codingActiveTab, setCodingActiveTab] = useState<'problem' | 'testcases'>('problem');
   const [isRunningCode, setIsRunningCode] = useState(false);
   const [runOutput, setRunOutput] = useState<any | null>(null);
-  const [activeTestCaseIdx, setActiveTestCaseIdx] = useState<number>(0);
+  // ---------------------------------------------------------------------------
+  // Descriptive Answer Companion & Exit Pass State
+  // ---------------------------------------------------------------------------
+  const [descriptiveStrokeCounts, setDescriptiveStrokeCounts] = useState<Record<string, number>>({});
+  const [exitPassCode, setExitPassCode] = useState<string | null>(null);
+  const [showExitPassModal, setShowExitPassModal] = useState<boolean>(false);
 
   // ---------------------------------------------------------------------------
   // Phase 9: AI Proctoring & Multi-Modal Telemetry State
@@ -272,6 +278,37 @@ export default function TakeAssessmentPage() {
       requestDevicePermissions();
     }
   }, [assessmentId]);
+
+  // Listen for question switches initiated remotely from paired mobile companion
+  useEffect(() => {
+    if (typeof window === 'undefined' || !examData) return;
+    const sId = examData.submissionId || examData.assessment?.id;
+    if (!sId) return;
+
+    let ws: WebSocket;
+    try {
+      ws = new WebSocket(
+        `ws://${window.location.hostname}:4000/companion?role=viewer&sessionId=${encodeURIComponent(sId)}`,
+      );
+      ws.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data);
+          if (msg.type === 'ACTIVE_QUESTION_CHANGED' && msg.questionId) {
+            const num = parseInt(msg.questionId.replace(/\D/g, ''), 10);
+            if (!isNaN(num) && num >= 1 && num <= (examData.questions?.length || 5)) {
+              setCurrentIdx(num - 1);
+            }
+          }
+        } catch {}
+      };
+    } catch {}
+
+    return () => {
+      try {
+        ws?.close();
+      } catch {}
+    };
+  }, [examData]);
 
   // Clean up media streams and audio context on unmount
   useEffect(() => {
@@ -571,6 +608,19 @@ export default function TakeAssessmentPage() {
   const isCodingTest = Boolean(
     examData?.questions?.some((q: any) => q.type === 'CODING' || q.codingProblem)
   );
+
+  const isDescriptiveTest = Boolean(
+    examData?.questions?.some((q: any) => q.type === 'SHORT_ANSWER' || q.type === 'DESCRIPTIVE')
+  );
+
+  const handleSwitchQuestion = (idx: number) => {
+    setCurrentIdx(idx);
+    setRunOutput(null);
+    const qLabel = `Q${idx + 1}`;
+    fetch(`/api/v1/companion/switch-question?sessionId=clias-session-9842&questionId=${qLabel}`, {
+      method: 'POST',
+    }).catch(() => {});
+  };
 
   const handleDismissTabSwitchModal = () => {
     if (tabSwitchAlertModal?.isTerminated) return;
@@ -900,7 +950,11 @@ export default function TakeAssessmentPage() {
               return true;
             });
 
-            if (phone) {
+            const isDescriptiveExam = examData?.questions?.some(
+              (q: any) => q.type === 'SHORT_ANSWER' || q.type === 'DESCRIPTIVE',
+            );
+
+            if (phone && !isDescriptiveExam) {
               consecutiveMobileDetectionRef.current += 1;
               // Require 2 consecutive cycles of confirmed detection to eliminate sensor glitches
               if (consecutiveMobileDetectionRef.current >= 2) {
@@ -1060,7 +1114,7 @@ export default function TakeAssessmentPage() {
         // -------------------------------------------------------------
         // C. 2-Strike Mobile Phone Policy & Automatic Test Termination
         // -------------------------------------------------------------
-        if (isMobileDetected) {
+        if (isMobileDetected && !isDescriptiveTest) {
           const now = Date.now();
           if (now - lastMobileStrikeTimeRef.current >= 4500 && !isAutoSubmittingRef.current) {
             lastMobileStrikeTimeRef.current = now;
@@ -1299,6 +1353,27 @@ export default function TakeAssessmentPage() {
     // Stop webcam stream tracks upon exam submission
     if (mediaStream) {
       mediaStream.getTracks().forEach((track) => track.stop());
+    }
+
+    // Call companion gateway to notify mobile client and generate random 6-digit Exit Pass
+    try {
+      const companionSession = 'clias-session-9842';
+      const companionRes = await fetch(`/api/v1/companion/submit?sessionId=${companionSession}`, {
+        method: 'POST',
+      });
+      if (companionRes.ok) {
+        const passData = await companionRes.json();
+        if (passData?.exitPass) {
+          setExitPassCode(passData.exitPass);
+          setShowExitPassModal(true);
+        }
+      }
+    } catch (e) {
+      console.warn('Companion exit pass call:', e);
+      // Fallback 6-digit random code if network issue
+      const fallbackPass = Math.floor(100000 + Math.random() * 900000).toString();
+      setExitPassCode(fallbackPass);
+      setShowExitPassModal(true);
     }
 
     const answerPayload = examData.questions.map((q: any) => ({
@@ -1598,6 +1673,20 @@ export default function TakeAssessmentPage() {
                 </span>
               </div>
             </div>
+
+            {exitPassCode && (
+              <div className="mt-6 p-6 rounded-2xl bg-gradient-to-r from-amber-500/10 via-amber-500/20 to-amber-500/10 border-2 border-amber-500/40 max-w-md mx-auto text-center space-y-2 shadow-lg animate-in fade-in zoom-in-95">
+                <span className="font-mono text-xs uppercase tracking-widest text-amber-600 dark:text-amber-400 font-extrabold block flex items-center justify-center gap-1.5">
+                  <Smartphone className="w-4 h-4" /> Proctor Exit Pass for Mobile Companion
+                </span>
+                <div className="font-mono text-4xl sm:text-5xl font-black text-amber-600 dark:text-amber-300 tracking-[0.25em] py-1 select-all">
+                  {exitPassCode}
+                </div>
+                <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                  Enter this 6-digit verification code on your mobile phone to safely exit Kiosk Lockdown mode.
+                </p>
+              </div>
+            )}
 
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               <button
@@ -2653,6 +2742,20 @@ export default function TakeAssessmentPage() {
                     )}
                   </div>
                 </div>
+              ) : (currentQ.type === 'SHORT_ANSWER' || currentQ.type === 'DESCRIPTIVE' || !currentQ.options || currentQ.options.length === 0) ? (
+                /* DESCRIPTIVE DIGITAL INK COMPANION WORKSPACE */
+                <DescriptiveCompanionWorkspace
+                  question={currentQ}
+                  questionNumber={currentIdx + 1}
+                  sessionId="clias-session-9842"
+                  onStrokeCountChange={(qId, count) => {
+                    setDescriptiveStrokeCounts((prev) => ({
+                      ...prev,
+                      [qId]: count,
+                      [`Q${currentIdx + 1}`]: count,
+                    }));
+                  }}
+                />
               ) : (
                 /* MCQ Question Options */
                 <div className="space-y-3 pt-2">
@@ -2692,10 +2795,7 @@ export default function TakeAssessmentPage() {
                 <button
                   type="button"
                   disabled={currentIdx === 0}
-                  onClick={() => {
-                    setCurrentIdx((prev) => Math.max(0, prev - 1));
-                    setRunOutput(null);
-                  }}
+                  onClick={() => handleSwitchQuestion(Math.max(0, currentIdx - 1))}
                   className="flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl transition disabled:opacity-40"
                 >
                   <ChevronLeft className="w-4 h-4" />
@@ -2705,10 +2805,7 @@ export default function TakeAssessmentPage() {
                 <button
                   type="button"
                   disabled={currentIdx === qList.length - 1}
-                  onClick={() => {
-                    setCurrentIdx((prev) => Math.min(qList.length - 1, prev + 1));
-                    setRunOutput(null);
-                  }}
+                  onClick={() => handleSwitchQuestion(Math.min(qList.length - 1, currentIdx + 1))}
                   className="flex items-center gap-1.5 px-4 py-2 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl transition disabled:opacity-40"
                 >
                   <span>Next</span>
@@ -2727,23 +2824,22 @@ export default function TakeAssessmentPage() {
               {qList.map((q: any, idx: number) => {
                 const isAnswered = (q.type === 'CODING' || q.codingProblem)
                   ? !!codingAnswers[q.id]?.sourceCode?.trim()
+                  : (q.type === 'SHORT_ANSWER' || q.type === 'DESCRIPTIVE' || !q.options || q.options.length === 0)
+                  ? (descriptiveStrokeCounts[q.id] || 0) > 0 || (descriptiveStrokeCounts[`Q${idx + 1}`] || 0) > 0
                   : !!answers[q.id];
                 const isCurrent = idx === currentIdx;
                 const isFlag = !!flagged[idx];
 
                 let btnClass = 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-400 border-slate-200 dark:border-slate-700';
-                if (isAnswered) btnClass = 'bg-amber-600 text-white border-amber-500 font-bold';
+                if (isAnswered) btnClass = 'bg-emerald-600 text-white border-emerald-500 font-bold';
                 if (isFlag) btnClass = 'bg-amber-100 dark:bg-amber-500/30 text-amber-800 dark:text-amber-300 border-amber-300 dark:border-amber-500 font-bold';
-                if (isCurrent) btnClass += ' ring-2 ring-amber-600 dark:ring-white';
+                if (isCurrent) btnClass += ' ring-2 ring-emerald-500 dark:ring-white';
 
                 return (
                   <button
                     key={q.id}
                     type="button"
-                    onClick={() => {
-                      setCurrentIdx(idx);
-                      setRunOutput(null);
-                    }}
+                    onClick={() => handleSwitchQuestion(idx)}
                     className={`h-10 rounded-xl border text-xs font-semibold flex items-center justify-center transition ${btnClass}`}
                   >
                     {idx + 1}
@@ -2769,6 +2865,43 @@ export default function TakeAssessmentPage() {
           </div>
         </div>
       </div>
+
+      {/* Dynamic Proctor Exit Pass Modal */}
+      {showExitPassModal && exitPassCode && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="max-w-md w-full bg-white dark:bg-slate-900 border-2 border-emerald-500/50 rounded-3xl p-6 sm:p-8 shadow-2xl text-center space-y-5 animate-in fade-in zoom-in-95">
+            <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 flex items-center justify-center mx-auto">
+              <CheckCircle2 className="w-9 h-9" />
+            </div>
+
+            <div>
+              <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-600 dark:text-emerald-400 font-extrabold block">
+                EXAMINATION SUBMITTED SUCCESSFULLY
+              </span>
+              <h3 className="text-xl font-black text-slate-900 dark:text-white mt-1">
+                Proctor Exit Pass Code
+              </h3>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
+              <div className="font-mono text-4xl sm:text-5xl font-black text-emerald-600 dark:text-emerald-400 tracking-[0.25em] py-2 select-all">
+                {exitPassCode}
+              </div>
+              <p className="text-xs text-slate-600 dark:text-slate-300 mt-2 leading-relaxed">
+                Enter this 6-digit verification code on your mobile companion phone to safely unlock Kiosk Lockdown mode.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowExitPassModal(false)}
+              className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-lg shadow-emerald-600/30 transition flex items-center justify-center gap-2"
+            >
+              <span>Done • View Full Results</span>
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

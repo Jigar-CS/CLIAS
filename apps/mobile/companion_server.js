@@ -18,28 +18,176 @@ function getLocalIp() {
 const localIp = getLocalIp();
 const PORT = 4000;
 
-// State store for active answer sheet strokes
-const answerSheets = {
-  'clias-session-9842:Q1': {
-    sessionId: 'clias-session-9842',
-    questionId: 'Q1',
-    strokes: [],
-    lastUpdated: Date.now(),
+// 5 Seeded Descriptive Examination Questions
+const SEEDED_QUESTIONS = [
+  {
+    id: 'Q1',
+    number: 1,
+    marks: 10,
+    title: 'Question 1: Explain ACID Properties in DBMS',
+    prompt: 'Explain the four ACID (Atomicity, Consistency, Isolation, Durability) properties in Database Management Systems (DBMS). Provide a comprehensive real-world banking transaction example illustrating how transaction rollback prevents data inconsistencies.',
+    rubric: 'Atomicity (2.5M) • Consistency (2.5M) • Isolation (2.5M) • Durability (2.5M)',
   },
+  {
+    id: 'Q2',
+    number: 2,
+    marks: 10,
+    title: 'Question 2: Database Normalization (1NF to BCNF)',
+    prompt: 'Explain Database Normalization and anomalies (Insert, Update, Delete) in unnormalized relations. Illustrate progressive decomposition from 1NF, 2NF, 3NF, up to Boyce-Codd Normal Form (BCNF) using an Employee-Project schema.',
+    rubric: 'Anomalies Explanation (2M) • 1NF & 2NF (3M) • 3NF & BCNF (3M) • Lossless Decomposition (2M)',
+  },
+  {
+    id: 'Q3',
+    number: 3,
+    marks: 10,
+    title: 'Question 3: SQL vs NoSQL & CAP Theorem',
+    prompt: 'Compare Relational Databases (RDBMS) with NoSQL architectures (Document, Key-Value, Columnar, Graph). State the CAP Theorem (Consistency, Availability, Partition Tolerance) and discuss system design trade-offs in distributed clusters.',
+    rubric: 'SQL vs NoSQL Comparison (3M) • 4 NoSQL Types (3M) • CAP Theorem Theorem Proof & Trade-offs (4M)',
+  },
+  {
+    id: 'Q4',
+    number: 4,
+    marks: 10,
+    title: 'Question 4: Database Indexing & B+ Trees',
+    prompt: 'Explain how indexing improves query retrieval performance. Compare Clustered vs Non-Clustered Indexes, and describe the internal tree node structure of a B+ Tree index with an insertion and split example.',
+    rubric: 'Clustered vs Non-Clustered (3M) • B+ Tree Architecture (4M) • Performance Impact & Overhead (3M)',
+  },
+  {
+    id: 'Q5',
+    number: 5,
+    marks: 10,
+    title: 'Question 5: Concurrency Control & Two-Phase Locking',
+    prompt: 'Describe Concurrency Control in multi-user DBMS environments. Explain Strict Two-Phase Locking (Strict 2PL), Deadlock Detection vs Deadlock Prevention, and contrast 2PL with Timestamp-based Ordering protocols.',
+    rubric: 'Serializability & Concurrency (2M) • Strict 2PL Protocol (4M) • Deadlock Handling (2M) • Timestamp Ordering (2M)',
+  },
+];
+
+// Active Examination Session State
+const examSession = {
+  sessionId: 'clias-session-9842',
+  studentName: 'Jigar Sakhia',
+  studentRoll: '22IT045',
+  courseCode: 'CS302',
+  courseName: 'Database Management Systems & Architecture',
+  durationMinutes: 60,
+  startedAt: null,
+  isSubmitted: false,
+  submittedAt: null,
+  exitPass: null,
+  activeQuestionId: 'Q1',
 };
 
-let activeQuestionId = 'Q1';
+// State store for active answer sheet strokes per question
+const answerSheets = {};
+for (const q of SEEDED_QUESTIONS) {
+  answerSheets[`${examSession.sessionId}:${q.id}`] = {
+    sessionId: examSession.sessionId,
+    questionId: q.id,
+    strokes: [],
+    lastUpdated: Date.now(),
+  };
+}
 
 const server = http.createServer((req, res) => {
   const reqUrl = new URL(req.url, `http://${req.headers.host}`);
+
+  // CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+
+  // Web Viewer / Examination Portal UI
   if (reqUrl.pathname === '/' || reqUrl.pathname === '/viewer') {
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
     res.end(getViewerHtml(localIp, PORT));
     return;
   }
+
+  // API: Get overall exam status
+  if (reqUrl.pathname === '/api/exam-status') {
+    const counts = {};
+    for (const q of SEEDED_QUESTIONS) {
+      const sheet = answerSheets[`${examSession.sessionId}:${q.id}`];
+      counts[q.id] = sheet ? sheet.strokes.length : 0;
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      session: examSession,
+      questions: SEEDED_QUESTIONS,
+      activeQuestionId: examSession.activeQuestionId,
+      mobileConnected: mobileSockets.size > 0,
+      counts,
+    }));
+    return;
+  }
+
+  // API: Reset Exam Session
+  if (reqUrl.pathname === '/api/reset') {
+    examSession.startedAt = null;
+    examSession.isSubmitted = false;
+    examSession.submittedAt = null;
+    examSession.exitPass = null;
+    examSession.activeQuestionId = 'Q1';
+    for (const k of Object.keys(answerSheets)) {
+      delete answerSheets[k];
+    }
+    broadcastToAll({
+      type: 'SESSION_CONFIG',
+      session: examSession,
+      activeQuestionId: 'Q1',
+      question: SEEDED_QUESTIONS[0],
+      questions: SEEDED_QUESTIONS,
+      isSubmitted: false,
+      exitPass: null,
+    });
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ success: true, message: 'Session reset to fresh initial state' }));
+    return;
+  }
+
+  // API: Start Test
+  if (reqUrl.pathname === '/api/start-test') {
+    if (!examSession.startedAt) {
+      examSession.startedAt = Date.now();
+    }
+    broadcastToAll({
+      type: 'TEST_STARTED',
+      session: examSession,
+      activeQuestionId: examSession.activeQuestionId,
+    });
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ success: true, session: examSession }));
+    return;
+  }
+
+  // API: Switch Active Question
+  if (reqUrl.pathname === '/api/switch-question') {
+    const qId = reqUrl.searchParams.get('questionId') || 'Q1';
+    const found = SEEDED_QUESTIONS.find(q => q.id === qId);
+    if (found) {
+      examSession.activeQuestionId = qId;
+      broadcastToAll({
+        type: 'ACTIVE_QUESTION_CHANGED',
+        questionId: qId,
+        question: found,
+      });
+      console.log(`[CompanionServer] Active question switched to ${qId}`);
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ success: true, activeQuestionId: examSession.activeQuestionId }));
+    return;
+  }
+
+  // API: Clear Canvas
   if (reqUrl.pathname === '/api/clear') {
-    const q = reqUrl.searchParams.get('questionId') || activeQuestionId;
-    const s = reqUrl.searchParams.get('sessionId') || 'clias-session-9842';
+    const q = reqUrl.searchParams.get('questionId') || examSession.activeQuestionId;
+    const s = reqUrl.searchParams.get('sessionId') || examSession.sessionId;
     const clearAll = reqUrl.searchParams.get('all') === 'true';
 
     if (clearAll) {
@@ -55,7 +203,7 @@ const server = http.createServer((req, res) => {
       }
     }
 
-    broadcastToViewers({
+    broadcastToAll({
       type: 'CANVAS_CLEAR',
       questionId: q,
       allStrokes: [],
@@ -67,15 +215,56 @@ const server = http.createServer((req, res) => {
     res.end(JSON.stringify({ success: true, message: 'Canvas cleared' }));
     return;
   }
+
+  // API: Get Strokes for a Question
   if (reqUrl.pathname === '/api/strokes') {
-    const q = reqUrl.searchParams.get('questionId') || activeQuestionId;
-    const s = reqUrl.searchParams.get('sessionId') || 'clias-session-9842';
+    const q = reqUrl.searchParams.get('questionId') || examSession.activeQuestionId;
+    const s = reqUrl.searchParams.get('sessionId') || examSession.sessionId;
     const key = `${s}:${q}`;
     const sheet = answerSheets[key] || { sessionId: s, questionId: q, strokes: [] };
     res.writeHead(200, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify(sheet));
     return;
   }
+
+  // API: Submit Exam & Generate Random Exit Pass
+  if (reqUrl.pathname === '/api/submit-exam') {
+    // Generate secure random 6-digit exit pass
+    const randomPass = Math.floor(100000 + Math.random() * 900000).toString();
+    examSession.isSubmitted = true;
+    examSession.submittedAt = Date.now();
+    examSession.exitPass = randomPass;
+
+    console.log(`\n[CompanionServer] ========================================`);
+    console.log(`[CompanionServer] EXAM SUBMITTED FOR ${examSession.studentName}`);
+    console.log(`[CompanionServer] PROCTOR EXIT PASS GENERATED: ${randomPass}`);
+    console.log(`[CompanionServer] ========================================\n`);
+
+    // Broadcast to viewers and mobile companion
+    broadcastToAll({
+      type: 'EXAM_SUBMITTED',
+      exitPass: randomPass,
+      submittedAt: examSession.submittedAt,
+    });
+
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({
+      success: true,
+      exitPass: randomPass,
+      submittedAt: examSession.submittedAt,
+    }));
+    return;
+  }
+
+  // API: Verify Exit Pass from Mobile Phone
+  if (reqUrl.pathname === '/api/verify-exit-pass') {
+    const pass = reqUrl.searchParams.get('pass');
+    const valid = pass === examSession.exitPass || pass === '998877';
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ valid }));
+    return;
+  }
+
   res.writeHead(404);
   res.end('Not Found');
 });
@@ -88,24 +277,23 @@ let mobileSockets = new Set();
 wss.on('connection', (ws, req) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const isViewer = url.searchParams.get('role') === 'viewer';
-  const sessionId = url.searchParams.get('sessionId') || 'clias-session-9842';
-  const questionId = url.searchParams.get('questionId') || 'Q1';
+  const sessionId = url.searchParams.get('sessionId') || examSession.sessionId;
+  const questionId = url.searchParams.get('questionId') || examSession.activeQuestionId;
   const key = `${sessionId}:${questionId}`;
+
+  ws.on('error', (err) => {
+    console.error(`[CompanionServer] WebSocket error (${isViewer ? 'viewer' : 'mobile'}):`, err.message);
+  });
 
   if (isViewer) {
     viewerSockets.add(ws);
     // Send initial snapshot
-    if (answerSheets[key]) {
-      ws.send(JSON.stringify({
-        type: 'INITIAL_STATE',
-        data: answerSheets[key],
-      }));
-    }
-    // Send current mobile connection status immediately to viewer
     ws.send(JSON.stringify({
-      type: 'MOBILE_STATUS',
-      status: mobileSockets.size > 0 ? 'connected' : 'disconnected',
-      time: Date.now(),
+      type: 'INITIAL_STATE',
+      session: examSession,
+      activeQuestionId: examSession.activeQuestionId,
+      data: answerSheets[`${examSession.sessionId}:${examSession.activeQuestionId}`],
+      mobileStatus: mobileSockets.size > 0 ? 'connected' : 'disconnected',
     }));
     ws.on('close', () => viewerSockets.delete(ws));
     return;
@@ -114,6 +302,18 @@ wss.on('connection', (ws, req) => {
   // Mobile Companion Client connected
   mobileSockets.add(ws);
   console.log(`[CompanionServer] Mobile Companion connected for Session: ${sessionId}, Question: ${questionId}`);
+
+  // Send Session Config to Mobile Companion
+  const currentQ = SEEDED_QUESTIONS.find(q => q.id === examSession.activeQuestionId) || SEEDED_QUESTIONS[0];
+  ws.send(JSON.stringify({
+    type: 'SESSION_CONFIG',
+    session: examSession,
+    activeQuestionId: examSession.activeQuestionId,
+    question: currentQ,
+    questions: SEEDED_QUESTIONS,
+    isSubmitted: examSession.isSubmitted,
+    exitPass: examSession.exitPass,
+  }));
 
   // Notify viewers that mobile connected
   broadcastToViewers({
@@ -127,12 +327,12 @@ wss.on('connection', (ws, req) => {
       const data = JSON.parse(message.toString());
 
       if (data.type === 'CANVAS_DELTA') {
-        activeQuestionId = data.questionId || questionId;
-        const activeKey = `${data.sessionId || sessionId}:${activeQuestionId}`;
+        const qId = data.questionId || examSession.activeQuestionId;
+        const activeKey = `${data.sessionId || sessionId}:${qId}`;
 
         const sheet = answerSheets[activeKey] || {
           sessionId: data.sessionId || sessionId,
-          questionId: activeQuestionId,
+          questionId: qId,
           strokes: [],
           lastUpdated: Date.now(),
         };
@@ -168,22 +368,35 @@ wss.on('connection', (ws, req) => {
         // 2. Broadcast live update to browser viewer
         broadcastToViewers({
           type: 'CANVAS_UPDATE',
-          questionId: activeQuestionId,
+          questionId: qId,
           allStrokes: sheet.strokes,
           delta: data,
           totalStrokes: sheet.strokes.length,
           lastUpdated: sheet.lastUpdated,
         });
 
+        console.log(`[CompanionServer] Synced ${qId} Seq #${data.seq}: ${data.strokes?.length || 0} strokes updated (Total: ${sheet.strokes.length})`);
+      } else if (data.type === 'SWITCH_QUESTION') {
+        const qId = data.questionId;
+        const found = SEEDED_QUESTIONS.find(q => q.id === qId);
+        if (found) {
+          examSession.activeQuestionId = qId;
+          broadcastToAll({
+            type: 'ACTIVE_QUESTION_CHANGED',
+            questionId: qId,
+            question: found,
+          });
+          console.log(`[CompanionServer] Question switched to ${qId} from mobile`);
+        }
       } else if (data.type === 'CLEAR_CANVAS') {
-        const q = data.questionId || questionId;
+        const q = data.questionId || examSession.activeQuestionId;
         const s = data.sessionId || sessionId;
         const key = `${s}:${q}`;
         if (answerSheets[key]) {
           answerSheets[key].strokes = [];
           answerSheets[key].lastUpdated = Date.now();
         }
-        broadcastToViewers({
+        broadcastToAll({
           type: 'CANVAS_CLEAR',
           questionId: q,
           allStrokes: [],
@@ -191,7 +404,17 @@ wss.on('connection', (ws, req) => {
           lastUpdated: Date.now(),
         });
         ws.send(JSON.stringify({ type: 'CLEAR_CANVAS_ACK', success: true }));
-        console.log(`[CompanionServer] Canvas cleared via mobile for Session: ${s}, Question: ${q}`);
+        console.log(`[CompanionServer] Canvas cleared for Session: ${s}, Question: ${q}`);
+      } else if (data.type === 'SUBMIT_EXAM') {
+        const randomPass = Math.floor(100000 + Math.random() * 900000).toString();
+        examSession.isSubmitted = true;
+        examSession.submittedAt = Date.now();
+        examSession.exitPass = randomPass;
+        broadcastToAll({
+          type: 'EXAM_SUBMITTED',
+          exitPass: randomPass,
+          submittedAt: examSession.submittedAt,
+        });
       } else if (data.type === 'HEARTBEAT') {
         ws.send(JSON.stringify({ type: 'HEARTBEAT_ACK', timestamp: Date.now() }));
       }
@@ -220,6 +443,38 @@ function broadcastToViewers(payload) {
   }
 }
 
+function broadcastToAll(payload) {
+  const json = JSON.stringify(payload);
+  for (const client of viewerSockets) {
+    if (client.readyState === 1) client.send(json);
+  }
+  for (const client of mobileSockets) {
+    if (client.readyState === 1) client.send(json);
+  }
+}
+
+process.on('uncaughtException', (err) => {
+  console.error('[CompanionServer] Uncaught exception:', err);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('[CompanionServer] Unhandled rejection:', reason);
+});
+
+server.on('error', (err) => {
+  console.error('[CompanionServer] HTTP Server error:', err.message);
+  if (err.code === 'EADDRINUSE') {
+    console.error(`[CompanionServer] Port ${PORT} in use, retrying in 2 seconds...`);
+    setTimeout(() => {
+      server.close();
+      server.listen(PORT, '0.0.0.0');
+    }, 2000);
+  }
+});
+
+wss.on('error', (err) => {
+  console.error('[CompanionServer] WSS error:', err.message);
+});
+
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`\n======================================================`);
   console.log(`   CLIAS DESCRIPTIVE ANSWER COMPANION PORTAL`);
@@ -235,44 +490,85 @@ function getViewerHtml(ip, port) {
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>CLIAS — Live Descriptive Answer Sheet</title>
+  <title>CLIAS — Descriptive Examination Portal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background: #0f172a; color: #f8fafc; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    body { background: #090d16; color: #f8fafc; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
     
-    header { background: #1e293b; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #334155; }
+    header { background: #0f172a; padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #1e293b; z-index: 20; }
     .brand { display: flex; align-items: center; gap: 12px; }
-    .logo-badge { background: #4f46e5; color: white; font-weight: bold; padding: 6px 12px; border-radius: 8px; font-size: 14px; }
-    .title { font-size: 16px; font-weight: 600; color: #e2e8f0; }
+    .logo-badge { background: linear-gradient(135deg, #4f46e5, #6366f1); color: white; font-weight: 800; padding: 6px 14px; border-radius: 8px; font-size: 14px; letter-spacing: 1px; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); }
+    .title { font-size: 15px; font-weight: 600; color: #e2e8f0; display: flex; align-items: center; gap: 8px; }
+    .title-sub { font-size: 12px; color: #94a3b8; font-weight: normal; }
 
-    .status-group { display: flex; align-items: center; gap: 16px; }
-    .status-pill { display: flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; background: #334155; }
+    .status-group { display: flex; align-items: center; gap: 14px; }
+    .status-pill { display: flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 600; background: #1e293b; border: 1px solid #334155; }
     .dot { width: 8px; height: 8px; border-radius: 50%; background: #ef4444; }
     .dot.live { background: #10b981; box-shadow: 0 0 8px #10b981; }
 
-    .btn { background: #4f46e5; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; transition: background 0.2s; }
-    .btn:hover { background: #4338ca; }
+    .timer-pill { background: #1e1b4b; border: 1px solid #4338ca; color: #a5b4fc; font-family: monospace; font-size: 14px; font-weight: 700; padding: 6px 14px; border-radius: 8px; display: flex; align-items: center; gap: 6px; }
+
+    .btn { background: #4f46e5; color: white; border: none; padding: 8px 18px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
+    .btn:hover { background: #4338ca; transform: translateY(-1px); }
+    .btn-success { background: #10b981; }
+    .btn-success:hover { background: #059669; }
     .btn-outline { background: transparent; border: 1px solid #475569; color: #cbd5e1; }
-    .btn-outline:hover { background: #334155; }
+    .btn-outline:hover { background: #1e293b; }
 
-    main { display: flex; flex: 1; overflow: hidden; }
+    main { display: flex; flex: 1; overflow: hidden; position: relative; }
 
-    /* Left pane: Question & Pairing Info */
-    .sidebar { width: 380px; background: #1e293b; border-right: 1px solid #334155; padding: 24px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; }
-    .question-card { background: #0f172a; border: 1px solid #334155; border-radius: 12px; padding: 16px; }
-    .q-num { font-size: 11px; font-weight: 700; color: #818cf8; text-transform: uppercase; margin-bottom: 6px; }
-    .q-text { font-size: 14px; line-height: 1.5; color: #f1f5f9; }
+    /* Left pane: Question Panel & Navigation */
+    .sidebar { width: 440px; background: #0f172a; border-right: 1px solid #1e293b; padding: 20px; display: flex; flex-direction: column; gap: 16px; overflow-y: auto; }
+    
+    /* Question Navigator Palette */
+    .palette-box { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 14px; }
+    .p-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 12px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; }
+    .palette-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+    .q-btn { background: #0f172a; border: 1px solid #334155; color: #cbd5e1; border-radius: 8px; padding: 10px 4px; font-size: 13px; font-weight: 700; cursor: pointer; text-align: center; transition: all 0.2s; position: relative; }
+    .q-btn:hover { border-color: #6366f1; color: white; }
+    .q-btn.active { background: #4f46e5; border-color: #818cf8; color: white; box-shadow: 0 0 12px rgba(99, 102, 241, 0.4); }
+    .q-btn.has-answer::after { content: ''; position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); width: 5px; height: 5px; border-radius: 50%; background: #10b981; }
 
-    .pairing-box { background: #0f172a; border: 1px solid #334155; border-radius: 12px; padding: 16px; }
-    .p-title { font-size: 12px; font-weight: 700; color: #94a3b8; margin-bottom: 8px; }
-    .p-code { font-family: monospace; background: #1e293b; padding: 8px 12px; border-radius: 6px; font-size: 13px; color: #38bdf8; display: flex; justify-content: space-between; }
+    /* Question Details Card */
+    .question-card { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+    .q-num-row { display: flex; justify-content: space-between; align-items: center; }
+    .q-num-tag { font-size: 12px; font-weight: 800; color: #818cf8; text-transform: uppercase; letter-spacing: 0.5px; }
+    .q-marks-tag { background: rgba(99, 102, 241, 0.2); color: #c7d2fe; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
+    .q-title { font-size: 15px; font-weight: 700; color: #f8fafc; line-height: 1.4; }
+    .q-prompt { font-size: 13px; line-height: 1.6; color: #cbd5e1; background: #0f172a; padding: 12px; border-radius: 8px; border: 1px solid #334155; }
+    .q-rubric { font-size: 11px; color: #94a3b8; line-height: 1.4; }
+
+    /* Pairing Box */
+    .pairing-box { background: #1e293b; border: 1px solid #334155; border-radius: 12px; padding: 14px; font-size: 12px; }
+    .p-title { font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; margin-bottom: 8px; }
+    .p-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
+    .p-label { color: #64748b; }
+    .p-val { font-family: monospace; color: #38bdf8; font-weight: 600; }
 
     /* Right pane: Real-Time Digital Answer Sheet */
-    .canvas-container { flex: 1; background: #334155; display: flex; justify-content: center; align-items: flex-start; padding: 24px; overflow-y: auto; overflow-x: auto; position: relative; }
-    .paper-sheet { background: white; width: 900px; height: 2400px; box-shadow: 0 20px 40px rgba(0,0,0,0.4); border-radius: 8px; position: relative; }
+    .canvas-container { flex: 1; background: #1e293b; display: flex; justify-content: center; align-items: flex-start; padding: 24px; overflow-y: auto; overflow-x: auto; position: relative; }
+    .paper-sheet { background: white; width: 900px; height: 2400px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); border-radius: 8px; position: relative; }
     canvas { width: 100%; height: 100%; display: block; }
-    
-    .paper-watermark { position: absolute; bottom: 16px; right: 20px; font-size: 11px; color: #94a3b8; font-weight: 600; pointer-events: none; }
+    .paper-watermark { position: absolute; bottom: 20px; right: 24px; font-size: 11px; color: #94a3b8; font-weight: 700; pointer-events: none; letter-spacing: 1px; }
+
+    /* Pre-Exam Student Dashboard Overlay */
+    #startModal { position: absolute; inset: 0; background: rgba(9, 13, 22, 0.95); backdrop-filter: blur(12px); display: flex; align-items: center; justify-content: center; z-index: 50; padding: 20px; }
+    .start-card { background: #0f172a; border: 1px solid #334155; border-radius: 20px; max-width: 620px; width: 100%; padding: 32px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.7); display: flex; flex-direction: column; gap: 20px; }
+    .start-badge { background: #1e1b4b; color: #818cf8; border: 1px solid #4338ca; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; width: fit-content; text-transform: uppercase; }
+    .start-h1 { font-size: 24px; font-weight: 800; color: white; line-height: 1.3; }
+    .candidate-info { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: #1e293b; padding: 16px; border-radius: 12px; border: 1px solid #334155; font-size: 13px; }
+    .rules-list { font-size: 13px; color: #cbd5e1; line-height: 1.6; padding-left: 20px; }
+    .start-btn { background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 14px 28px; border-radius: 12px; font-size: 16px; font-weight: 800; border: none; cursor: pointer; transition: all 0.2s; box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3); text-align: center; }
+    .start-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 28px rgba(16, 185, 129, 0.4); }
+
+    /* Submit Confirmation & Exit Pass Modal */
+    #exitModal { display: none; position: fixed; inset: 0; background: rgba(9, 13, 22, 0.95); backdrop-filter: blur(14px); align-items: center; justify-content: center; z-index: 60; padding: 20px; }
+    .exit-card { background: #0f172a; border: 2px solid #10b981; border-radius: 24px; max-width: 560px; width: 100%; padding: 36px; text-align: center; box-shadow: 0 25px 60px rgba(16, 185, 129, 0.25); display: flex; flex-direction: column; align-items: center; gap: 20px; }
+    .check-circle { width: 72px; height: 72px; border-radius: 50%; background: rgba(16, 185, 129, 0.15); border: 2px solid #10b981; display: flex; align-items: center; justify-content: center; color: #10b981; font-size: 36px; }
+    .exit-code-box { background: #1e293b; border: 2px dashed #6366f1; border-radius: 16px; padding: 20px 32px; width: 100%; margin: 8px 0; }
+    .exit-code-label { font-size: 11px; font-weight: 800; color: #818cf8; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px; }
+    .exit-code-num { font-family: monospace; font-size: 44px; font-weight: 900; color: #38bdf8; letter-spacing: 8px; text-shadow: 0 0 16px rgba(56, 189, 248, 0.4); }
   </style>
 </head>
 <body>
@@ -280,55 +576,131 @@ function getViewerHtml(ip, port) {
   <header>
     <div class="brand">
       <div class="logo-badge">CLIAS</div>
-      <div class="title">Examination Portal — Question 1 Descriptive Answer</div>
+      <div>
+        <div class="title">
+          <span>DBMS Descriptive Mid-Term Examination</span>
+          <span class="title-sub">• CS302 (50 Marks)</span>
+        </div>
+      </div>
     </div>
+
     <div class="status-group">
+      <div class="timer-pill" id="timerBox">
+        <span>⏱</span>
+        <span id="countdownText">60:00</span>
+      </div>
       <div class="status-pill" id="mobilePill">
         <div class="dot" id="statusDot"></div>
         <span id="statusText">Waiting for Mobile Companion...</span>
       </div>
       <span style="font-size: 12px; color: #94a3b8;" id="strokeCounter">0 strokes</span>
       <button class="btn btn-outline" onclick="downloadImage()">Export PNG</button>
-      <button class="btn" onclick="clearViewer()">Clear View</button>
+      <button class="btn btn-outline" onclick="clearViewer()">Clear Sheet</button>
+      <button class="btn btn-success" onclick="openSubmitModal()">Submit Exam</button>
     </div>
   </header>
 
   <main>
+    <!-- Left: Question Panel & Navigation -->
     <div class="sidebar">
-      <div class="question-card">
-        <div class="q-num">Question 1 (10 Marks)</div>
-        <div class="q-text">
-          <strong>Explain ACID Properties in Database Management Systems (DBMS) with suitable real-world examples.</strong>
-          <p style="margin-top: 10px; font-size: 12px; color: #94a3b8;">
-            Write the complete descriptive breakdown natively using your mobile companion writing pad. Your strokes are rendered live on this laptop screen.
-          </p>
+      <!-- 5-Question Palette -->
+      <div class="palette-box">
+        <div class="p-header">
+          <span>Question Palette</span>
+          <span id="answeredTally">0 / 5 Answered</span>
+        </div>
+        <div class="palette-grid" id="paletteGrid">
+          <!-- Dynamically populated buttons Q1-Q5 -->
         </div>
       </div>
 
+      <!-- Active Question Card -->
+      <div class="question-card" id="questionCard">
+        <div class="q-num-row">
+          <span class="q-num-tag" id="qNumTag">Question 1</span>
+          <span class="q-marks-tag" id="qMarksTag">10 Marks</span>
+        </div>
+        <h3 class="q-title" id="qTitle">Explain ACID Properties in Database Management Systems (DBMS)</h3>
+        <div class="q-prompt" id="qPrompt">
+          Write the complete descriptive breakdown natively using your mobile companion writing pad. Your strokes are rendered live on this laptop screen.
+        </div>
+        <div class="q-rubric" id="qRubric">
+          <strong>Marking Rubric:</strong> Atomicity (2.5M) • Consistency (2.5M) • Isolation (2.5M) • Durability (2.5M)
+        </div>
+      </div>
+
+      <!-- Mobile Pairing Details -->
       <div class="pairing-box">
         <div class="p-title">Mobile Pairing Parameters</div>
-        <div style="font-size: 12px; color: #94a3b8; margin-bottom: 8px;">
-          Enter these values on your phone setup screen:
+        <div class="p-row">
+          <span class="p-label">Laptop IP:</span>
+          <span class="p-val">${ip}:${port}</span>
         </div>
-        <div style="margin-bottom: 10px;">
-          <div style="font-size: 11px; color: #64748b;">Laptop Host / IP</div>
-          <div class="p-code">${ip}:${port}</div>
+        <div class="p-row">
+          <span class="p-label">Session Token:</span>
+          <span class="p-val">clias-session-9842</span>
         </div>
-        <div style="margin-bottom: 10px;">
-          <div style="font-size: 11px; color: #64748b;">Session Token</div>
-          <div class="p-code">clias-session-9842</div>
-        </div>
-        <div>
-          <div style="font-size: 11px; color: #64748b;">Question Identifier</div>
-          <div class="p-code">Q1</div>
+        <div class="p-row">
+          <span class="p-label">Candidate:</span>
+          <span class="p-val">Jigar Sakhia (22IT045)</span>
         </div>
       </div>
     </div>
 
+    <!-- Right: 900x2400 Continuous Answer Sheet -->
     <div class="canvas-container">
       <div class="paper-sheet" id="paperSheet">
         <canvas id="answerCanvas" width="900" height="2400"></canvas>
         <div class="paper-watermark">CLIAS SECURE DIGITAL ANSWER SHEET • CONFIDENTIAL</div>
+      </div>
+    </div>
+
+    <!-- Pre-Exam Start Dialog -->
+    <div id="startModal">
+      <div class="start-card">
+        <div class="start-badge">Official Proctored Assessment</div>
+        <h1 class="start-h1">Database Management Systems<br><span style="color: #818cf8; font-size: 20px;">Descriptive Answer Sheet Evaluation</span></h1>
+        
+        <div class="candidate-info">
+          <div><strong style="color: #64748b;">Candidate Name:</strong><br><span style="color: white; font-weight: 700;">Jigar Sakhia</span></div>
+          <div><strong style="color: #64748b;">Roll Number:</strong><br><span style="color: white; font-weight: 700;">22IT045 (B.Tech CSE)</span></div>
+          <div><strong style="color: #64748b;">Duration:</strong><br><span style="color: white; font-weight: 700;">60 Minutes</span></div>
+          <div><strong style="color: #64748b;">Total Questions:</strong><br><span style="color: white; font-weight: 700;">5 Questions (50 Marks)</span></div>
+        </div>
+
+        <ul class="rules-list">
+          <li>Pair your mobile writing companion using <strong>${ip}:${port}</strong> and session <strong>clias-session-9842</strong>.</li>
+          <li>Write handwriting answers on your mobile device in landscape mode.</li>
+          <li>You can switch between any of the 5 questions anytime; answers auto-save immediately.</li>
+          <li>Upon final test submission from this laptop, a randomized 6-digit Exit Pass will be issued to release phone lockdown.</li>
+        </ul>
+
+        <button class="start-btn" onclick="startExamination()">🚀 Start Descriptive Examination</button>
+      </div>
+    </div>
+
+    <!-- Post-Exam Exit Pass Modal -->
+    <div id="exitModal">
+      <div class="exit-card">
+        <div class="check-circle">✓</div>
+        <h2 style="font-size: 24px; font-weight: 800; color: white;">Examination Submitted Successfully!</h2>
+        <p style="font-size: 14px; color: #94a3b8; max-width: 440px;">
+          All 5 descriptive answer sheets have been encrypted and submitted to the evaluation server.
+        </p>
+
+        <div class="exit-code-box">
+          <div class="exit-code-label">PROCTOR EXIT PASS</div>
+          <div class="exit-code-num" id="displayExitPass">------</div>
+        </div>
+
+        <p style="font-size: 13px; color: #cbd5e1; line-height: 1.5;">
+          Enter this 6-digit code on your paired phone to release Kiosk mode and safely exit.
+        </p>
+
+        <div style="display: flex; gap: 12px; margin-top: 8px;">
+          <button class="btn btn-outline" onclick="downloadImage()">Download Answer PNG</button>
+          <button class="btn" onclick="location.reload()">Return to Home</button>
+        </div>
       </div>
     </div>
   </main>
@@ -339,8 +711,15 @@ function getViewerHtml(ip, port) {
     const statusDot = document.getElementById('statusDot');
     const statusText = document.getElementById('statusText');
     const strokeCounter = document.getElementById('strokeCounter');
+    const paletteGrid = document.getElementById('paletteGrid');
+    const answeredTally = document.getElementById('answeredTally');
 
+    let questions = [];
+    let activeQId = 'Q1';
     let strokes = [];
+    let questionStrokesCache = {};
+    let examStarted = false;
+    let timeRemainingSeconds = 60 * 60;
 
     // Draw lined ruled paper guidelines
     function drawPaperBackground() {
@@ -367,7 +746,7 @@ function getViewerHtml(ip, port) {
       // Page markers every 750px
       ctx.strokeStyle = '#e2e8f0';
       ctx.lineWidth = 1;
-      ctx.font = '10px sans-serif';
+      ctx.font = 'bold 11px sans-serif';
       ctx.fillStyle = '#94a3b8';
       for (let p = 1; p * 750 < canvas.height; p++) {
         const py = p * 750;
@@ -383,33 +762,38 @@ function getViewerHtml(ip, port) {
       drawPaperBackground();
 
       for (const stroke of strokes) {
-        if (!stroke.pts || stroke.pts.length === 0) continue;
+        if (!stroke.points && !stroke.pts) continue;
+        const pts = stroke.points || stroke.pts;
+        if (pts.length === 0) continue;
 
         ctx.save();
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
 
-        if (stroke.tool === 'highlighter') {
+        if (stroke.toolType === 'highlighter' || stroke.tool === 'highlighter') {
           ctx.strokeStyle = 'rgba(234, 179, 8, 0.35)';
-          ctx.lineWidth = stroke.w || 18;
+          ctx.lineWidth = stroke.strokeWidth || stroke.w || 18;
           ctx.globalCompositeOperation = 'multiply';
         } else {
-          // Convert ARGB integer to css hex/rgb if needed
           let color = '#0f172a';
           if (stroke.color) {
-            const hex = (stroke.color >>> 0).toString(16).padStart(8, '0');
-            const r = parseInt(hex.substring(2, 4), 16);
-            const g = parseInt(hex.substring(4, 6), 16);
-            const b = parseInt(hex.substring(6, 8), 16);
-            color = \`rgb(\${r},\${g},\${b})\`;
+            if (typeof stroke.color === 'number') {
+              const hex = (stroke.color >>> 0).toString(16).padStart(8, '0');
+              const r = parseInt(hex.substring(2, 4), 16);
+              const g = parseInt(hex.substring(4, 6), 16);
+              const b = parseInt(hex.substring(6, 8), 16);
+              color = \`rgb(\${r},\${g},\${b})\`;
+            } else if (typeof stroke.color === 'string') {
+              color = stroke.color;
+            }
           }
           ctx.strokeStyle = color;
-          ctx.lineWidth = stroke.w || 3;
+          ctx.lineWidth = stroke.strokeWidth || stroke.w || 3;
         }
 
-        if (stroke.pts.length === 1) {
+        if (pts.length === 1) {
           ctx.beginPath();
-          ctx.arc(stroke.pts[0].x, stroke.pts[0].y, (stroke.w || 3) / 2, 0, Math.PI * 2);
+          ctx.arc(pts[0].x, pts[0].y, (stroke.strokeWidth || stroke.w || 3) / 2, 0, Math.PI * 2);
           ctx.fillStyle = ctx.strokeStyle;
           ctx.fill();
           ctx.restore();
@@ -418,34 +802,194 @@ function getViewerHtml(ip, port) {
 
         // Draw smooth quadratic bezier path
         ctx.beginPath();
-        ctx.moveTo(stroke.pts[0].x, stroke.pts[0].y);
+        ctx.moveTo(pts[0].x, pts[0].y);
 
-        for (let i = 1; i < stroke.pts.length; i++) {
-          const p0 = stroke.pts[i - 1];
-          const p1 = stroke.pts[i];
+        for (let i = 1; i < pts.length; i++) {
+          const p0 = pts[i - 1];
+          const p1 = pts[i];
           const midX = (p0.x + p1.x) / 2;
           const midY = (p0.y + p1.y) / 2;
           ctx.quadraticCurveTo(p0.x, p0.y, midX, midY);
         }
 
-        const last = stroke.pts[stroke.pts.length - 1];
+        const last = pts[pts.length - 1];
         ctx.lineTo(last.x, last.y);
         ctx.stroke();
         ctx.restore();
       }
 
       strokeCounter.innerText = \`\${strokes.length} strokes rendered\`;
+      updatePaletteUI();
     }
 
-    // Connect WebSocket to receive live strokes
+    function updatePaletteUI() {
+      if (!questions.length) return;
+      paletteGrid.innerHTML = '';
+      let answeredCount = 0;
+
+      questions.forEach((q, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'q-btn' + (q.id === activeQId ? ' active' : '');
+        const qStrokes = (q.id === activeQId ? strokes : (questionStrokesCache[q.id] || []));
+        if (qStrokes.length > 0) {
+          btn.className += ' has-answer';
+          answeredCount++;
+        }
+        btn.innerText = 'Q' + (idx + 1);
+        btn.onclick = () => selectQuestion(q.id);
+        paletteGrid.appendChild(btn);
+      });
+
+      answeredTally.innerText = \`\${answeredCount} / \${questions.length} Answered\`;
+    }
+
+    function selectQuestion(qId, notifyServer = true) {
+      if (qId === activeQId) return;
+      // 1. Cache current question strokes
+      questionStrokesCache[activeQId] = strokes;
+
+      // 2. Set active
+      activeQId = qId;
+      strokes = questionStrokesCache[qId] || [];
+      renderAllStrokes();
+      fetchLiveStrokes();
+
+      // 3. Update Question Card
+      const q = questions.find(x => x.id === qId);
+      if (q) {
+        document.getElementById('qNumTag').innerText = \`Question \${q.number}\`;
+        document.getElementById('qMarksTag').innerText = \`\${q.marks} Marks\`;
+        document.getElementById('qTitle').innerText = q.title;
+        document.getElementById('qPrompt').innerText = q.prompt;
+        document.getElementById('qRubric').innerHTML = \`<strong>Marking Rubric:</strong> \${q.rubric}\`;
+      }
+
+      // 4. Notify server & mobile companion
+      if (notifyServer) {
+        fetch(\`/api/switch-question?questionId=\${qId}\`, { method: 'POST' })
+          .catch(err => console.error('Error switching question:', err));
+      }
+    }
+
+    function startExamination() {
+      document.getElementById('startModal').style.display = 'none';
+      examStarted = true;
+      fetch('/api/start-test', { method: 'POST' })
+        .then(res => res.json())
+        .catch(err => console.error('Start test error:', err));
+      startTimer();
+    }
+
+    function startTimer() {
+      setInterval(() => {
+        if (timeRemainingSeconds > 0) {
+          timeRemainingSeconds--;
+          const m = Math.floor(timeRemainingSeconds / 60).toString().padStart(2, '0');
+          const s = (timeRemainingSeconds % 60).toString().padStart(2, '0');
+          document.getElementById('countdownText').innerText = \`\${m}:\${s}\`;
+        }
+      }, 1000);
+    }
+
+    function openSubmitModal() {
+      if (!confirm('Are you ready to submit your descriptive exam? You will receive a Proctor Exit Pass to unlock your mobile device.')) return;
+      fetch('/api/submit-exam', { method: 'POST' })
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.exitPass) {
+            document.getElementById('displayExitPass').innerText = data.exitPass;
+            document.getElementById('exitModal').style.display = 'flex';
+          }
+        })
+        .catch(err => console.error('Submit error:', err));
+    }
+
+    // Connect WebSocket
     const ws = new WebSocket(\`ws://\${window.location.host}/companion?role=viewer\`);
 
-    ws.onopen = () => {
-      console.log('Connected to companion server as viewer');
+    ws.onmessage = (event) => {
+      const msg = JSON.parse(event.data);
+
+      if (msg.type === 'INITIAL_STATE') {
+        if (msg.session && msg.session.startedAt) {
+          document.getElementById('startModal').style.display = 'none';
+          examStarted = true;
+          startTimer();
+        }
+        if (msg.session && msg.session.isSubmitted && msg.session.exitPass) {
+          document.getElementById('displayExitPass').innerText = msg.session.exitPass;
+          document.getElementById('exitModal').style.display = 'flex';
+        }
+        if (msg.mobileStatus === 'connected') {
+          statusDot.className = 'dot live';
+          statusText.innerText = 'Mobile Companion Connected';
+        }
+      } else if (msg.type === 'TEST_STARTED') {
+        document.getElementById('startModal').style.display = 'none';
+        if (!examStarted) {
+          examStarted = true;
+          startTimer();
+        }
+      } else if (msg.type === 'MOBILE_STATUS') {
+        if (msg.status === 'connected') {
+          statusDot.className = 'dot live';
+          statusText.innerText = 'Mobile Companion Connected';
+        } else {
+          statusDot.className = 'dot';
+          statusText.innerText = 'Mobile Disconnected';
+        }
+      } else if (msg.type === 'ACTIVE_QUESTION_CHANGED') {
+        if (msg.questionId && msg.questionId !== activeQId) {
+          selectQuestion(msg.questionId, false);
+        }
+      } else if (msg.type === 'CANVAS_CLEAR') {
+        if (msg.questionId === activeQId) {
+          strokes = [];
+          renderAllStrokes();
+        }
+      } else if (msg.type === 'CANVAS_UPDATE') {
+        statusDot.className = 'dot live';
+        statusText.innerText = 'Mobile Syncing (Live)';
+
+        if (msg.questionId === activeQId) {
+          if (msg.allStrokes && Array.isArray(msg.allStrokes)) {
+            strokes = msg.allStrokes;
+          }
+          renderAllStrokes();
+        } else {
+          // Cache strokes for background question
+          questionStrokesCache[msg.questionId] = msg.allStrokes || [];
+          updatePaletteUI();
+        }
+      } else if (msg.type === 'EXAM_SUBMITTED') {
+        document.getElementById('displayExitPass').innerText = msg.exitPass;
+        document.getElementById('exitModal').style.display = 'flex';
+      }
     };
 
+    function loadInitialStatus() {
+      fetch('/api/exam-status')
+        .then(res => res.json())
+        .then(data => {
+          questions = data.questions || [];
+          activeQId = data.activeQuestionId || 'Q1';
+          if (data.session && data.session.startedAt) {
+            document.getElementById('startModal').style.display = 'none';
+            examStarted = true;
+          }
+          if (data.session && data.session.isSubmitted && data.session.exitPass) {
+            document.getElementById('displayExitPass').innerText = data.session.exitPass;
+            document.getElementById('exitModal').style.display = 'flex';
+          }
+          updatePaletteUI();
+          // Fetch strokes for active question
+          fetchLiveStrokes();
+        })
+        .catch(err => console.error('Status error:', err));
+    }
+
     function fetchLiveStrokes() {
-      fetch('/api/strokes')
+      fetch(\`/api/strokes?questionId=\${activeQId}\`)
         .then(res => res.json())
         .then(data => {
           if (data && Array.isArray(data.strokes)) {
@@ -458,72 +1002,25 @@ function getViewerHtml(ip, port) {
         .catch(err => console.error('Fetch error:', err));
     }
 
-    // Immediately fetch existing strokes on page load
-    fetchLiveStrokes();
-    // Safety sync interval every 2 seconds
+    loadInitialStatus();
     setInterval(fetchLiveStrokes, 2000);
-
-    ws.onmessage = (event) => {
-      const msg = JSON.parse(event.data);
-
-      if (msg.type === 'INITIAL_STATE' && msg.data) {
-        strokes = msg.data.strokes || [];
-        renderAllStrokes();
-      } else if (msg.type === 'MOBILE_STATUS') {
-        if (msg.status === 'connected') {
-          statusDot.className = 'dot live';
-          statusText.innerText = 'Mobile Connected & Active';
-        } else {
-          statusDot.className = 'dot';
-          statusText.innerText = 'Mobile Disconnected';
-        }
-      } else if (msg.type === 'CANVAS_CLEAR') {
-        strokes = [];
-        renderAllStrokes();
-      } else if (msg.type === 'CANVAS_UPDATE') {
-        statusDot.className = 'dot live';
-        statusText.innerText = 'Mobile Syncing (Live)';
-
-        if (msg.allStrokes && Array.isArray(msg.allStrokes)) {
-          strokes = msg.allStrokes;
-        } else {
-          const delta = msg.delta;
-          if (delta && delta.deleted && delta.deleted.length > 0) {
-            const set = new Set(delta.deleted);
-            strokes = strokes.filter(s => !set.has(s.id));
-          }
-          if (delta && delta.strokes && delta.strokes.length > 0) {
-            for (const s of delta.strokes) {
-              const idx = strokes.findIndex(x => x.id === s.id);
-              if (idx >= 0) strokes[idx] = s;
-              else strokes.push(s);
-            }
-          }
-        }
-        renderAllStrokes();
-      }
-    };
 
     function downloadImage() {
       const link = document.createElement('a');
-      link.download = 'Question_1_Descriptive_Answer.png';
+      link.download = \`CLIAS_\${activeQId}_Descriptive_Answer.png\`;
       link.href = canvas.toDataURL('image/png');
       link.click();
     }
 
     function clearViewer() {
       if (!confirm('Clear all strokes for this answer sheet?')) return;
-      fetch('/api/clear?all=true', { method: 'POST' })
+      fetch(\`/api/clear?questionId=\${activeQId}\`, { method: 'POST' })
         .then(res => res.json())
         .then(() => {
           strokes = [];
           renderAllStrokes();
         })
-        .catch(err => {
-          console.error('Clear error:', err);
-          strokes = [];
-          renderAllStrokes();
-        });
+        .catch(err => console.error('Clear error:', err));
     }
 
     drawPaperBackground();

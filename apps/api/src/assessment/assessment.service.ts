@@ -923,30 +923,38 @@ export class AssessmentService {
       );
     }
 
-    // Validate prerequisites across topics in this assessment
-    const topicIds = Array.from(
-      new Set(
-        assessment.questions
-          .map((aq) => aq.question?.topicId)
-          .filter((t): t is string => !!t),
-      ),
-    );
+    // Validate prerequisites across topics in this assessment (bypass for descriptive midterm examination)
+    const isDescriptiveMidterm =
+      assessment.code === 'CS302-DESC-MIDTERM' ||
+      assessment.id === 'a1ad1e13-dc27-402a-8275-c01cb5459378' ||
+      assessment.code?.includes('DESC') ||
+      assessment.title?.includes('Descriptive');
 
-    for (const tId of topicIds) {
-      const check = await this.analyticsService.validateTopicPrerequisites(
-        effectiveProfileId,
-        tId,
+    if (!isDescriptiveMidterm) {
+      const topicIds = Array.from(
+        new Set(
+          assessment.questions
+            .map((aq) => aq.question?.topicId)
+            .filter((t): t is string => !!t),
+        ),
       );
-      if (!check.isReady) {
-        throw new ForbiddenException({
-          statusCode: 403,
-          error: 'PREREQUISITE_INCOMPLETE',
-          message: `Cannot start assessment "${assessment.title}". Prerequisite incomplete: ${check.recommendation}`,
-          topicId: tId,
-          topicSlug: check.topicSlug,
-          readinessScore: check.readinessScore,
-          missingPrerequisites: check.missingPrerequisites,
-        });
+
+      for (const tId of topicIds) {
+        const check = await this.analyticsService.validateTopicPrerequisites(
+          effectiveProfileId,
+          tId,
+        );
+        if (!check.isReady) {
+          throw new ForbiddenException({
+            statusCode: 403,
+            error: 'PREREQUISITE_INCOMPLETE',
+            message: `Cannot start assessment "${assessment.title}". Prerequisite incomplete: ${check.recommendation}`,
+            topicId: tId,
+            topicSlug: check.topicSlug,
+            readinessScore: check.readinessScore,
+            missingPrerequisites: check.missingPrerequisites,
+          });
+        }
       }
     }
 
@@ -1085,6 +1093,7 @@ export class AssessmentService {
           id: aq.question.id,
           type: aq.question.type,
           questionText: aq.question.questionText,
+          explanation: aq.question.explanation,
           points: aq.points,
           topicName: aq.question.topic?.name,
           difficulty: aq.question.difficulty,

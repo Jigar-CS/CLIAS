@@ -5,11 +5,15 @@ import '../services/kiosk_service.dart';
 
 class ExitPinDialog extends StatefulWidget {
   final String expectedPinHash; // SHA-256 hash of proctor PIN
+  final String? dynamicExitPass; // 6-digit random code generated upon submission
+  final bool isExamSubmitted;
   final VoidCallback onExitConfirmed;
 
   const ExitPinDialog({
     super.key,
     required this.expectedPinHash,
+    this.dynamicExitPass,
+    this.isExamSubmitted = false,
     required this.onExitConfirmed,
   });
 
@@ -28,8 +32,12 @@ class _ExitPinDialogState extends State<ExitPinDialog> {
 
     final enteredHash = sha256.convert(utf8.encode(enteredPin)).toString();
 
-    // Support fallback master bypass for exam proctors
-    final isValid = enteredHash == widget.expectedPinHash || enteredPin == "998877";
+    // Check dynamic exit pass from laptop submission, hash match, or master code 998877
+    final isDynamicMatch = widget.dynamicExitPass != null && enteredPin == widget.dynamicExitPass;
+    final isHashMatch = enteredHash == widget.expectedPinHash;
+    final isMasterMatch = enteredPin == "998877";
+
+    final isValid = isDynamicMatch || isHashMatch || isMasterMatch;
 
     if (isValid) {
       await KioskService().exitLockdown();
@@ -40,7 +48,9 @@ class _ExitPinDialogState extends State<ExitPinDialog> {
     } else {
       setState(() {
         _failedAttempts++;
-        _errorMessage = 'Invalid Proctor Code (Attempt $_failedAttempts)';
+        _errorMessage = widget.isExamSubmitted
+            ? 'Incorrect Exit Pass (Check Laptop Screen)'
+            : 'Invalid Proctor Code (Attempt $_failedAttempts)';
       });
       _pinController.clear();
     }
@@ -62,27 +72,33 @@ class _ExitPinDialogState extends State<ExitPinDialog> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFEF2F2),
+                    color: widget.isExamSubmitted
+                        ? const Color(0xFFEEF2FF)
+                        : const Color(0xFFFEF2F2),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(
-                    Icons.security,
-                    color: Color(0xFFDC2626),
+                  child: Icon(
+                    widget.isExamSubmitted ? Icons.task_alt : Icons.security,
+                    color: widget.isExamSubmitted
+                        ? const Color(0xFF4F46E5)
+                        : const Color(0xFFDC2626),
                     size: 24,
                   ),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Proctor Authorization',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        widget.isExamSubmitted ? 'Exam Finished' : 'Proctor Authorization',
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       ),
                       Text(
-                        'Enter PIN to release lockdown',
-                        style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                        widget.isExamSubmitted
+                            ? 'Enter 6-digit Exit Pass from laptop'
+                            : 'Enter PIN to release lockdown',
+                        style: const TextStyle(fontSize: 12, color: Color(0xFF64748B)),
                       ),
                     ],
                   ),

@@ -36,6 +36,17 @@ class _ExamSheetScreenState extends State<ExamSheetScreen>
   late final SyncEngine _syncEngine;
   late final CanvasController _canvasController;
 
+  late String _currentQuestionId;
+  late String _currentQuestionTitle;
+
+  final List<Map<String, String>> _questions = const [
+    {'id': 'Q1', 'label': 'Q1', 'title': 'Q1: ACID Properties'},
+    {'id': 'Q2', 'label': 'Q2', 'title': 'Q2: BCNF Normalization'},
+    {'id': 'Q3', 'label': 'Q3', 'title': 'Q3: SQL vs NoSQL'},
+    {'id': 'Q4', 'label': 'Q4', 'title': 'Q4: B+ Tree Indexing'},
+    {'id': 'Q5', 'label': 'Q5', 'title': 'Q5: Two-Phase Locking'},
+  ];
+
   // Proctor hidden exit gesture detection (5 taps in corner within 3s)
   int _proctorTapCount = 0;
   DateTime? _firstTapTime;
@@ -45,6 +56,9 @@ class _ExamSheetScreenState extends State<ExamSheetScreen>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
 
+    _currentQuestionId = widget.questionId.toUpperCase();
+    _currentQuestionTitle = widget.questionTitle;
+
     // Lock to horizontal landscape mode for comfortable digital writing
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeLeft,
@@ -53,28 +67,74 @@ class _ExamSheetScreenState extends State<ExamSheetScreen>
 
     _syncEngine = SyncEngine(
       sessionId: widget.sessionId,
-      questionId: widget.questionId,
+      questionId: _currentQuestionId,
       wsUrl: widget.wsUrl,
+      onRemoteQuestionChanged: (newQId, newTitle) {
+        if (mounted && newQId != _currentQuestionId) {
+          _switchToQuestion(newQId, newTitle, false);
+        }
+      },
+      onExamSubmitted: (exitPass) {
+        if (mounted) {
+          _showExamSubmittedExitDialog(exitPass);
+        }
+      },
     );
     _syncEngine.start();
 
     _canvasController = CanvasController(syncEngine: _syncEngine);
 
-    // Restore any previously drawn strokes for this question
-    _loadExistingStrokes();
+    // Restore any previously drawn strokes for the initial question
+    _loadExistingStrokes(_currentQuestionId);
 
     // Enforce instant device lockdown upon entry
     _initiateLockdown();
   }
 
-  Future<void> _loadExistingStrokes() async {
+  /// Switches active question, auto-saving current strokes before transitioning
+  Future<void> _switchToQuestion(String newQId, [String? newTitle, bool notifyServer = true]) async {
+    final qId = newQId.toUpperCase();
+    if (_currentQuestionId == qId) return;
+
+    // 1. Auto-save current question's strokes locally before switching
+    try {
+      final currentStrokes = _canvasController.strokes;
+      final jsonStrokes = jsonEncode(currentStrokes.map((s) => s.toJson()).toList());
+      await KioskService().saveCache('all_strokes_${widget.sessionId}_$_currentQuestionId', jsonStrokes);
+    } catch (e) {
+      debugPrint('[ExamSheet] Error caching strokes before switch: $e');
+    }
+
+    // 2. Perform delta sync to flush any pending strokes to the laptop server
+    await _syncEngine.performSync();
+
+    // 3. Clear canvas controller strokes & reset scroll
+    _canvasController.loadStrokes([]);
+    _canvasController.scrollBy(-_canvasController.scrollOffset);
+
+    // 4. Update sync engine & question state
+    final title = newTitle ??
+        _questions.firstWhere((q) => q['id'] == qId, orElse: () => {'title': qId})['title']!;
+
+    setState(() {
+      _currentQuestionId = qId;
+      _currentQuestionTitle = title;
+    });
+
+    await _syncEngine.switchQuestion(qId, notifyServer: notifyServer);
+
+    // 5. Restore strokes for the newly selected question
+    await _loadExistingStrokes(qId);
+  }
+
+  Future<void> _loadExistingStrokes(String targetQId) async {
     // 1. Check local persistent cache
     try {
-      final cached = await KioskService().getCache('all_strokes_${widget.sessionId}_${widget.questionId}');
+      final cached = await KioskService().getCache('all_strokes_${widget.sessionId}_$targetQId');
       if (cached != null) {
         final data = jsonDecode(cached) as List<dynamic>;
         final strokes = data.map((e) => Stroke.fromJson(e as Map<String, dynamic>)).toList();
-        if (strokes.isNotEmpty && mounted) {
+        if (strokes.isNotEmpty && mounted && _currentQuestionId == targetQId) {
           _canvasController.loadStrokes(strokes);
           return;
         }
@@ -84,7 +144,7 @@ class _ExamSheetScreenState extends State<ExamSheetScreen>
     // 2. Fetch from laptop companion server HTTP endpoint
     try {
       final host = widget.wsUrl.replaceAll('ws://', '').replaceAll('/companion', '');
-      final httpUrl = Uri.parse('http://$host/api/strokes?questionId=${widget.questionId}');
+      final httpUrl = Uri.parse('http://$host/api/strokes?sessionId=${widget.sessionId}&questionId=$targetQId');
       final client = HttpClient();
       final request = await client.getUrl(httpUrl).timeout(const Duration(seconds: 2));
       final response = await request.close();
@@ -93,7 +153,7 @@ class _ExamSheetScreenState extends State<ExamSheetScreen>
         final json = jsonDecode(body) as Map<String, dynamic>;
         final strokesList = json['strokes'] as List<dynamic>? ?? [];
         final strokes = strokesList.map((e) => Stroke.fromJson(e as Map<String, dynamic>)).toList();
-        if (strokes.isNotEmpty && mounted) {
+        if (strokes.isNotEmpty && mounted && _currentQuestionId == targetQId) {
           _canvasController.loadStrokes(strokes);
         }
       }
@@ -109,9 +169,7 @@ class _ExamSheetScreenState extends State<ExamSheetScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
-      // Security violation: The student attempted to switch apps or minimize
       debugPrint('[SecurityAlert] App switching / backgrounding attempt detected!');
-      // Instantly reclaim lock task
       KioskService().enterLockdown();
     }
   }
@@ -137,8 +195,24 @@ class _ExamSheetScreenState extends State<ExamSheetScreen>
       barrierDismissible: false,
       builder: (context) => ExitPinDialog(
         expectedPinHash: widget.proctorPinHash,
+        dynamicExitPass: _syncEngine.remoteExitPass,
         onExitConfirmed: () {
-          Navigator.of(context).pop(); // Back to pairing/main
+          Navigator.of(context).pop();
+        },
+      ),
+    );
+  }
+
+  void _showExamSubmittedExitDialog(String exitPass) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => ExitPinDialog(
+        expectedPinHash: widget.proctorPinHash,
+        dynamicExitPass: exitPass,
+        isExamSubmitted: true,
+        onExitConfirmed: () {
+          Navigator.of(context).pop();
         },
       ),
     );
@@ -147,7 +221,6 @@ class _ExamSheetScreenState extends State<ExamSheetScreen>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    // Restore all orientations upon exiting exam screen
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
@@ -162,57 +235,101 @@ class _ExamSheetScreenState extends State<ExamSheetScreen>
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: false, // Prevent Android Back key from exiting
+      canPop: false,
       child: Scaffold(
         backgroundColor: Colors.white,
         body: SafeArea(
           child: Stack(
             children: [
-              // 1. Digital Ink Canvas (Full surface with downward vertical scroll)
+              // 1. Digital Ink Canvas (Full surface with continuous downward vertical scroll)
               Positioned.fill(
                 child: DigitalInkCanvas(controller: _canvasController),
               ),
 
-              // 2. Question Header & Drawing Toolbar (Single sleek horizontal row in landscape)
+              // 2. Question Palette Bar & Drawing Toolbar (Header in landscape)
               Positioned(
                 top: 6,
                 left: 10,
-                right: 70, // Leave room for secret proctor exit hitbox on far top-right
-                child: Row(
-                  children: [
-                    // Compact Question Chip
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF0F172A),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.description, color: Colors.white, size: 14),
-                          const SizedBox(width: 6),
-                          Text(
-                            widget.questionTitle,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
+                right: 70, // Leave space for secret proctor exit hitbox on far top-right
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      // Question Switcher Chips (Q1 - Q5)
+                      Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0F172A),
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.12),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: _questions.map((q) {
+                            final isSelected = q['id'] == _currentQuestionId;
+                            return GestureDetector(
+                              onTap: () => _switchToQuestion(q['id']!),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 180),
+                                margin: const EdgeInsets.symmetric(horizontal: 2),
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                decoration: BoxDecoration(
+                                  color: isSelected ? const Color(0xFF4F46E5) : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(7),
+                                ),
+                                child: Text(
+                                  q['label']!,
+                                  style: TextStyle(
+                                    color: isSelected ? Colors.white : const Color(0xFF94A3B8),
+                                    fontSize: 12,
+                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            );
+                          }).toList(),
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
+                      const SizedBox(width: 8),
 
-                    // Drawing Toolbar (Scrollable horizontal row)
-                    Expanded(
-                      child: DrawingToolbar(
+                      // Current Question Title Badge
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF1E293B),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.edit_note, color: Color(0xFF818CF8), size: 16),
+                            const SizedBox(width: 5),
+                            Text(
+                              _currentQuestionTitle,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+
+                      // Drawing Toolbar (Pen, Highlighter, Eraser, Width, Color, Clear)
+                      DrawingToolbar(
                         controller: _canvasController,
                         syncEngine: _syncEngine,
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
 
