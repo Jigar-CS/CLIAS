@@ -39,12 +39,12 @@ class _ExamSheetScreenState extends State<ExamSheetScreen>
   late String _currentQuestionId;
   late String _currentQuestionTitle;
 
-  final List<Map<String, String>> _questions = const [
-    {'id': 'Q1', 'label': 'Q1', 'title': 'Q1: ACID Properties'},
-    {'id': 'Q2', 'label': 'Q2', 'title': 'Q2: BCNF Normalization'},
-    {'id': 'Q3', 'label': 'Q3', 'title': 'Q3: SQL vs NoSQL'},
-    {'id': 'Q4', 'label': 'Q4', 'title': 'Q4: B+ Tree Indexing'},
-    {'id': 'Q5', 'label': 'Q5', 'title': 'Q5: Two-Phase Locking'},
+  List<Map<String, String>> _questions = [
+    {'id': 'Q1', 'label': 'Q1', 'title': 'Q1: Descriptive Answer Sheet'},
+    {'id': 'Q2', 'label': 'Q2', 'title': 'Q2: Descriptive Answer Sheet'},
+    {'id': 'Q3', 'label': 'Q3', 'title': 'Q3: Descriptive Answer Sheet'},
+    {'id': 'Q4', 'label': 'Q4', 'title': 'Q4: Descriptive Answer Sheet'},
+    {'id': 'Q5', 'label': 'Q5', 'title': 'Q5: Descriptive Answer Sheet'},
   ];
 
   // Proctor hidden exit gesture detection (5 taps in corner within 3s)
@@ -69,6 +69,18 @@ class _ExamSheetScreenState extends State<ExamSheetScreen>
       sessionId: widget.sessionId,
       questionId: _currentQuestionId,
       wsUrl: widget.wsUrl,
+      onDynamicQuestionsReceived: (newQuestions) {
+        if (mounted && newQuestions.isNotEmpty) {
+          setState(() {
+            _questions = newQuestions;
+            final match = _questions.firstWhere(
+              (q) => q['id'] == _currentQuestionId,
+              orElse: () => _questions.first,
+            );
+            _currentQuestionTitle = match['title'] ?? _currentQuestionId;
+          });
+        }
+      },
       onRemoteQuestionChanged: (newQId, newTitle) {
         if (mounted && newQId != _currentQuestionId) {
           _switchToQuestion(newQId, newTitle, false);
@@ -92,8 +104,45 @@ class _ExamSheetScreenState extends State<ExamSheetScreen>
     // Restore any previously drawn strokes for the initial question
     _loadExistingStrokes(_currentQuestionId);
 
+    // Fetch dynamic questions list from laptop
+    _fetchQuestionsFromLaptop();
+
     // Enforce instant device lockdown upon entry
     _initiateLockdown();
+  }
+
+  Future<void> _fetchQuestionsFromLaptop() async {
+    try {
+      final host = widget.wsUrl.replaceAll('ws://', '').replaceAll('/companion', '');
+      final httpUrl = Uri.parse('http://$host/api/v1/companion/questions?sessionId=${widget.sessionId}');
+      final client = HttpClient();
+      final request = await client.getUrl(httpUrl).timeout(const Duration(seconds: 3));
+      final response = await request.close();
+      if (response.statusCode == 200) {
+        final body = await response.transform(utf8.decoder).join();
+        final rawList = jsonDecode(body) as List<dynamic>;
+        if (rawList.isNotEmpty && mounted) {
+          final dynamicList = rawList.map((item) {
+            final m = item as Map<String, dynamic>;
+            return {
+              'id': m['id']?.toString() ?? 'Q1',
+              'label': m['label']?.toString() ?? m['id']?.toString() ?? 'Q1',
+              'title': m['title']?.toString() ?? m['id']?.toString() ?? 'Question',
+            };
+          }).toList();
+          setState(() {
+            _questions = dynamicList;
+            final match = _questions.firstWhere(
+              (q) => q['id'] == _currentQuestionId,
+              orElse: () => _questions.first,
+            );
+            _currentQuestionTitle = match['title'] ?? _currentQuestionId;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('[ExamSheet] Note: Could not fetch questions list from laptop: $e');
+    }
   }
 
   /// Switches active question, auto-saving current strokes before transitioning
@@ -149,7 +198,7 @@ class _ExamSheetScreenState extends State<ExamSheetScreen>
     // 2. Fetch from laptop companion server HTTP endpoint
     try {
       final host = widget.wsUrl.replaceAll('ws://', '').replaceAll('/companion', '');
-      final httpUrl = Uri.parse('http://$host/api/strokes?sessionId=${widget.sessionId}&questionId=$targetQId');
+      final httpUrl = Uri.parse('http://$host/api/v1/companion/strokes?sessionId=${widget.sessionId}&questionId=$targetQId');
       final client = HttpClient();
       final request = await client.getUrl(httpUrl).timeout(const Duration(seconds: 2));
       final response = await request.close();

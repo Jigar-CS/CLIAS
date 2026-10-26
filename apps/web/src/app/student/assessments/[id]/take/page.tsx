@@ -217,10 +217,22 @@ export default function TakeAssessmentPage() {
     }
   }, []);
 
+  // Dynamic pairing host from backend
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setPairingHost(`${window.location.hostname}:4000`);
-    }
+    fetch('/api/v1/companion/status?sessionId=clias-session-9842')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.localIp) {
+          setPairingHost(`${data.localIp}:4000`);
+        } else if (typeof window !== 'undefined') {
+          setPairingHost(`${window.location.hostname}:4000`);
+        }
+      })
+      .catch(() => {
+        if (typeof window !== 'undefined') {
+          setPairingHost(`${window.location.hostname}:4000`);
+        }
+      });
   }, []);
 
   // Monitor phone companion connectivity during PreFlight for descriptive tests
@@ -433,13 +445,23 @@ export default function TakeAssessmentPage() {
         setCodingAnswers(initialCoding);
       }
 
-      // If descriptive test, wipe any stale strokes from previous exam attempts
+      // If descriptive test, wipe any stale strokes and register real questions
       const isDescriptive = Boolean(
         data.assessment?.examMode === 'DESCRIPTIVE' ||
         data.questions?.some((q: any) => q.type === 'SHORT_ANSWER' || q.type === 'DESCRIPTIVE')
       );
       if (isDescriptive) {
         fetch('/api/v1/companion/reset?sessionId=clias-session-9842', { method: 'POST' }).catch(() => {});
+        const qList = (data.questions || []).map((q: any, i: number) => ({
+          id: `Q${i + 1}`,
+          label: `Q${i + 1}`,
+          title: `Q${i + 1}: ${q.topicName || q.questionText?.slice(0, 35) || 'Descriptive Question'}`,
+        }));
+        fetch('/api/v1/companion/register-questions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId: 'clias-session-9842', questions: qList }),
+        }).catch(() => {});
       }
     } catch (err: any) {
       const msg = err.message || '';
@@ -1106,15 +1128,17 @@ export default function TakeAssessmentPage() {
                           updateUnauthorizedPerson(null);
                         }
                       } else {
-                        // Anything other than registered face -> Report strictly as Face Not Visible
-                        isPersonFound = false;
-                        consecutiveMismatchRef.current += 1;
-                        updateUnauthorizedPerson('IDENTITY_MISMATCH');
-                        reportViolation(
-                          'NO_FACE',
-                          'HIGH',
-                          'Face not visible: Registered candidate face is not recognized in camera view.'
-                        );
+                        // Anything other than registered face -> In descriptive exams, candidate looks down to write
+                        if (!isDescriptiveTest) {
+                          isPersonFound = false;
+                          consecutiveMismatchRef.current += 1;
+                          updateUnauthorizedPerson('IDENTITY_MISMATCH');
+                          reportViolation(
+                            'NO_FACE',
+                            'HIGH',
+                            'Face not visible: Registered candidate face is not recognized in camera view.'
+                          );
+                        }
                       }
                     } else {
                       isPersonFound = false;
@@ -1248,9 +1272,9 @@ export default function TakeAssessmentPage() {
               sum += dataArray[i];
             }
             const avgAudioVolume = sum / bufferLen;
-            if (avgAudioVolume > 65) {
+            if (avgAudioVolume > 78 && !isDescriptiveTest) {
               consecutiveAudioAlertRef.current += 1;
-              if (consecutiveAudioAlertRef.current >= 2) {
+              if (consecutiveAudioAlertRef.current >= 3) {
                 reportViolation(
                   'AUDIO_ANOMALY',
                   'MEDIUM',
@@ -1268,15 +1292,20 @@ export default function TakeAssessmentPage() {
         // E. Face Absence 3-Strike Policy Enforcement
         // -------------------------------------------------------------
         if (!isPersonFound) {
-          consecutiveFaceAbsentRef.current += 1;
-          if (consecutiveFaceAbsentRef.current >= 2) {
-            setFacePresent(false);
+          if (isDescriptiveTest) {
+            // When candidate is in descriptive exam with mobile companion, looking down at writing pad is normal
+            setFacePresent(true);
+            consecutiveFaceAbsentRef.current = 0;
+          } else {
+            consecutiveFaceAbsentRef.current += 1;
+            if (consecutiveFaceAbsentRef.current >= 2) {
+              setFacePresent(false);
 
-            if (!faceModalActiveRef.current && !isAutoSubmittingRef.current) {
-              faceModalActiveRef.current = true;
-              const nextStrike = faceStrikeCountRef.current + 1;
-              faceStrikeCountRef.current = nextStrike;
-              setFaceStrikeCount(nextStrike);
+              if (!faceModalActiveRef.current && !isAutoSubmittingRef.current) {
+                faceModalActiveRef.current = true;
+                const nextStrike = faceStrikeCountRef.current + 1;
+                faceStrikeCountRef.current = nextStrike;
+                setFaceStrikeCount(nextStrike);
 
               if (nextStrike === 1) {
                 reportViolation('NO_FACE', 'LOW', 'Face not visible in camera frame (Warning 1/3).');
@@ -1295,10 +1324,11 @@ export default function TakeAssessmentPage() {
               }
             }
           }
-        } else {
-          consecutiveFaceAbsentRef.current = 0;
-          setFacePresent(true);
         }
+      } else {
+        consecutiveFaceAbsentRef.current = 0;
+        setFacePresent(true);
+      }
       } catch (err) {
         // catch canvas / detection safety
       } finally {
@@ -1439,9 +1469,10 @@ export default function TakeAssessmentPage() {
     // Call companion gateway to notify mobile client and generate random 6-digit Exit Pass
     try {
       const companionSession = 'clias-session-9842';
-      const companionRes = await fetch(`/api/v1/companion/submit?sessionId=${companionSession}`, {
-        method: 'POST',
-      });
+      const companionRes = await fetch(
+        `/api/v1/companion/submit?sessionId=${companionSession}&submissionId=${examData.submissionId}`,
+        { method: 'POST' },
+      );
       if (companionRes.ok) {
         const passData = await companionRes.json();
         if (passData?.exitPass) {
@@ -1451,20 +1482,56 @@ export default function TakeAssessmentPage() {
       }
     } catch (e) {
       console.warn('Companion exit pass call:', e);
-      // Fallback 6-digit random code if network issue
       const fallbackPass = Math.floor(100000 + Math.random() * 900000).toString();
       setExitPassCode(fallbackPass);
       setShowExitPassModal(true);
     }
 
-    const answerPayload = examData.questions.map((q: any) => ({
-      questionId: q.id,
-      selectedOptionId: answers[q.id] || null,
-      sourceCode: codingAnswers[q.id]?.sourceCode || undefined,
-      code: codingAnswers[q.id]?.sourceCode || undefined,
-      language: codingAnswers[q.id]?.language || 'PYTHON',
-      timeSpentSeconds: 30,
-    }));
+    // Assemble answers including digital ink strokes and typed text for descriptive questions
+    const answerPayload = await Promise.all(
+      examData.questions.map(async (q: any, idx: number) => {
+        const qKey = `Q${idx + 1}`;
+        let answerText: string | undefined = undefined;
+        const isDescriptive =
+          q.type === 'SHORT_ANSWER' || q.type === 'DESCRIPTIVE' || !q.options || q.options.length === 0;
+
+        if (isDescriptive) {
+          try {
+            const sRes = await fetch(
+              `/api/v1/companion/strokes?sessionId=clias-session-9842&questionId=${qKey}`,
+            );
+            let strokesData: any[] = [];
+            if (sRes.ok) {
+              const sData = await sRes.json();
+              if (sData?.strokes && sData.strokes.length > 0) {
+                strokesData = sData.strokes;
+              }
+            }
+            if (strokesData.length > 0) {
+              answerText = JSON.stringify({
+                type: 'DIGITAL_INK',
+                questionId: qKey,
+                strokesCount: strokesData.length,
+                strokes: strokesData,
+                lastUpdated: Date.now(),
+              });
+            }
+          } catch (e) {
+            console.warn('Could not package descriptive answer for', qKey, e);
+          }
+        }
+
+        return {
+          questionId: q.id,
+          selectedOptionId: answers[q.id] || null,
+          answerText,
+          sourceCode: codingAnswers[q.id]?.sourceCode || undefined,
+          code: codingAnswers[q.id]?.sourceCode || undefined,
+          language: codingAnswers[q.id]?.language || 'PYTHON',
+          timeSpentSeconds: 30,
+        };
+      }),
+    );
 
     try {
       await api.post(`/assessments/submissions/${examData.submissionId}/submit`, {
@@ -2996,6 +3063,7 @@ export default function TakeAssessmentPage() {
                   question={currentQ}
                   questionNumber={currentIdx + 1}
                   sessionId="clias-session-9842"
+                  onActiveQuestionChange={(qNum) => handleSwitchQuestion(qNum - 1)}
                   onStrokeCountChange={(qId, count) => {
                     setDescriptiveStrokeCounts((prev) => ({
                       ...prev,
@@ -3073,7 +3141,8 @@ export default function TakeAssessmentPage() {
                 const isAnswered = (q.type === 'CODING' || q.codingProblem)
                   ? !!codingAnswers[q.id]?.sourceCode?.trim()
                   : (q.type === 'SHORT_ANSWER' || q.type === 'DESCRIPTIVE' || !q.options || q.options.length === 0)
-                  ? (descriptiveStrokeCounts[q.id] || 0) > 0 || (descriptiveStrokeCounts[`Q${idx + 1}`] || 0) > 0
+                  ? (descriptiveStrokeCounts[q.id] || 0) > 0 ||
+                    (descriptiveStrokeCounts[`Q${idx + 1}`] || 0) > 0
                   : !!answers[q.id];
                 const isCurrent = idx === currentIdx;
                 const isFlag = !!flagged[idx];

@@ -4,6 +4,7 @@ import { WebSocketServer, WebSocket } from 'ws';
 import { URL } from 'url';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as os from 'os';
 
 export interface StrokePoint {
   x: number;
@@ -43,6 +44,7 @@ export class CompanionSyncService implements OnApplicationBootstrap {
   private activeQuestions: Record<string, string> = {}; // sessionId -> questionId
   private exitPasses: Record<string, string> = {}; // sessionId -> 6-digit random code
   private submittedSessions: Set<string> = new Set();
+  private sessionQuestions: Record<string, any[]> = {}; // sessionId -> dynamic question metadata
 
   constructor(private readonly adapterHost: HttpAdapterHost) {}
 
@@ -117,15 +119,14 @@ export class CompanionSyncService implements OnApplicationBootstrap {
     if (isViewer) {
       this.viewerSockets.add(ws);
       const activeQ = this.activeQuestions[sessionId] || questionId;
-      const key = `${sessionId}:${activeQ}`;
-      const sheet = this.answerSheets[key] || { sessionId, questionId: activeQ, strokes: [], lastUpdated: Date.now() };
+      const sheet = this.getStrokes(sessionId, activeQ);
 
       ws.send(
         JSON.stringify({
           type: 'INITIAL_STATE',
           activeQuestionId: activeQ,
           data: sheet,
-          mobileStatus: this.mobileSockets.size > 0 ? 'connected' : 'disconnected',
+          mobileStatus: this.isMobileConnected(sessionId) ? 'connected' : 'disconnected',
           isSubmitted: this.submittedSessions.has(sessionId),
           exitPass: this.exitPasses[sessionId] || null,
         }),
@@ -142,10 +143,12 @@ export class CompanionSyncService implements OnApplicationBootstrap {
     this.logger.log(`📱 Mobile Companion paired for Session: ${sessionId}, Question: ${questionId}`);
 
     const activeQ = this.activeQuestions[sessionId] || questionId;
+    const questionsMeta = this.sessionQuestions[sessionId] || this.sessionQuestions['clias-session-9842'] || null;
     ws.send(
       JSON.stringify({
         type: 'SESSION_CONFIG',
         activeQuestionId: activeQ,
+        questions: questionsMeta,
         isSubmitted: this.submittedSessions.has(sessionId),
         exitPass: this.exitPasses[sessionId] || null,
       }),
@@ -171,7 +174,7 @@ export class CompanionSyncService implements OnApplicationBootstrap {
       this.logger.log(`Mobile Companion disconnected for Session: ${sessionId}`);
       this.broadcastToViewers({
         type: 'MOBILE_STATUS',
-        status: this.mobileSockets.size > 0 ? 'connected' : 'disconnected',
+        status: this.isMobileConnected() ? 'connected' : 'disconnected',
         time: Date.now(),
       });
     });
@@ -291,18 +294,71 @@ export class CompanionSyncService implements OnApplicationBootstrap {
     return this.activeQuestions[sessionId] || this.activeQuestions['clias-session-9842'] || 'Q1';
   }
 
+  public getLocalIp(): string {
+    const interfaces = os.networkInterfaces();
+    for (const name of Object.keys(interfaces)) {
+      for (const net of interfaces[name] || []) {
+        if (net.family === 'IPv4' && !net.internal) {
+          return net.address;
+        }
+      }
+    }
+    return '127.0.0.1';
+  }
+
+  public registerSessionQuestions(sessionId: string, questions: any[]) {
+    this.sessionQuestions[sessionId] = questions;
+    this.sessionQuestions['clias-session-9842'] = questions;
+    this.logger.log(`📋 Registered ${questions.length} dynamic questions for session ${sessionId}`);
+
+    this.broadcastToAll({
+      type: 'SESSION_CONFIG',
+      activeQuestionId: this.getActiveQuestion(sessionId),
+      questions,
+    });
+    return { success: true, count: questions.length };
+  }
+
+  public getSessionQuestions(sessionId: string): any[] {
+    return (
+      this.sessionQuestions[sessionId] ||
+      this.sessionQuestions['clias-session-9842'] ||
+      []
+    );
+  }
+
+  public saveStrokes(sessionId: string, questionId: string, strokes: StrokeData[]) {
+    const q = questionId.toUpperCase();
+    const key = `${sessionId}:${q}`;
+    const sheet: AnswerSheetBuffer = {
+      sessionId,
+      questionId: q,
+      strokes,
+      lastUpdated: Date.now(),
+    };
+    this.answerSheets[key] = sheet;
+    this.answerSheets[`clias-session-9842:${q}`] = sheet;
+    this.saveToDisk();
+
+    this.broadcastToAll({
+      type: 'CANVAS_UPDATE',
+      questionId: q,
+      allStrokes: strokes,
+      totalStrokes: strokes.length,
+      lastUpdated: sheet.lastUpdated,
+    });
+
+    return { success: true, count: strokes.length };
+  }
+
   public resetSession(sessionId: string) {
     this.logger.log(`🧹 RESET COMPANION SESSION: ${sessionId}`);
     
-    // Clear only active session strokes for fresh test attempt, preserving archived answers
-    for (let i = 1; i <= 5; i++) {
+    // Clear only active session strokes for fresh test attempt
+    for (let i = 1; i <= 10; i++) {
       const q = `Q${i}`;
-      if (this.answerSheets[`${sessionId}:${q}`]) {
-        this.answerSheets[`${sessionId}:${q}`].strokes = [];
-      }
-      if (this.answerSheets[`clias-session-9842:${q}`]) {
-        this.answerSheets[`clias-session-9842:${q}`].strokes = [];
-      }
+      this.answerSheets[`${sessionId}:${q}`] = { sessionId, questionId: q, strokes: [], lastUpdated: Date.now() };
+      this.answerSheets[`clias-session-9842:${q}`] = { sessionId: 'clias-session-9842', questionId: q, strokes: [], lastUpdated: Date.now() };
     }
 
     delete this.exitPasses[sessionId];
@@ -329,19 +385,17 @@ export class CompanionSyncService implements OnApplicationBootstrap {
   public getStrokes(sessionId: string, questionId: string) {
     const q = questionId.toUpperCase();
     const key = `${sessionId}:${q}`;
-    if (this.answerSheets[key] && this.answerSheets[key].strokes?.length > 0) {
+    if (this.answerSheets[key] && Array.isArray(this.answerSheets[key].strokes) && this.answerSheets[key].strokes.length > 0) {
       return this.answerSheets[key];
     }
-    if (this.answerSheets[`clias-session-9842:${q}`] && this.answerSheets[`clias-session-9842:${q}`].strokes?.length > 0) {
-      return this.answerSheets[`clias-session-9842:${q}`];
-    }
-    // Fallback: check if any session has non-empty strokes recorded for this question
-    for (const [k, sheet] of Object.entries(this.answerSheets)) {
-      if (k.endsWith(`:${q}`) && sheet.strokes?.length > 0) {
-        return sheet;
+    // Only return clias-session-9842 if the requested session is actually clias-session-9842 or empty
+    if (!sessionId || sessionId === 'clias-session-9842') {
+      if (this.answerSheets[`clias-session-9842:${q}`] && Array.isArray(this.answerSheets[`clias-session-9842:${q}`].strokes) && this.answerSheets[`clias-session-9842:${q}`].strokes.length > 0) {
+        return this.answerSheets[`clias-session-9842:${q}`];
       }
     }
-    return this.answerSheets[key] || this.answerSheets[`clias-session-9842:${q}`] || { sessionId, questionId: q, strokes: [], lastUpdated: Date.now() };
+    // Return empty sheet for the requested session without polluting with other sessions' random strokes
+    return { sessionId, questionId: q, strokes: [], lastUpdated: Date.now() };
   }
 
   public switchActiveQuestion(sessionId: string, questionId: string) {
@@ -359,14 +413,8 @@ export class CompanionSyncService implements OnApplicationBootstrap {
   public clearCanvas(sessionId: string, questionId: string) {
     const q = questionId.toUpperCase();
     const key = `${sessionId}:${q}`;
-    if (this.answerSheets[key]) {
-      this.answerSheets[key].strokes = [];
-      this.answerSheets[key].lastUpdated = Date.now();
-    }
-    if (this.answerSheets[`clias-session-9842:${q}`]) {
-      this.answerSheets[`clias-session-9842:${q}`].strokes = [];
-      this.answerSheets[`clias-session-9842:${q}`].lastUpdated = Date.now();
-    }
+    this.answerSheets[key] = { sessionId, questionId: q, strokes: [], lastUpdated: Date.now() };
+    this.answerSheets[`clias-session-9842:${q}`] = { sessionId: 'clias-session-9842', questionId: q, strokes: [], lastUpdated: Date.now() };
     this.saveToDisk();
     this.broadcastToAll({
       type: 'CANVAS_CLEAR',
@@ -378,29 +426,52 @@ export class CompanionSyncService implements OnApplicationBootstrap {
     return { success: true };
   }
 
-  public submitExamAndGenerateExitPass(sessionId: string) {
+  public submitExamAndGenerateExitPass(sessionId: string, submissionId?: string) {
     const randomPass = Math.floor(100000 + Math.random() * 900000).toString();
     this.exitPasses[sessionId] = randomPass;
     this.exitPasses['clias-session-9842'] = randomPass;
     this.submittedSessions.add(sessionId);
     this.submittedSessions.add('clias-session-9842');
 
-    // Duplicate answer sheets to submissionId if different from clias-session-9842
-    if (sessionId !== 'clias-session-9842') {
-      for (let i = 1; i <= 5; i++) {
+    const targetSubId = submissionId || (sessionId !== 'clias-session-9842' ? sessionId : null);
+    if (targetSubId) {
+      this.exitPasses[targetSubId] = randomPass;
+      this.submittedSessions.add(targetSubId);
+      for (let i = 1; i <= 10; i++) {
         const q = `Q${i}`;
-        const defaultSheet = this.answerSheets[`clias-session-9842:${q}`];
-        if (defaultSheet && defaultSheet.strokes?.length > 0) {
-          this.answerSheets[`${sessionId}:${q}`] = {
-            ...defaultSheet,
-            sessionId,
+        const sourceSheet = this.answerSheets[`clias-session-9842:${q}`] || this.answerSheets[`${sessionId}:${q}`];
+        if (sourceSheet && sourceSheet.strokes && sourceSheet.strokes.length > 0) {
+          this.answerSheets[`${targetSubId}:${q}`] = {
+            sessionId: targetSubId,
+            questionId: q,
+            strokes: [...sourceSheet.strokes],
+            lastUpdated: Date.now(),
           };
         }
       }
     }
+
+    // Reset companion live memory buffer after exam submission so subsequent tests on the same device start with fresh empty sheets
+    for (let i = 1; i <= 10; i++) {
+      const q = `Q${i}`;
+      this.answerSheets[`clias-session-9842:${q}`] = {
+        sessionId: 'clias-session-9842',
+        questionId: q,
+        strokes: [],
+        lastUpdated: Date.now(),
+      };
+      if (sessionId && sessionId !== 'clias-session-9842') {
+        this.answerSheets[`${sessionId}:${q}`] = {
+          sessionId,
+          questionId: q,
+          strokes: [],
+          lastUpdated: Date.now(),
+        };
+      }
+    }
     this.saveToDisk();
 
-    this.logger.log(`🎓 EXAM SUBMISSION for session ${sessionId} - Generated Exit Pass: ${randomPass}`);
+    this.logger.log(`🎓 EXAM SUBMISSION for session ${sessionId} (target ${targetSubId || sessionId}) - Generated Exit Pass: ${randomPass}`);
 
     this.broadcastToAll({
       type: 'EXAM_SUBMITTED',

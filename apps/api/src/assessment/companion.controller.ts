@@ -11,7 +11,20 @@ export class CompanionController {
       mobileConnected: this.companionSync.isMobileConnected(sessionId),
       isSubmitted: this.companionSync.isSessionSubmitted(sessionId),
       activeQuestionId: this.companionSync.getActiveQuestion(sessionId),
+      localIp: this.companionSync.getLocalIp(),
+      port: 4000,
     };
+  }
+
+  @Post('register-questions')
+  registerQuestions(@Body() body: { sessionId?: string; questions: any[] }) {
+    const sId = body.sessionId || 'clias-session-9842';
+    return this.companionSync.registerSessionQuestions(sId, body.questions || []);
+  }
+
+  @Get('questions')
+  getQuestions(@Query('sessionId') sessionId = 'clias-session-default') {
+    return this.companionSync.getSessionQuestions(sessionId);
   }
 
   @Post('reset')
@@ -25,6 +38,16 @@ export class CompanionController {
     @Query('questionId') questionId = 'Q1',
   ) {
     return this.companionSync.getStrokes(sessionId, questionId);
+  }
+
+  @Post('strokes')
+  saveStrokes(
+    @Query('sessionId') sessionId = 'clias-session-default',
+    @Body() body: { sessionId?: string; questionId?: string; strokes: any[] },
+  ) {
+    const sId = body.sessionId || sessionId;
+    const qId = (body.questionId || 'Q1').toUpperCase();
+    return this.companionSync.saveStrokes(sId, qId, body.strokes || []);
   }
 
   @Post('switch-question')
@@ -44,8 +67,13 @@ export class CompanionController {
   }
 
   @Post('submit')
-  submitExam(@Query('sessionId') sessionId = 'clias-session-default') {
-    return this.companionSync.submitExamAndGenerateExitPass(sessionId);
+  submitExam(
+    @Query('sessionId') sessionId = 'clias-session-default',
+    @Query('submissionId') querySubId?: string,
+    @Body() body?: { submissionId?: string },
+  ) {
+    const subId = querySubId || body?.submissionId;
+    return this.companionSync.submitExamAndGenerateExitPass(sessionId, subId);
   }
 
   @Get('verify-exit-pass')

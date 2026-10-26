@@ -58,8 +58,8 @@ class _DigitalInkCanvasState extends State<DigitalInkCanvas> {
       return;
     }
 
-    // Reject large accidental contact surfaces (palm rest)
-    if (event.size > 0.45 || (event.radiusMajor > 30.0)) {
+    // Only reject palm rest when writing with an active stylus, or when accidental contact is extraordinarily large
+    if (_isStylusActive && (event.size > 0.85 || event.radiusMajor > 80.0)) {
       return;
     }
 

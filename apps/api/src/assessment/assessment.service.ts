@@ -1677,18 +1677,35 @@ export class AssessmentService {
       const awarded = Math.max(0, Number(item.pointsAwarded) || 0);
       totalScore += awarded;
 
-      await this.prisma.submissionAnswer.updateMany({
+      const existing = await this.prisma.submissionAnswer.findFirst({
         where: {
           submissionId: submission.id,
           questionId: item.questionId,
         },
-        data: {
-          pointsAwarded: awarded,
-          feedback: item.feedback || null,
-          evaluatedBy: facultyProfileId,
-          isCorrect: awarded > 0,
-        },
       });
+
+      if (existing) {
+        await this.prisma.submissionAnswer.update({
+          where: { id: existing.id },
+          data: {
+            pointsAwarded: awarded,
+            feedback: item.feedback || null,
+            evaluatedBy: facultyProfileId,
+            isCorrect: awarded > 0,
+          },
+        });
+      } else {
+        await this.prisma.submissionAnswer.create({
+          data: {
+            submissionId: submission.id,
+            questionId: item.questionId,
+            pointsAwarded: awarded,
+            feedback: item.feedback || null,
+            evaluatedBy: facultyProfileId,
+            isCorrect: awarded > 0,
+          },
+        });
+      }
     }
 
     // Retain points for any other answers in this submission not in dto.answers
@@ -1804,6 +1821,7 @@ export class AssessmentService {
         },
         questions: {
           include: { question: true },
+          orderBy: { order: 'asc' },
         },
       },
     });
@@ -1837,38 +1855,74 @@ export class AssessmentService {
       passRate: Number(passRate.toFixed(1)),
       highestScore: scores.length > 0 ? Math.max(...scores) : 0,
       lowestScore: scores.length > 0 ? Math.min(...scores) : 0,
-      submissions: assessment.submissions.map((s) => ({
-        submissionId: s.id,
-        enrollmentNumber: s.student.authorizedStudent?.enrollmentNumber || '24CS001',
-        studentName:
-          s.student.authorizedStudent?.name ||
-          s.student.user?.email?.split('@')[0] ||
-          'Student',
-        email: s.student.user?.email || 'N/A',
-        division: s.student.authorizedStudent?.division || assessment.division || 'DIV 1',
-        attemptNumber: s.attemptNumber,
-        status: s.status,
-        score: s.totalScore,
-        totalMarks: assessment.totalMarks,
-        percentage: s.percentage,
-        passed: s.passed,
-        feedback: (s as any).feedback,
-        evaluatedAt: (s as any).evaluatedAt,
-        answers: (s as any).answers?.map((ans: any) => ({
-          id: ans.id,
-          questionId: ans.questionId,
-          pointsAwarded: ans.pointsAwarded,
-          feedback: ans.feedback,
-          answerText: ans.answerText,
-          questionText: ans.question?.questionText,
-          explanation: ans.question?.explanation,
-        })) || [],
-        submittedAt: s.submittedAt || s.startedAt,
-        trustScore: s.proctoringSession?.trustScore ?? 100.0,
-        proctoringStatus: s.proctoringSession?.status || 'COMPLETED',
-        violationsCount: s.proctoringSession?.violationsCount ?? 0,
-        faceEnrollmentVerified: s.proctoringSession?.faceEnrollmentVerified ?? false,
+      questions: assessment.questions.map((aq, idx) => ({
+        id: aq.questionId,
+        questionId: aq.questionId,
+        order: aq.order ?? (idx + 1),
+        points: aq.points,
+        questionText: aq.question?.questionText,
+        explanation: aq.question?.explanation,
+        type: aq.question?.type,
+        difficulty: aq.question?.difficulty,
       })),
+      submissions: assessment.submissions.map((s) => {
+        // Map answers keyed by questionId
+        const ansByQId = new Map<string, any>();
+        for (const ans of (s.answers || [])) {
+          if (ans.questionId) {
+            ansByQId.set(ans.questionId, ans);
+          }
+        }
+
+        // Canonical answers list ordered by the assessment questions sequence
+        const canonicalAnswers = assessment.questions.map((aq, idx) => {
+          const ans = ansByQId.get(aq.questionId);
+          return {
+            id: ans?.id || `ans-${aq.questionId}`,
+            questionId: aq.questionId,
+            order: aq.order ?? (idx + 1),
+            pointsAwarded: ans?.pointsAwarded ?? 0,
+            feedback: ans?.feedback ?? '',
+            answerText: ans?.answerText ?? null,
+            questionText: aq.question?.questionText,
+            explanation: aq.question?.explanation,
+            points: aq.points,
+            question: {
+              id: aq.question.id,
+              questionId: aq.question.id,
+              questionText: aq.question.questionText,
+              explanation: aq.question.explanation,
+              type: aq.question.type,
+              points: aq.points,
+            },
+          };
+        });
+
+        return {
+          submissionId: s.id,
+          enrollmentNumber: s.student.authorizedStudent?.enrollmentNumber || '24CS001',
+          studentName:
+            s.student.authorizedStudent?.name ||
+            s.student.user?.email?.split('@')[0] ||
+            'Student',
+          email: s.student.user?.email || 'N/A',
+          division: s.student.authorizedStudent?.division || assessment.division || 'DIV 1',
+          attemptNumber: s.attemptNumber,
+          status: s.status,
+          score: s.totalScore,
+          totalMarks: assessment.totalMarks,
+          percentage: s.percentage,
+          passed: s.passed,
+          feedback: (s as any).feedback,
+          evaluatedAt: (s as any).evaluatedAt,
+          answers: canonicalAnswers,
+          submittedAt: s.submittedAt || s.startedAt,
+          trustScore: s.proctoringSession?.trustScore ?? 100.0,
+          proctoringStatus: s.proctoringSession?.status || 'COMPLETED',
+          violationsCount: s.proctoringSession?.violationsCount ?? 0,
+          faceEnrollmentVerified: s.proctoringSession?.faceEnrollmentVerified ?? false,
+        };
+      }),
     };
   }
 

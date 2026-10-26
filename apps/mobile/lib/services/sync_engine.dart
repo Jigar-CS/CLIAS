@@ -22,6 +22,7 @@ class SyncEngine {
   final String wsUrl;
 
   Function(String questionId, String title)? onRemoteQuestionChanged;
+  Function(List<Map<String, String>> questions)? onDynamicQuestionsReceived;
   Function(String exitPass)? onExamSubmitted;
   Function()? onSessionReset;
   String? remoteExitPass;
@@ -48,6 +49,7 @@ class SyncEngine {
     required this.questionId,
     required this.wsUrl,
     this.onRemoteQuestionChanged,
+    this.onDynamicQuestionsReceived,
     this.onExamSubmitted,
     this.onSessionReset,
   });
@@ -74,14 +76,21 @@ class SyncEngine {
         onError: (err) => _handleDisconnect(err),
       );
 
-      _isConnected = true;
-      statusNotifier.value = SyncStatus.connected;
-      debugPrint('[SyncEngine] Connected to laptop WebSocket: $uri');
+      _channel!.ready.then((_) {
+        if (!_isDisposed && _channel != null) {
+          _isConnected = true;
+          statusNotifier.value = SyncStatus.connected;
+          debugPrint('[SyncEngine] Connected to laptop WebSocket: $uri');
 
-      // Flush any pending deltas immediately upon connecting
-      if (_pendingDelta.isNotEmpty || _deletedDelta.isNotEmpty) {
-        performSync();
-      }
+          // Flush any pending deltas immediately upon connecting
+          if (_pendingDelta.isNotEmpty || _deletedDelta.isNotEmpty) {
+            performSync();
+          }
+        }
+      }).catchError((err) {
+        debugPrint('[SyncEngine] Connection handshake error: $err');
+        _handleDisconnect(err);
+      });
     } catch (e) {
       debugPrint('[SyncEngine] Connection error: $e');
       _handleDisconnect(e);
@@ -103,6 +112,24 @@ class SyncEngine {
       } else if (type == 'SESSION_CONFIG') {
         if (msg['exitPass'] != null) {
           remoteExitPass = msg['exitPass'].toString();
+        }
+        if (msg['questions'] != null && msg['questions'] is List) {
+          try {
+            final rawList = msg['questions'] as List;
+            final dynamicList = rawList.map((item) {
+              final m = item as Map<String, dynamic>;
+              return {
+                'id': m['id']?.toString() ?? 'Q1',
+                'label': m['label']?.toString() ?? m['id']?.toString() ?? 'Q1',
+                'title': m['title']?.toString() ?? m['id']?.toString() ?? 'Question',
+              };
+            }).toList();
+            if (dynamicList.isNotEmpty) {
+              onDynamicQuestionsReceived?.call(dynamicList);
+            }
+          } catch (e) {
+            debugPrint('[SyncEngine] Error parsing dynamic questions: $e');
+          }
         }
         if (msg['activeQuestionId'] != null) {
           final activeQId = msg['activeQuestionId'].toString();
@@ -189,9 +216,9 @@ class SyncEngine {
   /// Appends a new or modified stroke to the pending sync delta buffer.
   void recordStroke(Stroke stroke) {
     _pendingDelta.add(stroke);
-    // Instant debounced sync 1.2s after user finishes stroke
+    // Fast debounced sync 150ms after user finishes stroke for real-time responsiveness
     _debouncedSyncTimer?.cancel();
-    _debouncedSyncTimer = Timer(const Duration(milliseconds: 1200), () {
+    _debouncedSyncTimer = Timer(const Duration(milliseconds: 150), () {
       performSync();
     });
   }
@@ -200,7 +227,7 @@ class SyncEngine {
   void recordStrokeDeletion(String strokeId) {
     _deletedDelta.add(strokeId);
     _debouncedSyncTimer?.cancel();
-    _debouncedSyncTimer = Timer(const Duration(milliseconds: 1200), () {
+    _debouncedSyncTimer = Timer(const Duration(milliseconds: 150), () {
       performSync();
     });
   }
@@ -253,6 +280,10 @@ class SyncEngine {
       try {
         _channel!.sink.add(packet.serialize());
         debugPrint('[SyncEngine] Sent sync packet Seq #$_sequenceNumber with ${strokesToSend.length} strokes');
+        _pendingDelta.removeWhere((s) => strokesToSend.contains(s));
+        _deletedDelta.removeWhere((id) => deletedToSend.contains(id));
+        statusNotifier.value = SyncStatus.synced;
+        lastSyncedNotifier.value = DateTime.now();
       } catch (e) {
         _isConnected = false;
         statusNotifier.value = SyncStatus.offlineBufferActive;

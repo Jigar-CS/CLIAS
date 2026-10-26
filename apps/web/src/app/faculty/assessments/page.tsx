@@ -281,8 +281,9 @@ export default function FacultyAssessmentsPage() {
   // Handwritten Answer Sheet Review Modal & Manual Grading State
   const [sheetModalOpen, setSheetModalOpen] = useState(false);
   const [selectedSubForSheet, setSelectedSubForSheet] = useState<any | null>(null);
-  const [sheetActiveQ, setSheetActiveQ] = useState<'Q1' | 'Q2' | 'Q3' | 'Q4' | 'Q5'>('Q1');
+  const [sheetActiveQ, setSheetActiveQ] = useState<string>('Q1');
   const [sheetStrokes, setSheetStrokes] = useState<any[]>([]);
+  const [sheetTypedText, setSheetTypedText] = useState<string>('');
   const [sheetLoading, setSheetLoading] = useState(false);
   const sheetCanvasRef = React.useRef<HTMLCanvasElement | null>(null);
   const sheetScrollContainerRef = React.useRef<HTMLDivElement | null>(null);
@@ -536,7 +537,9 @@ export default function FacultyAssessmentsPage() {
     setGradingFeedback(initialFeedback);
     setOverallFeedback(sub.feedback || '');
 
-    loadSheetStrokes(sub.submissionId || 'clias-session-9842', 'Q1');
+    const firstAns = sub?.answers?.[0];
+    const targetQId = firstAns?.questionId || 'Q1';
+    loadSheetStrokes(sub, 'Q1', targetQId);
   };
 
   const handleSaveStudentGrades = async () => {
@@ -545,16 +548,14 @@ export default function FacultyAssessmentsPage() {
     setGradeSuccessMsg('');
 
     try {
-      const questionsCount = selectedSubForSheet?.answers?.length || 5;
-      const qKeys = Array.from({ length: questionsCount }, (_, i) => `Q${i + 1}`);
-
-      const answersPayload = qKeys.map((qKey, idx) => {
-        const existingAns = selectedSubForSheet?.answers?.[idx];
-        const qId = existingAns?.questionId || existingAns?.id || `q-${qKey}`;
+      const answersList = selectedSubForSheet?.answers || [];
+      const answersPayload = answersList.map((ans: any, idx: number) => {
+        const qKey = `Q${idx + 1}`;
+        const qId = ans.questionId || ans.id || `q-${qKey}`;
         const awarded = gradingMarks[qKey] !== undefined 
           ? gradingMarks[qKey] 
-          : (gradingMarks[qId] !== undefined ? gradingMarks[qId] : (existingAns?.pointsAwarded ?? 0));
-        const fb = gradingFeedback[qKey] || gradingFeedback[qId] || existingAns?.feedback || '';
+          : (gradingMarks[qId] !== undefined ? gradingMarks[qId] : (ans?.pointsAwarded ?? 0));
+        const fb = gradingFeedback[qKey] || gradingFeedback[qId] || ans?.feedback || '';
         return {
           questionId: qId,
           pointsAwarded: Number(awarded) || 0,
@@ -593,31 +594,62 @@ export default function FacultyAssessmentsPage() {
     }
   };
 
-  const loadSheetStrokes = async (sessionId: string, qId: string) => {
+  const loadSheetStrokes = async (subOrSession: any, qId: string, targetQuestionId?: string) => {
     setSheetLoading(true);
     setSheetCurrentPage(1);
+    setSheetTypedText('');
+    setSheetStrokes([]);
     if (sheetScrollContainerRef.current) {
       sheetScrollContainerRef.current.scrollTo({ top: 0 });
     }
-    try {
-      const res = await fetch(`/api/v1/companion/strokes?sessionId=${sessionId}&questionId=${qId}`);
-      if (res.ok) {
-        const data = await res.json();
-        setSheetStrokes(data?.strokes || []);
-      } else {
-        setSheetStrokes([]);
+
+    const subObj = typeof subOrSession === 'object' ? subOrSession : selectedSubForSheet;
+    const qIndex = Math.max(0, Number(qId.replace('Q', '')) - 1);
+
+    // 1. First, check if the student's submission has answerText stored in the DB!
+    let ans = null;
+    if (subObj?.answers && Array.isArray(subObj.answers)) {
+      if (targetQuestionId) {
+        ans = subObj.answers.find((a: any) => a.questionId === targetQuestionId);
       }
-    } catch {
-      setSheetStrokes([]);
-    } finally {
-      setSheetLoading(false);
+      if (!ans) {
+        ans = subObj.answers.find((a: any) => a.order === (qIndex + 1)) || subObj.answers[qIndex];
+      }
     }
+
+    let foundStrokes: any[] = [];
+    let foundText = '';
+
+    if (ans?.answerText) {
+      try {
+        const raw = String(ans.answerText).trim();
+        if (raw.startsWith('{') || raw.startsWith('[')) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            foundStrokes = parsed;
+          } else if (parsed && typeof parsed === 'object') {
+            if (Array.isArray(parsed.strokes)) foundStrokes = parsed.strokes;
+            if (parsed.typedText) foundText = parsed.typedText;
+          }
+        } else {
+          foundText = raw;
+        }
+      } catch {
+        foundText = ans.answerText;
+      }
+    }
+
+    // In the faculty review portal, student submissions in DB are final and immutable.
+    // Display what the student actually submitted. If unattempted, display a clean blank sheet.
+    setSheetStrokes(foundStrokes);
+    setSheetTypedText(foundText);
+    setSheetLoading(false);
   };
 
-  const handleSheetQuestionChange = (qId: 'Q1' | 'Q2' | 'Q3' | 'Q4' | 'Q5') => {
+  const handleSheetQuestionChange = (qId: string, targetQuestionId?: string) => {
     setSheetActiveQ(qId);
     if (selectedSubForSheet) {
-      loadSheetStrokes(selectedSubForSheet.submissionId || 'clias-session-9842', qId);
+      loadSheetStrokes(selectedSubForSheet, qId, targetQuestionId);
     }
   };
 
@@ -4162,29 +4194,36 @@ export default function FacultyAssessmentsPage() {
             {(() => {
               const answersList = selectedSubForSheet?.answers || [];
               const questionsCount = answersList.length > 0 ? answersList.length : 5;
-              const tabs = Array.from({ length: questionsCount }, (_, idx) => {
+              const tabs = answersList.map((ans: any, idx: number) => {
                 const qKey = `Q${idx + 1}`;
-                const ans = answersList[idx];
-                const rawTitle = ans?.question?.title || `Question ${idx + 1}`;
+                const rawTitle = ans?.question?.title || ans?.questionText || `Question ${idx + 1}`;
                 const cleanTitle = rawTitle.replace(/^Question \d+:\s*/, '');
                 return {
                   id: qKey,
+                  qIndex: idx,
+                  questionId: ans?.questionId,
                   title: `${qKey}: ${cleanTitle.slice(0, 22)}${cleanTitle.length > 22 ? '...' : ''}`,
-                  question: ans?.question,
+                  question: ans?.question || {
+                    questionText: ans?.questionText,
+                    explanation: ans?.explanation,
+                    points: ans?.points || 10,
+                  },
                   ansObj: ans,
                 };
               });
 
               const activeQIndex = Math.max(0, Number(sheetActiveQ.replace('Q', '')) - 1);
-              const activeAns = answersList[activeQIndex];
-              const activeQuestion = activeAns?.question;
-              const activeMaxPoints = activeQuestion?.points || 10;
+              const activeTab = tabs[activeQIndex] || tabs[0];
+              const activeAns = activeTab?.ansObj;
+              const activeQuestion = activeTab?.question;
+              const activeMaxPoints = activeQuestion?.points || activeAns?.points || 10;
               const totalPossibleMarks = selectedSubForSheet?.totalMarks || (questionsCount * 10);
-              const currentTotalAwarded = Array.from({ length: questionsCount }, (_, i) => {
-                const qK = `Q${i + 1}`;
-                const existingAns = answersList[i];
-                return gradingMarks[qK] !== undefined ? gradingMarks[qK] : (existingAns?.pointsAwarded ?? 0);
-              }).reduce((a, b) => a + Number(b || 0), 0);
+              const currentTotalAwarded = tabs.reduce((sum: number, t: any) => {
+                const val = gradingMarks[t.id] !== undefined
+                  ? gradingMarks[t.id]
+                  : (t.questionId && gradingMarks[t.questionId] !== undefined ? gradingMarks[t.questionId] : (t.ansObj?.pointsAwarded ?? 0));
+                return sum + Number(val || 0);
+              }, 0);
               const totalPercentage = totalPossibleMarks > 0 ? ((currentTotalAwarded / totalPossibleMarks) * 100).toFixed(1) : '0.0';
 
               return (
@@ -4192,12 +4231,14 @@ export default function FacultyAssessmentsPage() {
                   <div className="flex items-center gap-2 px-6 py-2.5 bg-[#111827] border-b border-slate-800 overflow-x-auto text-xs font-bold">
                     {tabs.map((q: any) => {
                       const isActive = sheetActiveQ === q.id;
-                      const awarded = gradingMarks[q.id] !== undefined ? gradingMarks[q.id] : q.ansObj?.pointsAwarded;
+                      const awarded = gradingMarks[q.id] !== undefined
+                        ? gradingMarks[q.id]
+                        : (q.questionId && gradingMarks[q.questionId] !== undefined ? gradingMarks[q.questionId] : q.ansObj?.pointsAwarded);
                       return (
                         <button
                           key={q.id}
                           type="button"
-                          onClick={() => handleSheetQuestionChange(q.id as any)}
+                          onClick={() => handleSheetQuestionChange(q.id, q.questionId)}
                           className={`px-3.5 py-1.5 rounded-xl transition flex items-center gap-2 shrink-0 ${
                             isActive
                               ? 'bg-indigo-600 text-white shadow-xs'
@@ -4224,7 +4265,7 @@ export default function FacultyAssessmentsPage() {
                       <div className="p-5 rounded-2xl bg-[#1E293B] border border-slate-800 space-y-3">
                         <div className="flex items-center justify-between">
                           <span className="px-2.5 py-1 rounded-lg bg-indigo-950 text-indigo-300 border border-indigo-800 text-xs font-bold">
-                            {sheetActiveQ} • {activeQuestion?.title || 'Descriptive Theory'}
+                            {sheetActiveQ} • {activeQuestion?.title || activeQuestion?.type || 'Descriptive Theory'}
                           </span>
                           <span className="px-2.5 py-1 rounded-lg bg-emerald-950 text-emerald-300 border border-emerald-800 text-xs font-bold">
                             {activeMaxPoints} Marks
@@ -4232,13 +4273,11 @@ export default function FacultyAssessmentsPage() {
                         </div>
 
                         <h4 className="text-sm font-bold text-white leading-relaxed">
-                          {activeQuestion?.prompt || (
-                            sheetActiveQ === 'Q1' ? 'Explain the ACID properties (Atomicity, Consistency, Isolation, Durability) in Database Management Systems. Provide a concrete banking transaction scenario demonstrating how a crash between debit and credit operations violates Atomicity without Write-Ahead Logging (WAL).' :
-                            sheetActiveQ === 'Q2' ? 'Differentiate between 3NF and Boyce-Codd Normal Form (BCNF). Given the relation R(A, B, C, D) with F = { A -> B, B -> C, C -> D, D -> A }, identify candidate keys and show step-by-step lossless join decomposition.' :
-                            sheetActiveQ === 'Q3' ? 'Contrast Relational DBMS with NoSQL distributed systems. Discuss the CAP Theorem and analyze why traditional RDBMS prioritizes ACID while systems like MongoDB and Cassandra adopt BASE.' :
-                            sheetActiveQ === 'Q4' ? 'Describe the internal structure of a B+ Tree index in relational database engines. Why do database storage engines prefer B+ Trees over BSTs and B-Trees for disk-based storage? Illustrate node splitting during order 3 insertion.' :
-                            'Explain Concurrency Control in multi-user DBMS environments. Detail the Two-Phase Locking (2PL) protocol, distinguishing between Strict 2PL and Rigorous 2PL. Draw a lock acquisition graph proving conflict serializability.'
-                          )}
+                          {(() => {
+                            const full = activeQuestion?.questionText || activeAns?.questionText || '';
+                            const parts = full.split('\n\n[Marking Rubric:');
+                            return parts[0] || (full ?? `Question ${sheetActiveQ}`);
+                          })()}
                         </h4>
 
                         <div className="p-3.5 rounded-xl bg-[#0F172A] border border-slate-800 space-y-1">
@@ -4247,13 +4286,11 @@ export default function FacultyAssessmentsPage() {
                             Grading Rubric
                           </span>
                           <p className="text-xs text-slate-300 leading-normal">
-                            {activeQuestion?.explanation || (
-                              sheetActiveQ === 'Q1' ? '10 Marks: Atomicity explanation & WAL mechanics (3m), Consistency preservation (2m), Isolation levels (2m), Durability & Non-volatile recovery (3m).' :
-                              sheetActiveQ === 'Q2' ? '10 Marks: 3NF vs BCNF formal definitions (3m), Candidate key derivation (3m), Dependency preservation & Lossless decomposition steps (4m).' :
-                              sheetActiveQ === 'Q3' ? '10 Marks: Architectural comparison (3m), CAP Theorem triangle diagram & explanation (4m), BASE vs ACID trade-offs (3m).' :
-                              sheetActiveQ === 'Q4' ? '10 Marks: B+ Tree node layout & leaf linked list (3m), Fanout and Disk Block I/O efficiency (3m), Step-by-step insertion & node splitting diagram (4m).' :
-                              '10 Marks: Concurrency anomalies (2m), Growing vs Shrinking phase of 2PL (3m), Strict vs Rigorous 2PL comparison (2m), Cascading abort prevention proof (3m).'
-                            )}
+                            {(() => {
+                              const full = activeQuestion?.questionText || activeAns?.questionText || '';
+                              const parts = full.split('\n\n[Marking Rubric:');
+                              return parts[1] ? parts[1].replace(']', '').trim() : (activeQuestion?.explanation || activeAns?.explanation || 'Evaluated manually based on accuracy and technical depth.');
+                            })()}
                           </p>
                         </div>
                       </div>
@@ -4400,8 +4437,18 @@ export default function FacultyAssessmentsPage() {
                       </div>
                     </div>
 
-                    {/* Right: Answer Sheet Ruled Paper Canvas Pages */}
-                    <div className="lg:col-span-7 space-y-2">
+                    {/* Right: Answer Sheet Ruled Paper Canvas Pages & Typed Text */}
+                    <div className="lg:col-span-7 space-y-3">
+                      {sheetTypedText && (
+                        <div className="p-4 rounded-2xl bg-[#1E293B] border border-indigo-500/40 space-y-2">
+                          <span className="text-xs font-bold text-indigo-400 block uppercase tracking-wider">
+                            📝 Student Submitted Typed Response:
+                          </span>
+                          <div className="text-xs text-slate-200 whitespace-pre-wrap leading-relaxed font-sans bg-[#0F172A] p-3.5 rounded-xl border border-slate-800">
+                            {sheetTypedText}
+                          </div>
+                        </div>
+                      )}
                       <div className="flex items-center justify-between text-xs text-slate-400 flex-wrap gap-2">
                         <div className="flex items-center gap-2">
                           <span className="font-semibold text-slate-300">Student Submitted Answer Sheet</span>

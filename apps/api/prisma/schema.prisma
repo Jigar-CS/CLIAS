@@ -554,7 +554,7 @@ model SubmissionAnswer {
   question         Question             @relation(fields: [questionId], references: [id], onDelete: Cascade)
   selectedOptionId String?
   selectedOption   QuestionOption?      @relation(fields: [selectedOptionId], references: [id], onDelete: SetNull)
-  answerText       String?              @db.Text
+  answerText       String?              @db.LongText
   feedback         String?              @db.Text
   evaluatedBy      String?
   isCorrect        Boolean              @default(false)

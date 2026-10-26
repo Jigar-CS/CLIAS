@@ -15,6 +15,7 @@ import {
   Sparkles,
   ZoomIn,
   ZoomOut,
+  Radio,
 } from 'lucide-react';
 
 export interface StrokePoint {
@@ -46,6 +47,7 @@ interface DescriptiveWorkspaceProps {
   questionNumber: number;
   sessionId: string;
   onStrokeCountChange?: (questionId: string, count: number) => void;
+  onActiveQuestionChange?: (questionNumber: number) => void;
 }
 
 export function DescriptiveCompanionWorkspace({
@@ -53,6 +55,7 @@ export function DescriptiveCompanionWorkspace({
   questionNumber,
   sessionId,
   onStrokeCountChange,
+  onActiveQuestionChange,
 }: DescriptiveWorkspaceProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [strokes, setStrokes] = useState<StrokeItem[]>([]);
@@ -80,14 +83,26 @@ export function DescriptiveCompanionWorkspace({
     setDocDimensions({ width: w, height: h });
   }, [strokes]);
 
-  // 1. Determine local host for pairing
+  // 1. Determine local host for pairing via backend status
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const hostname = window.location.hostname;
-      // Default companion port on NestJS backend is 4000
-      setPairingHost(`${hostname}:4000`);
-    }
-  }, []);
+    fetch(`/api/v1/companion/status?sessionId=${encodeURIComponent(sessionId)}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data?.localIp) {
+          setPairingHost(`${data.localIp}:4000`);
+        } else if (typeof window !== 'undefined') {
+          setPairingHost(`${window.location.hostname}:4000`);
+        }
+        if (data?.mobileConnected) {
+          setMobileConnected(true);
+        }
+      })
+      .catch(() => {
+        if (typeof window !== 'undefined') {
+          setPairingHost(`${window.location.hostname}:4000`);
+        }
+      });
+  }, [sessionId]);
 
   // 2. Fetch existing strokes for this question upon question change
   const fetchStrokes = useCallback(async () => {
@@ -100,6 +115,9 @@ export function DescriptiveCompanionWorkspace({
         if (data && Array.isArray(data.strokes)) {
           setStrokes(data.strokes);
           onStrokeCountChange?.(question.id, data.strokes.length);
+        } else {
+          setStrokes([]);
+          onStrokeCountChange?.(question.id, 0);
         }
       }
     } catch (err) {
@@ -111,7 +129,7 @@ export function DescriptiveCompanionWorkspace({
     fetchStrokes();
   }, [fetchStrokes]);
 
-  // 3. Connect to Companion WebSocket
+  // 3. Connect to Companion WebSocket as a Viewer to receive live strokes from phone
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
@@ -125,15 +143,11 @@ export function DescriptiveCompanionWorkspace({
       ws = new WebSocket(wsUrl);
       socketRef.current = ws;
 
-      ws.onopen = () => {
-        // Connected to companion gateway
-      };
-
       ws.onmessage = (event) => {
         try {
           const msg = JSON.parse(event.data);
           if (msg.type === 'INITIAL_STATE') {
-            if (msg.mobileStatus === 'connected') setMobileConnected(true);
+            setMobileConnected(msg.mobileStatus === 'connected');
             if (msg.data && Array.isArray(msg.data.strokes)) {
               setStrokes(msg.data.strokes);
               onStrokeCountChange?.(question.id, msg.data.strokes.length);
@@ -148,6 +162,14 @@ export function DescriptiveCompanionWorkspace({
                 onStrokeCountChange?.(question.id, msg.allStrokes.length);
               }
             }
+          } else if (msg.type === 'ACTIVE_QUESTION_CHANGED') {
+            const match = (msg.questionId || '').match(/Q(\d+)/i);
+            if (match) {
+              const qNum = parseInt(match[1], 10);
+              if (qNum && qNum !== questionNumber) {
+                onActiveQuestionChange?.(qNum);
+              }
+            }
           } else if (msg.type === 'CANVAS_CLEAR') {
             if (msg.questionId === activeQId) {
               setStrokes([]);
@@ -160,7 +182,7 @@ export function DescriptiveCompanionWorkspace({
       };
 
       ws.onclose = () => {
-        // Disconnected
+        // Handle viewer close
       };
     } catch (e) {
       console.warn('[DescriptiveWorkspace] WebSocket initialization error:', e);
@@ -172,9 +194,9 @@ export function DescriptiveCompanionWorkspace({
         socketRef.current = null;
       }
     };
-  }, [sessionId, activeQId, question.id, onStrokeCountChange]);
+  }, [sessionId, activeQId, question.id, questionNumber, onStrokeCountChange, onActiveQuestionChange]);
 
-  // 4. Render digital ruled paper canvas with live strokes
+  // 4. Render digital ruled paper canvas with live strokes received from phone
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -186,11 +208,11 @@ export function DescriptiveCompanionWorkspace({
       canvas.height = docDimensions.height;
     }
 
-    // Background ruled paper
+    // Background clean white notebook ruled paper
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Subtle horizontal notebook ruled lines (spaced every 36px, starting at y=48)
+    // Subtle horizontal notebook ruled guidelines (spaced every 36px, starting at y=48)
     ctx.strokeStyle = '#f1f5f9';
     ctx.lineWidth = 1;
     for (let y = 48; y < canvas.height; y += 36) {
@@ -235,6 +257,9 @@ export function DescriptiveCompanionWorkspace({
         ctx.strokeStyle = 'rgba(250, 204, 21, 0.4)';
         ctx.lineWidth = stroke.strokeWidth || stroke.w || 20;
         ctx.globalCompositeOperation = 'multiply';
+      } else if (stroke.toolType === 'eraser' || stroke.tool === 'eraser') {
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = stroke.strokeWidth || stroke.w || 24;
       } else {
         let color = '#0f172a';
         if (stroke.color) {
@@ -249,7 +274,7 @@ export function DescriptiveCompanionWorkspace({
           }
         }
         ctx.strokeStyle = color;
-        ctx.lineWidth = stroke.strokeWidth || stroke.w || 3;
+        ctx.lineWidth = stroke.strokeWidth || stroke.w || 2.8;
       }
 
       if (pts.length === 1) {
@@ -315,10 +340,10 @@ export function DescriptiveCompanionWorkspace({
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-      {/* Left Column: Descriptive Prompt & Rubric Card */}
+      {/* Left Column: Descriptive Prompt & Rubric Card + Mobile Status */}
       <div className="lg:col-span-5 space-y-4">
         {/* Question Header Card */}
-        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
+        <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs space-y-3">
           <div className="flex items-center justify-between">
             <span className="px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-xs font-bold uppercase tracking-wider">
               {activeQId} • Descriptive
@@ -343,28 +368,28 @@ export function DescriptiveCompanionWorkspace({
           )}
         </div>
 
-        {/* Mobile Companion Pairing Card */}
+        {/* Mobile Companion Connection Status Card */}
         <div className="p-4 rounded-2xl bg-gradient-to-br from-slate-900 to-indigo-950 text-white border border-indigo-500/30 shadow-lg space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Smartphone className="w-4 h-4 text-cyan-400" />
-              <span className="text-xs font-bold tracking-wide">Mobile Writing Companion</span>
+              <span className="text-xs font-bold tracking-wide">Phone Companion Stream</span>
             </div>
-            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-black/40 border border-slate-700 text-[10px]">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-black/40 border border-slate-700 text-[10px]">
               <span
                 className={`w-2 h-2 rounded-full ${
-                  mobileConnected ? 'bg-emerald-400 shadow-sm shadow-emerald-400' : 'bg-rose-500'
+                  mobileConnected ? 'bg-emerald-400 shadow-sm shadow-emerald-400 animate-pulse' : 'bg-rose-500'
                 }`}
               />
               <span className="font-semibold text-slate-300">
-                {mobileConnected ? 'Connected (Live)' : 'Waiting for Device'}
+                {mobileConnected ? 'Phone Connected (Live Streaming)' : 'Waiting for Device'}
               </span>
             </div>
           </div>
 
           <p className="text-[11px] text-slate-300 leading-relaxed">
-            Write handwriting answers on your paired phone or tablet in landscape mode. Your strokes
-            are rendered live on this digital sheet and auto-saved.
+            All answers for this descriptive test must be written on your paired mobile companion in landscape mode.
+            Your strokes are mirrored live onto this digital answer sheet.
           </p>
 
           <div className="p-3 rounded-xl bg-black/50 border border-slate-800 space-y-1.5 font-mono text-[11px]">
@@ -377,138 +402,72 @@ export function DescriptiveCompanionWorkspace({
               <span className="text-indigo-300">{sessionId}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-400">Active Sheet:</span>
+              <span className="text-slate-400">Active Question:</span>
               <span className="text-emerald-400 font-bold">{activeQId}</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Right Column: 900x2400 Continuous Downward Scroll Ruled Answer Sheet */}
+      {/* Right Column: Read-Only Digital Ruled Answer Sheet Mirror */}
       <div className="lg:col-span-7 space-y-3">
-        {/* Canvas Toolbar with Fit-Width & Zoom Controls */}
-        <div className="flex items-center justify-between p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex-wrap gap-2">
+        {/* Toolbar with Zoom & Controls (No laptop writing options) */}
+        <div className="p-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xs flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <Layers className="w-4 h-4 text-indigo-500" />
             <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
               Live Digital Answer Sheet ({activeQId})
             </span>
-            <span className="text-[11px] text-slate-500 font-mono">
+            <span className="text-[11px] font-mono text-slate-500">
               • {strokes.length} strokes
             </span>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap">
-            {/* View Mode Toggle: Fit Width vs Actual 100% */}
-            <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs">
-              <button
-                type="button"
-                onClick={() => setViewMode('fit')}
-                className={`px-2.5 py-1 rounded-lg font-semibold transition flex items-center gap-1.5 ${
-                  viewMode === 'fit'
-                    ? 'bg-indigo-600 text-white shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-                title="Fit sheet to 100% card width so all words are fully visible"
-              >
-                <Maximize2 className="w-3 h-3" />
-                <span>Fit Width</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setViewMode('actual');
-                  setZoomLevel(100);
-                }}
-                className={`px-2.5 py-1 rounded-lg font-semibold transition flex items-center gap-1.5 ${
-                  viewMode === 'actual'
-                    ? 'bg-indigo-600 text-white shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-                }`}
-                title="View at 1:1 actual pixel scale"
-              >
-                <span>100% Size</span>
-              </button>
-            </div>
-
-            {viewMode === 'actual' && (
-              <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs">
-                <button
-                  type="button"
-                  onClick={() => setZoomLevel((z) => Math.max(50, z - 15))}
-                  className="px-2 py-0.5 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md font-bold"
-                  title="Zoom Out"
-                >
-                  -
-                </button>
-                <span className="font-mono text-[11px] px-1 font-bold text-slate-700 dark:text-slate-300">
-                  {zoomLevel}%
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setZoomLevel((z) => Math.min(200, z + 15))}
-                  className="px-2 py-0.5 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md font-bold"
-                  title="Zoom In"
-                >
-                  +
-                </button>
-              </div>
-            )}
-
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setViewMode(viewMode === 'fit' ? 'actual' : 'fit')}
+              className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition flex items-center gap-1.5"
+            >
+              <Maximize2 className="w-3.5 h-3.5" />
+              <span>{viewMode === 'fit' ? '100% Size' : 'Fit Width'}</span>
+            </button>
             <button
               type="button"
               onClick={handleClear}
-              disabled={isClearing || strokes.length === 0}
-              className="p-1.5 px-2 text-xs text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition disabled:opacity-40 flex items-center gap-1 font-semibold border border-rose-200 dark:border-rose-900/40"
-              title="Clear answer sheet for this question"
+              disabled={strokes.length === 0 || isClearing}
+              className="p-1.5 rounded-lg border border-rose-200 dark:border-rose-900/40 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 disabled:opacity-30 transition"
+              title="Clear canvas"
             >
-              <Trash2 className="w-3.5 h-3.5" />
-              <span>Clear</span>
+              <Trash2 className="w-4 h-4" />
             </button>
-
             <button
               type="button"
               onClick={handleDownload}
-              disabled={strokes.length === 0}
-              className="p-1.5 px-2 text-xs text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 rounded-xl transition disabled:opacity-40 flex items-center gap-1 font-semibold border border-indigo-200 dark:border-indigo-900/40"
-              title="Download answer sheet as PNG"
+              className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition"
+              title="Download PNG sheet"
             >
-              <Download className="w-3.5 h-3.5" />
-              <span>Export PNG</span>
+              <Download className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* Scrollable Answer Sheet Paper Container */}
-        <div className="w-full h-[660px] rounded-2xl bg-slate-200/90 dark:bg-slate-950/80 p-3 sm:p-5 overflow-y-auto overflow-x-auto border border-slate-300 dark:border-slate-800 shadow-inner">
-          <div
-            className="bg-white rounded-xl shadow-xl relative overflow-hidden mx-auto transition-all duration-150"
-            style={
-              viewMode === 'fit'
-                ? {
-                    width: '100%',
-                    maxWidth: `${docDimensions.width}px`,
-                    height: 'auto',
-                    aspectRatio: `${docDimensions.width} / ${docDimensions.height}`,
-                  }
-                : {
-                    width: `${(docDimensions.width * zoomLevel) / 100}px`,
-                    minWidth: `${(docDimensions.width * zoomLevel) / 100}px`,
-                    height: `${(docDimensions.height * zoomLevel) / 100}px`,
-                  }
-            }
-          >
-            <canvas
-              ref={canvasRef}
-              width={docDimensions.width}
-              height={docDimensions.height}
-              className="w-full h-auto block select-none bg-white"
-            />
-            <div className="absolute bottom-4 right-6 text-[10px] font-bold tracking-widest text-slate-400 pointer-events-none select-none">
-              CLIAS SECURE DIGITAL ANSWER SHEET • CONFIDENTIAL
-            </div>
-          </div>
+        {/* Read-Only Ruled Answer Sheet Container (Pointer events disabled on laptop screen) */}
+        <div
+          className={`relative rounded-2xl border border-slate-300 dark:border-slate-700 overflow-auto bg-slate-100 dark:bg-slate-950 p-2 shadow-inner select-none ${
+            viewMode === 'fit' ? 'max-h-[680px]' : 'max-h-[780px]'
+          }`}
+        >
+          <canvas
+            ref={canvasRef}
+            className="mx-auto rounded-xl shadow-md transition-all pointer-events-none"
+            style={{
+              width: viewMode === 'fit' ? '100%' : `${docDimensions.width}px`,
+              height: 'auto',
+              display: 'block',
+              backgroundColor: '#ffffff',
+            }}
+          />
         </div>
       </div>
     </div>

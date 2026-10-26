@@ -171,12 +171,26 @@ class _PairingScreenState extends State<PairingScreen> {
                     controller: _laptopHostController,
                     decoration: InputDecoration(
                       labelText: 'Laptop IP / WebSocket Endpoint',
-                      hintText: 'e.g. 192.168.1.100:4000',
+                      hintText: 'e.g. 10.0.2.2:4000 (emulator) or 192.168.x.x:4000',
                       prefixIcon: const Icon(Icons.laptop_mac),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
+                  ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 6,
+                    children: [
+                      ActionChip(
+                        label: const Text('Emulator (10.0.2.2:4000)', style: TextStyle(fontSize: 10)),
+                        onPressed: () => _laptopHostController.text = '10.0.2.2:4000',
+                      ),
+                      ActionChip(
+                        label: const Text('Localhost (4000)', style: TextStyle(fontSize: 10)),
+                        onPressed: () => _laptopHostController.text = 'localhost:4000',
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 14),
 
