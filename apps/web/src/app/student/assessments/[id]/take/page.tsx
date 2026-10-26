@@ -1518,7 +1518,7 @@ export default function TakeAssessmentPage() {
 
         if (isDescriptive) {
           try {
-            const sRes = await fetch(
+            let sRes = await fetch(
               `/api/v1/companion/strokes?sessionId=${encodeURIComponent(companionSession)}&questionId=${qKey}`,
             );
             let strokesData: any[] = [];
@@ -1527,6 +1527,20 @@ export default function TakeAssessmentPage() {
               if (sData?.strokes && sData.strokes.length > 0) {
                 strokesData = sData.strokes;
               }
+            }
+            // Fallback check by submissionId if companionSession had 0 strokes
+            if (strokesData.length === 0 && examData.submissionId) {
+              try {
+                const subRes = await fetch(
+                  `/api/v1/companion/strokes?sessionId=${encodeURIComponent(examData.submissionId)}&questionId=${qKey}`,
+                );
+                if (subRes.ok) {
+                  const subData = await subRes.json();
+                  if (subData?.strokes && subData.strokes.length > 0) {
+                    strokesData = subData.strokes;
+                  }
+                }
+              } catch (_) {}
             }
             if (strokesData.length > 0) {
               answerText = JSON.stringify({

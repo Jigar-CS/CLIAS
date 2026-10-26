@@ -15,7 +15,7 @@ class _PairingScreenState extends State<PairingScreen> {
   final TextEditingController _laptopHostController =
       TextEditingController(text: '10.194.8.196:4000');
   final TextEditingController _sessionTokenController =
-      TextEditingController(text: 'clias-session-9842');
+      TextEditingController();
   final TextEditingController _questionIdController =
       TextEditingController(text: 'Q1');
 
@@ -213,6 +213,7 @@ class _PairingScreenState extends State<PairingScreen> {
                     controller: _sessionTokenController,
                     decoration: InputDecoration(
                       labelText: 'Exam Session Token',
+                      hintText: 'e.g. CLIAS-24CS024 (from laptop)',
                       prefixIcon: const Icon(Icons.vpn_key),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
