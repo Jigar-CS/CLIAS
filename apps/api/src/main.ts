@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import * as dns from 'dns';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
