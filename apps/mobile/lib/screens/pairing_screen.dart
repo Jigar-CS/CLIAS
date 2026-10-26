@@ -35,16 +35,30 @@ class _PairingScreenState extends State<PairingScreen> {
   }
 
   void _launchExamSession() {
-    final host = _laptopHostController.text.trim();
+    final rawHost = _laptopHostController.text.trim();
     final session = _sessionTokenController.text.trim();
     final question = _questionIdController.text.trim();
 
-    if (host.isEmpty || session.isEmpty) {
+    if (rawHost.isEmpty || session.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please provide laptop host and session token')),
       );
       return;
     }
+
+    String cleanHost = rawHost.replaceAll(RegExp(r'^https?://'), '').replaceAll(RegExp(r'^wss?://'), '');
+    while (cleanHost.endsWith('/')) {
+      cleanHost = cleanHost.substring(0, cleanHost.length - 1);
+    }
+
+    final bool isSecure = rawHost.startsWith('https://') ||
+        rawHost.startsWith('wss://') ||
+        cleanHost.contains('onrender.com') ||
+        cleanHost.contains('vercel.app') ||
+        (!cleanHost.contains(':') && !cleanHost.contains('localhost'));
+
+    final String protocol = isSecure ? 'wss' : 'ws';
+    final String companionWsUrl = '$protocol://$cleanHost/companion';
 
     // Default proctor PIN hash for test ("123456")
     final defaultPinHash = sha256.convert(utf8.encode('123456')).toString();
@@ -55,7 +69,7 @@ class _PairingScreenState extends State<PairingScreen> {
           sessionId: session,
           questionId: question.toUpperCase(),
           questionTitle: 'Q1: ACID Properties',
-          wsUrl: 'ws://$host/companion',
+          wsUrl: companionWsUrl,
           proctorPinHash: defaultPinHash,
         ),
       ),

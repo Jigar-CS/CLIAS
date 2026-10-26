@@ -46,6 +46,7 @@ interface DescriptiveWorkspaceProps {
   };
   questionNumber: number;
   sessionId: string;
+  pairingHost?: string;
   onStrokeCountChange?: (questionId: string, count: number) => void;
   onActiveQuestionChange?: (questionNumber: number) => void;
 }
@@ -54,13 +55,14 @@ export function DescriptiveCompanionWorkspace({
   question,
   questionNumber,
   sessionId,
+  pairingHost: propPairingHost,
   onStrokeCountChange,
   onActiveQuestionChange,
 }: DescriptiveWorkspaceProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [strokes, setStrokes] = useState<StrokeItem[]>([]);
   const [mobileConnected, setMobileConnected] = useState(false);
-  const [pairingHost, setPairingHost] = useState('');
+  const [pairingHost, setPairingHost] = useState(propPairingHost || '');
   const [isClearing, setIsClearing] = useState(false);
   const [viewMode, setViewMode] = useState<'fit' | 'actual'>('fit');
   const [zoomLevel, setZoomLevel] = useState<number>(100);
@@ -68,6 +70,13 @@ export function DescriptiveCompanionWorkspace({
   const socketRef = useRef<WebSocket | null>(null);
 
   const activeQId = `Q${questionNumber}`;
+
+  // Keep pairingHost updated if passed from parent
+  useEffect(() => {
+    if (propPairingHost) {
+      setPairingHost(propPairingHost);
+    }
+  }, [propPairingHost]);
 
   // Dynamically expand canvas bounds if any received strokes exceed default 900x2400 dimensions
   useEffect(() => {
@@ -88,7 +97,9 @@ export function DescriptiveCompanionWorkspace({
     fetch(`/api/v1/companion/status?sessionId=${encodeURIComponent(sessionId)}`)
       .then((res) => res.json())
       .then((data) => {
-        if (data?.localIp) {
+        if (data?.publicHost) {
+          setPairingHost(data.publicHost);
+        } else if (data?.localIp) {
           setPairingHost(`${data.localIp}:4000`);
         } else if (typeof window !== 'undefined') {
           setPairingHost(`${window.location.hostname}:4000`);
@@ -98,7 +109,7 @@ export function DescriptiveCompanionWorkspace({
         }
       })
       .catch(() => {
-        if (typeof window !== 'undefined') {
+        if (!pairingHost && typeof window !== 'undefined') {
           setPairingHost(`${window.location.hostname}:4000`);
         }
       });
@@ -133,8 +144,15 @@ export function DescriptiveCompanionWorkspace({
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const hostname = window.location.hostname;
-    const wsUrl = `ws://${hostname}:4000/companion?role=viewer&sessionId=${encodeURIComponent(
+    const hostToUse = pairingHost || `${window.location.hostname}:4000`;
+    const cleanHost = hostToUse.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    const isSecure =
+      window.location.protocol === 'https:' ||
+      cleanHost.includes('onrender.com') ||
+      cleanHost.includes('vercel.app') ||
+      !cleanHost.includes(':');
+    const wsProto = isSecure ? 'wss:' : 'ws:';
+    const wsUrl = `${wsProto}//${cleanHost}/companion?role=viewer&sessionId=${encodeURIComponent(
       sessionId,
     )}&questionId=${activeQId}`;
 

@@ -987,7 +987,7 @@ export class AssessmentService {
     const active = studentSubmissions.find((s) => s.status === SubmissionStatus.IN_PROGRESS);
     if (active) {
       const proc = await this.ensureProctoringSession(active.id, effectiveProfileId);
-      return await this.formatAttemptPayload(assessment, active, proc);
+      return await this.formatAttemptPayload(assessment, active, proc, student?.authorizedStudent?.enrollmentNumber);
     }
 
     if (studentSubmissions.length >= assessment.allowedAttempts) {
@@ -1043,7 +1043,7 @@ export class AssessmentService {
     });
 
     const proc = await this.ensureProctoringSession(newSubmission.id, effectiveProfileId);
-    return await this.formatAttemptPayload(assessment, newSubmission, proc);
+    return await this.formatAttemptPayload(assessment, newSubmission, proc, student?.authorizedStudent?.enrollmentNumber);
   }
 
   private async ensureProctoringSession(submissionId: string, studentId: string) {
@@ -1060,7 +1060,7 @@ export class AssessmentService {
     });
   }
 
-  private async formatAttemptPayload(assessment: any, submission: any, proctoring?: any) {
+  private async formatAttemptPayload(assessment: any, submission: any, proctoring?: any, studentEnrollment?: string) {
     // High-performance batch prefetch for any coding problems
     const codingQuestions = assessment.questions.filter((aq: any) => aq.question.type === QuestionType.CODING);
     const problemMap = new Map<string, any>();
@@ -1183,6 +1183,11 @@ export class AssessmentService {
     const totalDurationMs = assessment.durationMinutes * 60 * 1000;
     const remainingSeconds = Math.max(0, Math.floor((totalDurationMs - elapsedMs) / 1000));
 
+    const enrollment = studentEnrollment || submission.student?.authorizedStudent?.enrollmentNumber;
+    const companionSessionToken = enrollment
+      ? `CLIAS-${enrollment.toUpperCase()}`
+      : `CLIAS-${submission.id.replace(/-/g, '').slice(0, 6).toUpperCase()}`;
+
     return {
       submissionId: submission.id,
       attemptNumber: submission.attemptNumber,
@@ -1195,6 +1200,8 @@ export class AssessmentService {
         totalQuestions: assessment.totalQuestions,
       },
       remainingSeconds,
+      companionSessionToken,
+      studentEnrollment: enrollment || null,
       proctoringSessionId: proctoring?.id || null,
       trustScore: proctoring?.trustScore ?? 100,
       faceEnrollmentVerified: proctoring?.faceEnrollmentVerified ?? false,

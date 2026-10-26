@@ -113,8 +113,13 @@ class _ExamSheetScreenState extends State<ExamSheetScreen>
 
   Future<void> _fetchQuestionsFromLaptop() async {
     try {
-      final host = widget.wsUrl.replaceAll('ws://', '').replaceAll('/companion', '');
-      final httpUrl = Uri.parse('http://$host/api/v1/companion/questions?sessionId=${widget.sessionId}');
+      final bool isSecure = widget.wsUrl.startsWith('wss://');
+      final host = widget.wsUrl
+          .replaceAll('wss://', '')
+          .replaceAll('ws://', '')
+          .replaceAll('/companion', '');
+      final scheme = isSecure ? 'https' : 'http';
+      final httpUrl = Uri.parse('$scheme://$host/api/v1/companion/questions?sessionId=${widget.sessionId}');
       final client = HttpClient();
       final request = await client.getUrl(httpUrl).timeout(const Duration(seconds: 3));
       final response = await request.close();
@@ -197,8 +202,13 @@ class _ExamSheetScreenState extends State<ExamSheetScreen>
 
     // 2. Fetch from laptop companion server HTTP endpoint
     try {
-      final host = widget.wsUrl.replaceAll('ws://', '').replaceAll('/companion', '');
-      final httpUrl = Uri.parse('http://$host/api/v1/companion/strokes?sessionId=${widget.sessionId}&questionId=$targetQId');
+      final bool isSecure = widget.wsUrl.startsWith('wss://');
+      final host = widget.wsUrl
+          .replaceAll('wss://', '')
+          .replaceAll('ws://', '')
+          .replaceAll('/companion', '');
+      final scheme = isSecure ? 'https' : 'http';
+      final httpUrl = Uri.parse('$scheme://$host/api/v1/companion/strokes?sessionId=${widget.sessionId}&questionId=$targetQId');
       final client = HttpClient();
       final request = await client.getUrl(httpUrl).timeout(const Duration(seconds: 2));
       final response = await request.close();

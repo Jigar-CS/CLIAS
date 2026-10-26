@@ -202,27 +202,38 @@ export default function TakeAssessmentPage() {
     examData?.questions?.some((q: any) => q.type === 'SHORT_ANSWER' || q.type === 'DESCRIPTIVE')
   );
 
+  const companionSession =
+    examData?.companionSessionToken ||
+    (examData?.studentEnrollment ? `CLIAS-${examData.studentEnrollment.toUpperCase()}` : null) ||
+    (user?.studentDetails?.enrollmentNumber ? `CLIAS-${user.studentDetails.enrollmentNumber.toUpperCase()}` : null) ||
+    (user?.id ? `CLIAS-${user.id.slice(0, 6).toUpperCase()}` : 'clias-session-9842');
+
   const checkMobileStatus = React.useCallback(async () => {
     setPreflightCheckingMobile(true);
     try {
-      const res = await fetch('/api/v1/companion/status?sessionId=clias-session-9842');
+      const res = await fetch(`/api/v1/companion/status?sessionId=${encodeURIComponent(companionSession)}`);
       if (res.ok) {
         const data = await res.json();
         setPreflightMobileConnected(Boolean(data.mobileConnected));
+        if (data?.publicHost) {
+          setPairingHost(data.publicHost);
+        }
       }
     } catch {
       // ignore network errors during preflight
     } finally {
       setPreflightCheckingMobile(false);
     }
-  }, []);
+  }, [companionSession]);
 
   // Dynamic pairing host from backend
   useEffect(() => {
-    fetch('/api/v1/companion/status?sessionId=clias-session-9842')
+    fetch(`/api/v1/companion/status?sessionId=${encodeURIComponent(companionSession)}`)
       .then((res) => res.json())
       .then((data) => {
-        if (data?.localIp) {
+        if (data?.publicHost) {
+          setPairingHost(data.publicHost);
+        } else if (data?.localIp) {
           setPairingHost(`${data.localIp}:4000`);
         } else if (typeof window !== 'undefined') {
           setPairingHost(`${window.location.hostname}:4000`);
@@ -233,7 +244,7 @@ export default function TakeAssessmentPage() {
           setPairingHost(`${window.location.hostname}:4000`);
         }
       });
-  }, []);
+  }, [companionSession]);
 
   // Monitor phone companion connectivity during PreFlight for descriptive tests
   useEffect(() => {
@@ -242,11 +253,21 @@ export default function TakeAssessmentPage() {
     checkMobileStatus();
     const interval = setInterval(checkMobileStatus, 3000);
 
+    const hostToUse = pairingHost || `${window.location.hostname}:4000`;
+    const cleanHost = hostToUse.replace(/^https?:\/\//, '').replace(/\/$/, '');
+    const isSecure =
+      window.location.protocol === 'https:' ||
+      cleanHost.includes('onrender.com') ||
+      cleanHost.includes('vercel.app') ||
+      !cleanHost.includes(':');
+    const wsProto = isSecure ? 'wss:' : 'ws:';
+    const wsUrl = `${wsProto}//${cleanHost}/companion?role=viewer&sessionId=${encodeURIComponent(
+      companionSession,
+    )}`;
+
     let ws: WebSocket;
     try {
-      ws = new WebSocket(
-        `ws://${window.location.hostname}:4000/companion?role=viewer&sessionId=clias-session-9842`,
-      );
+      ws = new WebSocket(wsUrl);
       ws.onmessage = (event) => {
         try {
           const msg = JSON.parse(event.data);
@@ -265,7 +286,7 @@ export default function TakeAssessmentPage() {
         ws?.close();
       } catch {}
     };
-  }, [isDescriptiveTest, checkMobileStatus]);
+  }, [isDescriptiveTest, checkMobileStatus, pairingHost, companionSession]);
 
   // ---------------------------------------------------------------------------
   // Phase 9: AI Proctoring & Multi-Modal Telemetry State
@@ -451,7 +472,7 @@ export default function TakeAssessmentPage() {
         data.questions?.some((q: any) => q.type === 'SHORT_ANSWER' || q.type === 'DESCRIPTIVE')
       );
       if (isDescriptive) {
-        fetch('/api/v1/companion/reset?sessionId=clias-session-9842', { method: 'POST' }).catch(() => {});
+        fetch(`/api/v1/companion/reset?sessionId=${encodeURIComponent(companionSession)}`, { method: 'POST' }).catch(() => {});
         const qList = (data.questions || []).map((q: any, i: number) => ({
           id: `Q${i + 1}`,
           label: `Q${i + 1}`,
@@ -460,7 +481,7 @@ export default function TakeAssessmentPage() {
         fetch('/api/v1/companion/register-questions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId: 'clias-session-9842', questions: qList }),
+          body: JSON.stringify({ sessionId: companionSession, questions: qList }),
         }).catch(() => {});
       }
     } catch (err: any) {
@@ -579,7 +600,7 @@ export default function TakeAssessmentPage() {
     if (isDescriptiveTest) {
       try {
         // Reset companion server session buffer so previous test's strokes are wiped
-        await fetch('/api/v1/companion/reset?sessionId=clias-session-9842', { method: 'POST' });
+        await fetch(`/api/v1/companion/reset?sessionId=${encodeURIComponent(companionSession)}`, { method: 'POST' });
       } catch (err) {
         console.warn('Could not reset companion session:', err);
       }
@@ -720,7 +741,7 @@ export default function TakeAssessmentPage() {
     setCurrentIdx(idx);
     setRunOutput(null);
     const qLabel = `Q${idx + 1}`;
-    fetch(`/api/v1/companion/switch-question?sessionId=clias-session-9842&questionId=${qLabel}`, {
+    fetch(`/api/v1/companion/switch-question?sessionId=${encodeURIComponent(companionSession)}&questionId=${qLabel}`, {
       method: 'POST',
     }).catch(() => {});
   };
@@ -1468,9 +1489,9 @@ export default function TakeAssessmentPage() {
 
     // Call companion gateway to notify mobile client and generate random 6-digit Exit Pass
     try {
-      const companionSession = 'clias-session-9842';
+      const companionSessionToken = companionSession;
       const companionRes = await fetch(
-        `/api/v1/companion/submit?sessionId=${companionSession}&submissionId=${examData.submissionId}`,
+        `/api/v1/companion/submit?sessionId=${encodeURIComponent(companionSessionToken)}&submissionId=${examData.submissionId}`,
         { method: 'POST' },
       );
       if (companionRes.ok) {
@@ -1498,7 +1519,7 @@ export default function TakeAssessmentPage() {
         if (isDescriptive) {
           try {
             const sRes = await fetch(
-              `/api/v1/companion/strokes?sessionId=clias-session-9842&questionId=${qKey}`,
+              `/api/v1/companion/strokes?sessionId=${encodeURIComponent(companionSession)}&questionId=${qKey}`,
             );
             let strokesData: any[] = [];
             if (sRes.ok) {
@@ -1777,7 +1798,7 @@ export default function TakeAssessmentPage() {
                   </div>
                   <div>
                     <span className="text-[10px] text-slate-400 block uppercase font-bold">2. Session Token</span>
-                    <span className="font-bold text-emerald-400">clias-session-9842</span>
+                    <span className="font-bold text-emerald-400">{companionSession}</span>
                   </div>
                 </div>
               )}
@@ -3062,7 +3083,8 @@ export default function TakeAssessmentPage() {
                 <DescriptiveCompanionWorkspace
                   question={currentQ}
                   questionNumber={currentIdx + 1}
-                  sessionId="clias-session-9842"
+                  sessionId={companionSession}
+                  pairingHost={pairingHost}
                   onActiveQuestionChange={(qNum) => handleSwitchQuestion(qNum - 1)}
                   onStrokeCountChange={(qId, count) => {
                     setDescriptiveStrokeCounts((prev) => ({

@@ -12,6 +12,7 @@ export class CompanionController {
       isSubmitted: this.companionSync.isSessionSubmitted(sessionId),
       activeQuestionId: this.companionSync.getActiveQuestion(sessionId),
       localIp: this.companionSync.getLocalIp(),
+      publicHost: process.env.RENDER_EXTERNAL_HOSTNAME || process.env.PUBLIC_API_HOST || null,
       port: 4000,
     };
   }
